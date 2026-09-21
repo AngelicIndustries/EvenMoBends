@@ -1,8 +1,8 @@
 # Blockbench rig
 
-`player.bbmodel` / `player_slim.bbmodel` (Blockbench projects, for editing) and `player.geo.json` /
-`player_slim.geo.json` (Bedrock/GeckoLib geometry) are the Even Mo' Bends player model, generated from
-`ModelBendsPlayer` by `BlockbenchProjectTest` and `PlayerRigTest`. Tests prove that Salamander
+`player.geo.json` (classic arms) and `player_slim.geo.json` (slim arms) are the Even Mo' Bends player model in
+Bedrock/GeckoLib format, generated from `ModelBendsPlayer` by `PlayerRigTest`. For animating, export a Blockbench
+project from the game instead (below). Tests prove that Salamander
 renders them vertex for vertex like the in-game model, at rest and posed, UVs included, so an arm or elbow bent in
 Blockbench is the same bend in game.
 
@@ -14,16 +14,19 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 
 ## Using it
 
-1. Blockbench: *File → Open Model* and pick `player.bbmodel` (or `player_slim.bbmodel`). It is the rig as a
-   Blockbench project, with the Molang placeholders already filled in.
-2. Replace the grey placeholder skin with yours: drag your 64×64 skin onto the "skin (replace with yours)" texture in
-   the texture panel (or right-click it and load a file).
+1. In game, run `/evenmobends blockbench` (add `slim` or `classic` to override the arm width detected from your
+   skin). It writes `.minecraft/mobends/blockbench/player.bbmodel` (or `player_slim.bbmodel`): the rig with your own
+   skin, the Molang placeholders filled in, and preview items made 1:1 from your game's textures.
+2. Blockbench: *File → Open Model* and pick that file.
 3. Animate in the *Animate* tab. Bone rotations are the in-game part rotations in degrees.
 
-Preview items: `rightItem` and `rightItemFree` each hold a *preview sword* and a *preview grass block* group, sized and
-placed exactly as the game draws a held tool and a held block. Toggle them with the eye icon in the outliner (the
-sword in the hand is on by default). They are only for looking at; the game reads nothing but the exported
-animations. (`player.geo.json` is the same rig without them, as plain Bedrock geometry.)
+Preview items: `rightItem` and `rightItemFree` each hold a *preview sword* (an iron sword, extruded pixel by pixel
+the way the game draws held items) and a *preview grass block*, sized and placed exactly as the game draws a held tool
+and a held block. Toggle them with the eye icon in the outliner (the sword in the hand is on by default). They are
+only for looking at; the game reads nothing but exported animations. Blockbench's Bedrock format allows one texture,
+so the project's texture is your skin with the item textures below it.
+
+`player.geo.json` / `player_slim.geo.json` are the bare rig as plain Bedrock geometry.
 
 Bones: `root` → `body` → `neck` → `head`, `rightArmAim` → `rightArm` → `rightForeArm`,
 `leftArmAim` → `leftArm` → `leftForeArm`; `root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`.
@@ -53,7 +56,7 @@ them at the same path and F3+T reloads it.
 
 To edit one:
 
-1. Open `player.bbmodel` as above, switch to the *Animate* tab and use *Animation → Import Animations* on the file.
+1. Open your exported `player.bbmodel` as above, switch to the *Animate* tab and use *Animation → Import Animations* on the file.
 2. Change the *Variable Placeholders* (already listing the queries) to preview other head angles.
 3. *Animation → Export Animations* into a resource pack, e.g.
    `resourcepacks/test/assets/mobends/geckolib/animations/player/punch.animation.json` (with a `pack.mcmeta`),
