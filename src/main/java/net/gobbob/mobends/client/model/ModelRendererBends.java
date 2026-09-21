@@ -151,6 +151,24 @@ extends ModelRenderer {
         GL11.glTranslatef((float)(-this.offsetX), (float)(-this.offsetY), (float)(-this.offsetZ));
     }
 
+    /**
+     * Applies this part's whole transform to the current GL matrix (offset, animated pivot, aim, pre-rotation,
+     * rotation, scale), for things drawn attached to it, such as 3D skin layers.
+     */
+    public void applyTransform(float scale) {
+        this.updateBends(scale);
+        GL11.glTranslatef(this.offsetX, this.offsetY, this.offsetZ);
+        GL11.glTranslatef(this.pivotX() * scale, this.pivotY() * scale, this.pivotZ() * scale);
+        this.applyAim();
+        GL11.glRotatef(-this.pre_rotation.getY(), 0.0f, 1.0f, 0.0f);
+        GL11.glRotatef(this.pre_rotation.getX(), 1.0f, 0.0f, 0.0f);
+        GL11.glRotatef(this.pre_rotation.getZ(), 0.0f, 0.0f, 1.0f);
+        if (this.rotateAngleZ != 0.0f) GL11.glRotatef(this.rotateAngleZ * 57.295776f, 0.0f, 0.0f, 1.0f);
+        if (this.rotateAngleY != 0.0f) GL11.glRotatef(this.rotateAngleY * 57.295776f, 0.0f, 1.0f, 0.0f);
+        if (this.rotateAngleX != 0.0f) GL11.glRotatef(this.rotateAngleX * 57.295776f, 1.0f, 0.0f, 0.0f);
+        GL11.glScalef(this.scaleX, this.scaleY, this.scaleZ);
+    }
+
     protected void applyAim() {
         GL11.glRotatef(this.aim.getZ(), 0.0f, 0.0f, 1.0f);
         GL11.glRotatef(this.aim.getY(), 0.0f, 1.0f, 0.0f);

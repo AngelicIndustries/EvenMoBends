@@ -783,7 +783,7 @@ extends ModelBiped {
         }
         GL11.glPushMatrix();
         for (ModelRendererBends part : hierarchy) {
-            this.applyTransform(part, scale);
+            part.applyTransform(scale);
         }
         WawelAuth3DSkinLayers.renderMesh(
             mesh,
@@ -795,19 +795,6 @@ extends ModelBiped {
             localOffsetY,
             localOffsetZ);
         GL11.glPopMatrix();
-    }
-
-    private void applyTransform(ModelRendererBends part, float scale) {
-        part.updateBends(scale);
-        GL11.glTranslatef(part.offsetX, part.offsetY, part.offsetZ);
-        GL11.glTranslatef(part.rotationPointX * scale, part.rotationPointY * scale, part.rotationPointZ * scale);
-        GL11.glRotatef(-part.pre_rotation.getY(), 0.0f, 1.0f, 0.0f);
-        GL11.glRotatef(part.pre_rotation.getX(), 1.0f, 0.0f, 0.0f);
-        GL11.glRotatef(part.pre_rotation.getZ(), 0.0f, 0.0f, 1.0f);
-        if (part.rotateAngleZ != 0.0f) GL11.glRotatef(part.rotateAngleZ * 57.295776f, 0.0f, 0.0f, 1.0f);
-        if (part.rotateAngleY != 0.0f) GL11.glRotatef(part.rotateAngleY * 57.295776f, 0.0f, 1.0f, 0.0f);
-        if (part.rotateAngleX != 0.0f) GL11.glRotatef(part.rotateAngleX * 57.295776f, 1.0f, 0.0f, 0.0f);
-        GL11.glScalef(part.scaleX, part.scaleY, part.scaleZ);
     }
 
     private void setRightSleeveVisible(boolean visible) {
