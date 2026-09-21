@@ -19,3 +19,24 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 Bones: `root` → `body` → `head`, `rightArm` → `rightForeArm`, `leftArm` → `leftForeArm`;
 `root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`. Forearms and forelegs hinge at the elbow and
 knee exactly as in game.
+
+## Animations
+
+Player animations live in `src/main/resources/assets/mobends/geckolib/animations/player/` (currently only
+`punch.animation.json`). Salamander loads them through the resource manager, so a resource pack can replace any of
+them at the same path and F3+T reloads it.
+
+To edit one:
+
+1. Open `player.geo.json` as above, switch to the *Animate* tab and use *Animation → Import Animations* on the file.
+2. In the animation panel's *Variable Placeholders*, add the queries the file uses so the preview moves, e.g.
+   `q.mobends_head_pitch = 0; q.mobends_head_yaw = 0;`
+3. *Animation → Export Animations* into a resource pack, e.g.
+   `resourcepacks/test/assets/mobends/geckolib/animations/player/punch.animation.json` (with a `pack.mcmeta`),
+   enable the pack and press F3+T.
+
+An animation gives the target pose; the parts ease toward it with Mo' Bends' usual smoothing. Bones and axes an
+animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole body.
+
+Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
+`q.mobends_ticks_after_punch`.
