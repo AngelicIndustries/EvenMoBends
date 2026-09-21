@@ -1,5 +1,6 @@
 package net.gobbob.mobends.animation.player;
 
+import com.geckolib.cache.GeckoLibResources;
 import com.geckolib.cache.animation.Animation;
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.client.animation.PlayerAnimator;
@@ -31,22 +32,25 @@ extends net.gobbob.mobends.animation.Animation {
 
     /**
      * Plays the Blockbench swim from {@code player/swim.animation.json}: {@code swim} / {@code swim_idle} for the
-     * upper body and {@code swim_legs} / {@code swim_idle_legs} for the kick, which loops at its own speed. Falls
-     * back to the Java swim below if the file is missing.
+     * upper body and {@code swim_legs} / {@code swim_idle_legs} for the kick, which loops at its own speed. While the
+     * hand holds something, a {@code _holding} version of each is used if the file has one. Falls back to the Java
+     * swim below if the file is missing.
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean moving) {
         String upper = moving ? "swim" : "swim_idle";
-        boolean played = loop(model, data, upper, "swim_upper");
-        played &= loop(model, data, upper + "_legs", "swim_legs");
+        boolean holding = PlayerAnimator.isHolding(data);
+        boolean played = loop(model, data, upper, "swim_upper", holding);
+        played &= loop(model, data, upper + "_legs", "swim_legs", holding);
         if (!played) apply(model, data.ticks, moving);
     }
 
-    private static boolean loop(ModelBendsPlayer model, Data_Player data, String name, String slot) {
-        String animation = "animation.mobends.player." + name;
+    private static boolean loop(ModelBendsPlayer model, Data_Player data, String name, String slot, boolean holding) {
+        String animation = PlayerAnimator.variant(GeckoLibResources.getBakedAnimations().getAnimations(FILE, null),
+            "animation.mobends.player." + name, holding);
         Animation loaded = PlayerAnimator.find(FILE, animation);
         if (loaded == null) return false;
         double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
-        // Blend when switching between moving and idle, as the Java swim eased between them.
+        // Blend when switching between moving and idle or empty and holding, as the Java swim eased between them.
         return PlayerAnimator.play(model, data, FILE, animation, seconds, slot, 0.5);
     }
 

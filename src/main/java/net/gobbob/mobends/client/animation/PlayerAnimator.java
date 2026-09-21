@@ -4,6 +4,7 @@ import com.geckolib.animation.AnimationProcessor;
 import com.geckolib.animation.state.BoneSnapshot;
 import com.geckolib.cache.GeckoLibResources;
 import com.geckolib.cache.animation.Animation;
+import com.geckolib.cache.animation.BakedAnimations;
 import com.geckolib.cache.animation.BoneAnimation;
 import com.geckolib.cache.animation.Keyframe;
 import com.geckolib.cache.animation.KeyframeStack;
@@ -20,6 +21,9 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.BendsLogger;
 import net.gobbob.mobends.util.SmoothVector3f;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ResourceLocation;
 
 /**
@@ -94,9 +98,26 @@ public final class PlayerAnimator {
                 case "query.mobends_head_yaw": return model.headRotationY;
                 case "query.mobends_ticks": return data == null ? 0 : data.ticks;
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
+                case "query.mobends_holding": return isHolding(data) ? 1 : 0;
                 default: return 0;
             }
         };
+    }
+
+    /** Whether the player's main hand holds something (false outside a running world). */
+    public static boolean isHolding(Data_Player data) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (data == null || minecraft == null || minecraft.theWorld == null) return false;
+        EntityLivingBase entity = data.getEntity();
+        return entity instanceof EntityPlayer && ((EntityPlayer)entity).getCurrentEquippedItem() != null;
+    }
+
+    /**
+     * {@code name + "_holding"} when the hand holds something and {@code animations} has that variant, else
+     * {@code name}: an animation can have a version for an occupied hand without every animation needing one.
+     */
+    public static String variant(BakedAnimations animations, String name, boolean holding) {
+        return holding && animations.getAnimation(name + "_holding") != null ? name + "_holding" : name;
     }
 
     static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose) {

@@ -51,6 +51,9 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
 - `swim.animation.json`: surface swimming. `swim` (moving) and `swim_idle` animate the upper body, including the held
   item's swing on `rightItem`; `swim_legs` and `swim_idle_legs` kick at their own speed and play at the same time.
   Time is the player's age, looping each animation; switching between moving and idle blends over 0.5 s.
+  With something in the hand, `swim_holding` / `swim_idle_holding` (and `swim_legs_holding` /
+  `swim_idle_legs_holding`) are used instead when the file has them: duplicate an animation in Blockbench and rename
+  the copy with `_holding` to give the occupied hand its own stroke. Switching also blends over 0.5 s.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
@@ -76,7 +79,7 @@ Bone positions work on every bone: moving `rightForeArm` detaches the hand (held
 Positions an animation stops setting ease back to zero.
 
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
-`q.mobends_ticks_after_punch`.
+`q.mobends_ticks_after_punch`, `q.mobends_holding` (1 with something in the main hand, else 0).
 
 ## Trying an animation in game
 

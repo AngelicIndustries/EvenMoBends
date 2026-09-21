@@ -33,6 +33,24 @@ class BlendTest {
         assertEquals(0, data.ticksPlaying("swim_upper", "idle"), 1e-6f, "not played for a moment restarts");
     }
 
+    @Test
+    void holdingVariantIsUsedOnlyWhenPresent() {
+        String json = "{\"format_version\": \"1.8.0\", \"animations\": {"
+            + "\"animation.a.swim\": {\"bones\": {}}, \"animation.a.swim_holding\": {\"bones\": {}},"
+            + " \"animation.a.swim_legs\": {\"bones\": {}}}}";
+        com.geckolib.cache.animation.BakedAnimations animations =
+            new com.geckolib.loading.loader.GeckoLibGsonLoader().loadAnimations(new java.io.StringReader(json));
+        assertEquals("animation.a.swim_holding", PlayerAnimator.variant(animations, "animation.a.swim", true));
+        assertEquals("animation.a.swim", PlayerAnimator.variant(animations, "animation.a.swim", false));
+        assertEquals("animation.a.swim_legs", PlayerAnimator.variant(animations, "animation.a.swim_legs", true),
+            "no holding version: the normal one");
+    }
+
+    @Test
+    void holdingIsFalseOutsideAWorld() {
+        assertEquals(false, PlayerAnimator.isHolding(null));
+    }
+
     private static Data_Player data() throws Exception {
         Field field = Unsafe.class.getDeclaredField("theUnsafe");
         field.setAccessible(true);
