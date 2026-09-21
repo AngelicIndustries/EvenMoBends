@@ -38,6 +38,8 @@ extends EntityData {
     public boolean fistPunchArm = false;
     public int currentAttack = 0;
 
+    /** The diving lean along the travel direction, eased (q.mobends_travel_pitch). */
+    public float divingTravelPitch;
     private java.util.Map<String, String> slotAnimations;
     private java.util.Map<String, float[]> slotTicks;
 

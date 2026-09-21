@@ -250,7 +250,7 @@ public final class BlockbenchExport {
         project.addProperty("model_identifier", "mobends." + name);
         project.add("visible_box", vector(3, 3, 1.5));
         project.addProperty("animation_variable_placeholders",
-            "q.mobends_head_pitch = 0;\nq.mobends_head_yaw = 0;\nq.mobends_ticks = 0;\nq.mobends_ticks_after_punch = 0;\nq.mobends_holding = 1;");
+            "q.mobends_head_pitch = 0;\nq.mobends_head_yaw = 0;\nq.mobends_ticks = 0;\nq.mobends_ticks_after_punch = 0;\nq.mobends_holding = 1;\nq.mobends_travel_pitch = 0;");
         project.add("resolution", resolution);
         project.add("elements", elements);
         project.add("outliner", outliner);
