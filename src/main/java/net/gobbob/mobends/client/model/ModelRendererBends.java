@@ -156,6 +156,8 @@ extends ModelRenderer {
 
     public void update(float p_78785_1_) {
         this.rotation.update(p_78785_1_);
+        // Procedural animations stay within a turn; only a looping spin from an animation file goes further.
+        this.rotation.wrapTurns(360.0f);
         this.pre_rotation.update(p_78785_1_);
         this.position.update(p_78785_1_);
         this.updateBends(p_78785_1_);

@@ -133,6 +133,22 @@ public class SmoothVector3f {
         this.completion.z = 1.0f;
     }
 
+    /**
+     * For angles: removes whole turns from any axis past {@code limit} degrees, landing in (-180, 180]. The same
+     * rotation per axis, but a channel an animation stops driving then eases back by at most half a turn.
+     */
+    public void wrapTurns(float limit) {
+        this.vSmooth.x = wrap(this.vSmooth.x, limit);
+        this.vSmooth.y = wrap(this.vSmooth.y, limit);
+        this.vSmooth.z = wrap(this.vSmooth.z, limit);
+    }
+
+    private static float wrap(float angle, float limit) {
+        if (Math.abs(angle) <= limit) return angle;
+        float wrapped = angle - 360.0f * (float)Math.floor(angle / 360.0f);
+        return wrapped > 180.0f ? wrapped - 360.0f : wrapped;
+    }
+
     public void set(SmoothVector3f argV) {
         this.completion = argV.completion;
         this.smoothness = argV.smoothness;

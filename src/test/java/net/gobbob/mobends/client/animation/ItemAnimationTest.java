@@ -93,6 +93,43 @@ class ItemAnimationTest {
         assertEquals(14.4f, model.rightItem.rotation.vFinal.x - before, 1e-3f, "wraps forward, not back through 0");
     }
 
+    /** After a long spin, switching to an animation that doesn't turn the item eases it back by half a turn at most. */
+    @Test
+    void switchingAwayFromASpinDoesNotUnwindIt() throws Exception {
+        Animation spin = itemTest().getAnimation("animation.mobends.player.item_spin");
+        Animation thrown = itemTest().getAnimation("animation.mobends.player.item_throw");
+        ModelBendsPlayer model = new ModelBendsPlayer();
+        float ticksPerFrame = 20 / 60f;
+        for (double seconds = 0; seconds < 5; seconds += 1 / 60.0) {
+            apply(model, spin, seconds % spin.length());
+            model.rightItem.update(ticksPerFrame);
+        }
+        float turned = 0;
+        float previous = model.rightItem.rotation.vSmooth.x;
+        assertTrue(Math.abs(previous) <= 180, "kept within half a turn while spinning: " + previous);
+        for (double seconds = 0; seconds < 1; seconds += 1 / 60.0) {
+            apply(model, thrown, seconds);
+            model.rightItem.update(ticksPerFrame);
+            turned += Math.abs(model.rightItem.rotation.vSmooth.x - previous);
+            previous = model.rightItem.rotation.vSmooth.x;
+        }
+        assertTrue(turned <= 180.001f, "eased back " + turned + " degrees");
+        assertEquals(0, previous, 0.5f, "settled at rest");
+    }
+
+    @Test
+    void wrappingKeepsProceduralAnglesButFoldsLongSpins() {
+        net.gobbob.mobends.util.SmoothVector3f angle = new net.gobbob.mobends.util.SmoothVector3f();
+        angle.vSmooth.set(-300, 350, 7270);
+        angle.wrapTurns(360);
+        assertEquals(-300, angle.vSmooth.x, 1e-3f, "within a turn: left alone");
+        assertEquals(350, angle.vSmooth.y, 1e-3f);
+        assertEquals(70, angle.vSmooth.z, 1e-3f, "20 turns and 70 degrees: folded");
+        angle.wrapTurns(180);
+        assertEquals(60, angle.vSmooth.x, 1e-3f);
+        assertEquals(-10, angle.vSmooth.y, 1e-3f);
+    }
+
     @Test
     void itemsAreVisibleOnlyInTheHandByDefault() {
         ModelBendsPlayer model = new ModelBendsPlayer();

@@ -401,6 +401,7 @@ extends ModelBiped {
             ((ModelRendererBends)this.bipedRightForeLeg).update(data.ticksPerFrame);
             this.renderOffset.update(data.ticksPerFrame);
             this.renderRotation.update(data.ticksPerFrame);
+            this.renderRotation.wrapTurns(360.0f);
             this.renderItemRotation.update(data.ticksPerFrame);
             this.rightItem.update(data.ticksPerFrame);
             this.rightItemFree.update(data.ticksPerFrame);

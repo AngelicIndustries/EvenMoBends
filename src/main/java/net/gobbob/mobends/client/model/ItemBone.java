@@ -37,6 +37,9 @@ public final class ItemBone {
 
     public void update(float ticksPerFrame) {
         this.rotation.update(ticksPerFrame);
+        // Only animation files turn items, so keep angles within half a turn: after a long spin, switching to an
+        // animation that doesn't turn the item eases it back at most 180 degrees instead of unwinding every turn.
+        this.rotation.wrapTurns(180.0f);
         this.position.update(ticksPerFrame);
     }
 
