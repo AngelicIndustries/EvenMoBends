@@ -3,20 +3,21 @@ dependencies {
 
     // The compatibility stack used by the default EvenMoBends development client.
     // These are deliberately not published as hard dependencies of EvenMoBends.
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Hodgepodge:2.7.206:dev")
-    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.13:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Hodgepodge:2.7.211:dev")
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.17:dev")
     runtimeOnlyNonPublishable("dev.dediamondpro.resourcify:VintageResourcify:1.0.5:dev")
     runtimeOnlyNonPublishable("org.fentanylsolutions.vrap:vrap:1.0.1:dev")
     runtimeOnlyNonPublishable("com.falsepattern:forgelin-mc1.7.10:2.4.3-2.4.10")
+    runtimeOnlyNonPublishable("tcb.spiderstpo:Spiders-2.0-1.7.10:0.1.1")
 
     // devOnlyNonPublishable includes both compile and non-published runtime scopes.
-    devOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.48:dev")
+    devOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.51:dev")
     // GeckoLib backport: loads and evaluates the Blockbench-authored player animations.
     implementation("org.fentanylsolutions.salamander:Salamander:76e5603-snapshot:dev")
     // GTNHLib provides JOML in game through its dependency loader; Salamander's CPU renderer needs it in tests.
     testImplementation("org.joml:joml:1.10.9")
     devOnlyNonPublishable("org.fentanylsolutions.fentlib:FentLib:0.0.55:dev")
-    devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.90-1.7.10:dev")
+    devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.91-1.7.10:dev")
     compileOnly(wawelAuthDependency)
     testImplementation(wawelAuthDependency)
     // SSB and Wawel Auth must be tested separately. Supply a local SSB development jar to opt in.
@@ -29,10 +30,10 @@ dependencies {
     } else {
         runtimeOnlyNonPublishable(wawelAuthDependency)
     }
-    devOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.6.58-GTNH:dev")
+    devOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.6.59-GTNH:dev")
 
     if (project.hasProperty("backhand") || project.hasProperty("justAShieldJar")) {
-        devOnlyNonPublishable("com.github.GTNewHorizons:Backhand:1.8.14:dev")
+        devOnlyNonPublishable("com.github.GTNewHorizons:Backhand:1.8.15:dev")
     }
     if (project.hasProperty("justAShieldJar")) {
         def shieldJar = file(project.property("justAShieldJar"))
