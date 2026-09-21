@@ -43,21 +43,24 @@ class PunchAnimationTest {
         }
     }
 
+    /** Standing: stance, the old punch at its peak, then back to the stance for the rest of the 3 s. */
     @Test
-    void punchesMatchTheJavaPunch() throws Exception {
+    void standingPunchMatchesTheJavaPunchAndStance() throws Exception {
         for (boolean right : new boolean[] {true, false}) {
-            for (boolean moving : new boolean[] {false, true}) {
-                String name = "animation.mobends.player." + (right ? "punch_right" : "punch_left") + (moving ? "_moving" : "");
-                for (float pitch : PITCHES) {
-                    for (float yaw : YAWS) {
-                        ModelBendsPlayer java = model(pitch, yaw);
-                        Animation_Attack_Punch.animate(null, java, data(right, moving));
-                        for (double seconds : new double[] {0, 0.2, 0.49}) {
-                            ModelBendsPlayer file = model(pitch, yaw);
-                            play(file, data(right, moving), name, seconds);
-                            assertSamePose(java, file, right ? Bone.RIGHT_ARM : Bone.LEFT_ARM,
-                                name + " at " + seconds + "s, pitch " + pitch + " yaw " + yaw);
-                        }
+            String name = "animation.mobends.player.punch_" + (right ? "right" : "left");
+            Bone arm = right ? Bone.RIGHT_ARM : Bone.LEFT_ARM;
+            for (float pitch : PITCHES) {
+                for (float yaw : YAWS) {
+                    ModelBendsPlayer stance = model(pitch, yaw);
+                    Animation_Attack_PunchStance.animate(null, stance, data(right, false));
+                    ModelBendsPlayer punch = model(pitch, yaw);
+                    Animation_Attack_Punch.animate(null, punch, data(right, false));
+                    String at = ", pitch " + pitch + " yaw " + yaw;
+                    for (double seconds : new double[] {0, 1.1, 2.0, 3.0}) {
+                        assertSamePose(stance, played(name, right, false, pitch, yaw, seconds), arm, name + " at " + seconds + "s" + at);
+                    }
+                    for (double seconds : new double[] {0.45, 0.5}) {
+                        assertSamePose(punch, played(name, right, false, pitch, yaw, seconds), arm, name + " at " + seconds + "s" + at);
                     }
                 }
             }
@@ -65,18 +68,53 @@ class PunchAnimationTest {
     }
 
     @Test
-    void stanceMatchesTheJavaStance() throws Exception {
-        for (float pitch : PITCHES) {
-            for (float yaw : YAWS) {
-                ModelBendsPlayer java = model(pitch, yaw);
-                Animation_Attack_PunchStance.animate(null, java, data(true, false));
-                for (double seconds : new double[] {0, 1.2, 2.49}) {
-                    ModelBendsPlayer file = model(pitch, yaw);
-                    play(file, data(true, false), "animation.mobends.player.punch_stance", seconds);
-                    assertSamePose(java, file, null, "stance at " + seconds + "s, pitch " + pitch + " yaw " + yaw);
+    void movingPunchMatchesTheJavaPunchAtItsPeak() throws Exception {
+        for (boolean right : new boolean[] {true, false}) {
+            String name = "animation.mobends.player.punch_" + (right ? "right" : "left") + "_moving";
+            for (float pitch : PITCHES) {
+                for (float yaw : YAWS) {
+                    ModelBendsPlayer punch = model(pitch, yaw);
+                    Animation_Attack_Punch.animate(null, punch, data(right, true));
+                    for (double seconds : new double[] {0.45, 0.5}) {
+                        assertSamePose(punch, played(name, right, true, pitch, yaw, seconds), right ? Bone.RIGHT_ARM : Bone.LEFT_ARM,
+                            name + " at " + seconds + "s, pitch " + pitch + " yaw " + yaw);
+                    }
                 }
             }
         }
+    }
+
+    /** The punch is an animation, not a pose: mid-way the fist is between guard and full extension. */
+    @Test
+    void punchMovesOverTime() throws Exception {
+        float guard = rightForeArmX(0);
+        float mid = rightForeArmX(0.05);
+        float out = rightForeArmX(0.3);
+        assertEquals(-80, guard, 1e-3f);
+        assertEquals(0, out, 1e-3f);
+        assertTrue(mid > guard + 1 && mid < out - 1, "forearm mid-punch at " + mid);
+    }
+
+    /** Moving bones follow their keyframes; bones that only hold a pose ease into it. */
+    @Test
+    void movingBonesFollowAndHeldBonesEase() throws Exception {
+        ModelBendsPlayer model = played("animation.mobends.player.punch_right", true, false, 0, 0, 0.05);
+        assertEquals(PlayerAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedBody).rotation.smoothness.y, 1e-6f);
+        assertEquals(PlayerAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedRightArm).rotation.smoothness.z, 1e-6f);
+        assertEquals(PlayerAnimator.EASE_RATE, ((ModelRendererBends)model.bipedRightLeg).rotation.smoothness.x, 1e-6f);
+        assertEquals(PlayerAnimator.EASE_RATE, ((ModelRendererBends)model.bipedLeftArm).rotation.smoothness.x, 1e-6f);
+    }
+
+    private static float rightForeArmX(double seconds) throws Exception {
+        ModelBendsPlayer model = played("animation.mobends.player.punch_right", true, false, 0, 0, seconds);
+        return ((ModelRendererBends)model.bipedRightForeArm).rotation.vFinal.x;
+    }
+
+    private static ModelBendsPlayer played(String name, boolean right, boolean moving, float pitch, float yaw, double seconds)
+        throws Exception {
+        ModelBendsPlayer model = model(pitch, yaw);
+        play(model, data(right, moving), name, seconds);
+        return model;
     }
 
     /**
@@ -120,7 +158,7 @@ class PunchAnimationTest {
         Animation animation = animations().getAnimation(name);
         assertNotNull(animation, name);
         PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)), bone -> 0.3f);
+            AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)));
     }
 
     private static BakedAnimations animations() throws Exception {

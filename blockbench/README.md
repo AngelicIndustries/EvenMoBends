@@ -39,9 +39,14 @@ To edit one:
    `resourcepacks/test/assets/mobends/geckolib/animations/player/punch.animation.json` (with a `pack.mcmeta`),
    enable the pack and press F3+T.
 
-Time is seconds since the animation started: the punch plays for 0.5 s from the hit, then the stance plays from
-0 until 2.5 s. An animation gives the target pose; the parts ease toward it with Mo' Bends' usual smoothing. Bones and axes an
-animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole body.
+Time is seconds since the punch. `punch_right` / `punch_left` (3 s) snap the fist out, hold it until 0.5 s and
+settle back into the stance by 1.1 s; the `_moving` versions (0.5 s) only animate the upper body, so the walk keeps
+the legs.
+
+Bones with motion (more than one keyframe) follow their keyframes as authored. Bones with a single keyframe hold
+that pose and ease into it at Mo' Bends' usual rate, which is what blends a punch in from walking or standing.
+Bones and axes an animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole
+body.
 
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
 `q.mobends_ticks_after_punch`.

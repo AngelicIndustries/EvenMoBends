@@ -24,20 +24,21 @@ import net.minecraft.util.ResourceLocation;
 /**
  * Plays Blockbench/GeckoLib animations on the Mo' Bends player model through Salamander.
  *
- * <p>An animation gives the target pose; the model's usual smoothing eases the parts toward it, so authored
- * animations blend with the procedural ones. Only channels an animation keyframes are applied: bones and
- * axes it leaves out keep whatever the animations before it set.
+ * <p>Bones with motion (more than one keyframe) follow their keyframes closely, so what plays in Blockbench plays in
+ * game. Bones that only hold a pose ease into it at Mo' Bends' usual rate, which blends an animation in from
+ * whatever the player was doing. Only channels an animation keyframes are applied: bones and axes it leaves out
+ * keep whatever the animations before it set.
  */
 public final class PlayerAnimator {
     public static final ResourceLocation PUNCH = new ResourceLocation(MoBends.MODID, "player/punch");
 
+    /** Smoothing rate for keyframed motion: about one frame behind at 60 fps, none at 20. */
+    static final float FOLLOW_RATE = 2.0f;
+    /** Smoothing rate for held poses, as most procedural animations use. */
+    static final float EASE_RATE = 0.3f;
+
     private static final float RAD_TO_DEG = (float)(180.0 / Math.PI);
     private static final Set<String> reportedMissing = new HashSet<String>();
-
-    /** Per-bone smoothing rate, as in {@link SmoothVector3f#setSmoothX(float, float)}. */
-    public interface Smoothing {
-        float rate(String bone);
-    }
 
     private PlayerAnimator() {}
 
@@ -47,10 +48,10 @@ public final class PlayerAnimator {
      * @return false if the file or animation is missing, so the caller can fall back to its Java pose.
      */
     public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
-        double seconds, Smoothing smoothing) {
+        double seconds) {
         Animation animation = find(file, name);
         if (animation == null) return false;
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), smoothing);
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)));
         return true;
     }
 
@@ -75,14 +76,14 @@ public final class PlayerAnimator {
         };
     }
 
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, Smoothing smoothing) {
+    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose) {
         Map<String, BoneAnimation> tracks = new HashMap<String, BoneAnimation>();
         for (BoneAnimation track : animation.boneAnimations()) {
             if (pose.containsKey(track.boneName())) tracks.put(track.boneName(), track);
         }
         for (BoneAnimation track : tracks.values()) {
             BoneSnapshot snapshot = pose.get(track.boneName());
-            float rate = smoothing.rate(track.boneName());
+            float rate = rate(track);
             if (PlayerRig.ROOT.equals(track.boneName())) {
                 applyRoot(model, track, snapshot, rate);
                 continue;
@@ -102,8 +103,9 @@ public final class PlayerAnimator {
             BoneAnimation aimTrack = tracks.get(aim.id);
             if (aimTrack == null || !animates(aimTrack.rotationKeyFrames())) continue;
             Bone arm = aim.aimed();
-            applyAimedArm(arm.part(model), aimTrack, pose.get(aim.id), tracks.get(arm.id), pose.get(arm.id),
-                smoothing.rate(arm.id));
+            BoneAnimation armTrack = tracks.get(arm.id);
+            float rate = Math.max(rate(aimTrack), armTrack == null ? EASE_RATE : rate(armTrack));
+            applyAimedArm(arm.part(model), aimTrack, pose.get(aim.id), armTrack, pose.get(arm.id), rate);
         }
     }
 
@@ -154,6 +156,17 @@ public final class PlayerAnimator {
         if (has(keyframes.xKeyframes())) target.setSmoothX(-snapshot.getRotX() * RAD_TO_DEG, rate);
         if (has(keyframes.yKeyframes())) target.setSmoothY(-snapshot.getRotY() * RAD_TO_DEG, rate);
         if (has(keyframes.zKeyframes())) target.setSmoothZ(snapshot.getRotZ() * RAD_TO_DEG, rate);
+    }
+
+    /** Follow a bone that moves; ease into a bone that only holds a pose. */
+    static float rate(BoneAnimation track) {
+        for (KeyframeStack stack : new KeyframeStack[] {
+            track.rotationKeyFrames(), track.positionKeyFrames(), track.scaleKeyFrames()}) {
+            for (Keyframe[] axis : new Keyframe[][] {stack.xKeyframes(), stack.yKeyframes(), stack.zKeyframes()}) {
+                if (axis != null && axis.length > 1) return FOLLOW_RATE;
+            }
+        }
+        return EASE_RATE;
     }
 
     private static boolean animates(KeyframeStack stack) {
