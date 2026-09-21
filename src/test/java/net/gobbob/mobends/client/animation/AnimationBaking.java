@@ -181,8 +181,47 @@ final class AnimationBaking {
         return animation(name, periodTicks / 20.0, tracks);
     }
 
+    /**
+     * Bakes something that happens once (e.g. a jump): {@code before} settles for 400 ticks, then {@code animate}
+     * runs for {@code durationTicks} (its ticks count from the start) and is recorded every eighth of a tick as an
+     * animation that holds its last frame.
+     */
+    static String bakeOnce(String name, double durationTicks, Map<String, Channel> channels, Map<String, String[]> templates,
+        BiConsumer<ModelBendsPlayer, Float> before, BiConsumer<ModelBendsPlayer, Float> animate) {
+        int samples = (int)Math.round(durationTicks * 8);
+        float step = TICKS_PER_FRAME / 8;
+        ModelBendsPlayer model = model(0, 0);
+        for (float ticks = 0; ticks < 400; ticks += step) {
+            final float now = ticks;
+            frame(model, m -> before.accept(m, now), step);
+        }
+        Map<String, List<float[]>> recorded = new LinkedHashMap<String, List<float[]>>();
+        for (String channel : channels.keySet()) recorded.put(channel, new ArrayList<float[]>());
+        int next = 0;
+        for (float ticks = 0; next <= samples; ticks += step) {
+            final float now = ticks;
+            frame(model, m -> animate.accept(m, now), step);
+            // Frames land on the samples: an eighth of a tick is exactly one step.
+            while (next <= samples && ticks + step / 2 >= durationTicks * next / samples) {
+                for (Map.Entry<String, Channel> channel : channels.entrySet()) {
+                    recorded.get(channel.getKey()).add(channel.getValue().read(model));
+                }
+                ++next;
+            }
+        }
+        Map<String, String> tracks = new LinkedHashMap<String, String>();
+        for (String channel : channels.keySet()) {
+            tracks.put(channel, keyframes(recorded.get(channel), durationTicks / 20.0, samples, templates.get(channel)));
+        }
+        return animation(name, durationTicks / 20.0, tracks, "\"hold_on_last_frame\"");
+    }
+
     /** A looping animation from "bone property" to JSON track. */
     static String animation(String name, double seconds, Map<String, String> tracks) {
+        return animation(name, seconds, tracks, "true");
+    }
+
+    static String animation(String name, double seconds, Map<String, String> tracks, String loop) {
         Map<String, Map<String, String>> bones = new LinkedHashMap<String, Map<String, String>>();
         for (Map.Entry<String, String> track : tracks.entrySet()) {
             String bone = track.getKey().substring(0, track.getKey().indexOf(' '));
@@ -190,8 +229,8 @@ final class AnimationBaking {
             bones.computeIfAbsent(bone, b -> new LinkedHashMap<String, String>()).put(property, track.getValue());
         }
         StringBuilder json = new StringBuilder();
-        json.append(String.format(Locale.ROOT, "\t\t\"animation.mobends.player.%s\": {\n\t\t\t\"loop\": true,\n"
-            + "\t\t\t\"animation_length\": %.4f,\n\t\t\t\"bones\": {\n", name, seconds));
+        json.append(String.format(Locale.ROOT, "\t\t\"animation.mobends.player.%s\": {\n\t\t\t\"loop\": %s,\n"
+            + "\t\t\t\"animation_length\": %.4f,\n\t\t\t\"bones\": {\n", name, loop, seconds));
         int b = 0;
         for (Map.Entry<String, Map<String, String>> bone : bones.entrySet()) {
             json.append("\t\t\t\t\"").append(bone.getKey()).append("\": {");
@@ -327,6 +366,54 @@ final class AnimationBaking {
             float[] differences = new Snapshot(javaModel).differences(new Snapshot(bakedModel));
             for (int i = 0; i < differences.length; ++i) {
                 if (!excluded.contains(i) && differences[i] > worst) {
+                    worst = differences[i];
+                    where[0] = Snapshot.name(i) + " at tick " + ticks;
+                }
+            }
+        }
+        return worst;
+    }
+
+    /**
+     * Compares something that happens once: {@code before} settles both models for 400 ticks, then {@code java} and
+     * {@code baked} run for {@code durationTicks} (ticks counting from the start), compared every frame. As in
+     * {@link #compare}, the Java side runs at 480 fps.
+     */
+    static float compareOnce(ModelBendsPlayer javaModel, ModelBendsPlayer bakedModel, BiConsumer<ModelBendsPlayer, Float> before,
+        BiConsumer<ModelBendsPlayer, Float> java, BiConsumer<ModelBendsPlayer, Float> baked, double durationTicks, String[] where) {
+        return compareOnce(javaModel, bakedModel, before, java, baked, durationTicks, 0, where);
+    }
+
+    /** As above, comparing only from {@code fromTicks}. */
+    static float compareOnce(ModelBendsPlayer javaModel, ModelBendsPlayer bakedModel, BiConsumer<ModelBendsPlayer, Float> before,
+        BiConsumer<ModelBendsPlayer, Float> java, BiConsumer<ModelBendsPlayer, Float> baked, double durationTicks, double fromTicks,
+        String[] where) {
+        float step = TICKS_PER_FRAME / 8;
+        for (float ticks = 0; ticks < 400; ticks += step) {
+            final float now = ticks;
+            frame(javaModel, m -> before.accept(m, now), step);
+        }
+        // Both lead-ups at 480 fps, so the two models start from the same state.
+        for (float ticks = 0; ticks < 400; ticks += step) {
+            final float now = ticks;
+            frame(bakedModel, m -> before.accept(m, now), step);
+        }
+        float worst = 0;
+        float javaTicks = 0;
+        for (float ticks = 0; ticks < durationTicks; ticks += TICKS_PER_FRAME) {
+            final float now = ticks;
+            while (javaTicks <= ticks + step / 2) {
+                final float javaNow = javaTicks;
+                frame(javaModel, m -> java.accept(m, javaNow), step);
+                javaTicks += step;
+            }
+            frame(bakedModel, m -> baked.accept(m, now));
+            // The first frame is the switch itself: channels the animation doesn't set start settling there, a frame
+            // at 60 fps against an eighth of one on the Java side.
+            if (ticks == 0 || ticks < fromTicks) continue;
+            float[] differences = new Snapshot(javaModel).differences(new Snapshot(bakedModel));
+            for (int i = 0; i < differences.length; ++i) {
+                if (differences[i] > worst) {
                     worst = differences[i];
                     where[0] = Snapshot.name(i) + " at tick " + ticks;
                 }

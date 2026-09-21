@@ -76,6 +76,15 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
 - `sneak.animation.json`: `sneak_walk` / `sneak_walk_swing` replace the walk while sneaking on the move; `sneak` is
   the crouch over standing, held at the stride's phase where the player stopped, and uses `q.mobends_keep` for the
   axes it leaves to the stand.
+- `fall.animation.json`: `fall`, looping on the player's age.
+- `climb.animation.json`: `climb` (holding on) and `climb_move` over it as fast as the player climbs (full stroke
+  from 0.12 blocks per tick).
+- `fly.animation.json`: the hover `fly` (or `fly_elytra` gliding with Et Futurum elytra) and `fly_forward` /
+  `fly_elytra_forward` over it as fast as the player flies (fully forward from 0.35 blocks per tick).
+- `ride.animation.json`: `ride` sitting still; moving, `ride_move` with `ride_move_jiggle` over it by the limbs' swing.
+- `jump.animation.json`: timed from liftoff and holding its last frame. `jump`; while walking, `jump_walk` (and
+  `jump_walk_swing`) keep the legs striding over it; sprinting, `jump_sprint_right` / `jump_sprint_left` by the leg
+  leading this jump.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
@@ -91,8 +100,8 @@ Time is seconds since the punch. `punch_right` / `punch_left` (3 s) snap the fis
 settle back into the stance by 1.1 s; the `_moving` versions (0.5 s) only animate the upper body, so the walk keeps
 the legs.
 
-Bones with motion (more than one keyframe, or Molang like following the look) are exactly where their keyframes put
-them. Bones with a single keyframe hold
+Axes with motion (keyframes that change, or Molang like following the look) are exactly where their keyframes put
+them. Axes whose keyframes all hold one value ease into it, even when the bone's other axes move. Bones with a single keyframe hold
 that pose and ease into it at Mo' Bends' usual rate, which is what blends a punch in from walking or standing.
 Bones and axes an animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole
 body.
@@ -107,7 +116,8 @@ An axis set to `q.mobends_keep` isn't applied: it keeps what the animations befo
 bends the legs forward but leaves their sideways turn to the walk underneath).
 
 `MovementAnimationTest` keeps stand, walk, sprint and sneak within 1.5 degrees of their Java originals (bake with
-`MOBENDS_BAKE_MOVEMENT=1`, which overwrites those four files).
+`MOBENDS_BAKE_MOVEMENT=1`, which overwrites those four files); `AirAnimationTest` does the same for fall, climb,
+fly, ride and jump (`MOBENDS_BAKE_AIR=1`).
 
 The swim and dive files started as bakes of the old Java animations. Their moving arms are now deliberately
 reauthored. `SwimAnimationTest` and `DiveAnimationTest` retain the 1.5-degree parity checks for the unchanged

@@ -6,7 +6,10 @@
  */
 package net.gobbob.mobends.animation.player;
 
+import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -24,9 +27,19 @@ public class Animation_Falling extends Animation {
 
     @Override
     public void animate(EntityLivingBase entity, ModelBase baseModel, EntityData entityData) {
-        ModelBendsPlayer model = (ModelBendsPlayer)baseModel;
-        Data_Player data = (Data_Player)entityData;
-        float phase = data.ticks * 0.1f;
+        play((ModelBendsPlayer)baseModel, (Data_Player)entityData);
+    }
+
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/fall");
+
+    /** Plays {@code player/fall.animation.json}'s {@code fall}, looping on the player's age; else the Java fall. */
+    public static void play(ModelBendsPlayer model, Data_Player data) {
+        if (!PlayerAnimator.playLoop(model, data, FILE, "fall", "fall")) apply(model, data.ticks);
+    }
+
+    /** The original Java fall, kept as the reference the Blockbench fall was baked from. */
+    public static void apply(ModelBendsPlayer model, float ticks) {
+        float phase = ticks * 0.1f;
 
         float armTurn = MathHelper.cos(phase + (float)Math.PI / 2.0f) * 22.5f;
         float armSpread = MathHelper.cos(phase) * 45.0f;

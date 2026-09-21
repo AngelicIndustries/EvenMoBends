@@ -6,7 +6,10 @@
  */
 package net.gobbob.mobends.animation.player;
 
+import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -24,12 +27,33 @@ public class Animation_Climbing extends Animation {
 
     @Override
     public void animate(EntityLivingBase entity, ModelBase baseModel, EntityData entityData) {
-        ModelBendsPlayer model = (ModelBendsPlayer)baseModel;
-        Data_Player data = (Data_Player)entityData;
-        float verticalSpeed = Math.abs(data.motion.y);
-        boolean moving = verticalSpeed > 0.015f;
-        float phase = data.ticks * 0.32f;
-        float stride = moving ? Math.min(verticalSpeed / 0.12f, 1.0f) : 0.0f;
+        play((ModelBendsPlayer)baseModel, (Data_Player)entityData);
+    }
+
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/climb");
+
+    /** How strongly the climbing stroke plays: 0 holding still, 1 from 0.12 blocks per tick. */
+    public static float stride(float motionY) {
+        float verticalSpeed = Math.abs(motionY);
+        return verticalSpeed > 0.015f ? Math.min(verticalSpeed / 0.12f, 1.0f) : 0.0f;
+    }
+
+    /**
+     * Plays {@code player/climb.animation.json}: {@code climb} holding on and {@code climb_move} (looping on the
+     * player's age) over it as fast as the player climbs. Falls back to the Java climb below.
+     */
+    public static void play(ModelBendsPlayer model, Data_Player data) {
+        if (!PlayerAnimator.playPose(model, data, FILE, "climb", "climb")
+            || !PlayerAnimator.playLoop(model, data, FILE, "climb_move", "climb_move", stride(data.motion.y))) {
+            apply(model, data.ticks, data.motion.y);
+        }
+    }
+
+    /** The original Java climb, kept as the reference the Blockbench climb was baked from. */
+    public static void apply(ModelBendsPlayer model, float ticks, float motionY) {
+        float stride = stride(motionY);
+        boolean moving = stride > 0.0f;
+        float phase = ticks * 0.32f;
         float rightCycle = MathHelper.cos(phase);
         float leftCycle = MathHelper.cos(phase + (float)Math.PI);
 
