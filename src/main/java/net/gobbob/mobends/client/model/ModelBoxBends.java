@@ -136,6 +136,10 @@ extends ModelBox {
         }
     }
 
+    public boolean isQuadVisible(int quad) {
+        return quad >= 0 && quad < this.visibleQuads.length && this.visibleQuads[quad];
+    }
+
     public void hideQuad(int quad) {
         if (quad >= 0 && quad < this.visibleQuads.length) {
             this.visibleQuads[quad] = false;
