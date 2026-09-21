@@ -109,6 +109,19 @@ final class AnimationBaking {
      */
     static String bake(String name, double periodTicks, Map<String, Channel> channels, Map<String, String> fixed,
         BiConsumer<ModelBendsPlayer, Float> animate) {
+        return bake(name, periodTicks, channels, new LinkedHashMap<String, String[]>(), fixed, animate);
+    }
+
+    /** Leaves an axis to the animations before this one. */
+    static final String KEEP = "q.mobends_keep";
+
+    /**
+     * As above, with per-axis {@code templates} for some channels: an axis template containing {@code %s} wraps the
+     * recorded number in Molang (e.g. {@code "q.mobends_head_pitch + %s"}); one without is written as it is (e.g. a
+     * Molang expression, or {@link #KEEP}).
+     */
+    static String bake(String name, double periodTicks, Map<String, Channel> channels, Map<String, String[]> templates,
+        Map<String, String> fixed, BiConsumer<ModelBendsPlayer, Float> animate) {
         // Every eighth of a tick, so the keyframes can land on the corner where a Java target switches.
         int samples = (int)Math.round(periodTicks * 8);
         ModelBendsPlayer model = model(0, 0);
@@ -139,8 +152,32 @@ final class AnimationBaking {
             previousTicks = ticks;
         }
         Map<String, String> tracks = new LinkedHashMap<String, String>();
-        for (String channel : channels.keySet()) tracks.put(channel, keyframes(recorded.get(channel), periodTicks / 20.0, samples));
+        for (String channel : channels.keySet()) {
+            tracks.put(channel, keyframes(recorded.get(channel), periodTicks / 20.0, samples, templates.get(channel)));
+        }
         tracks.putAll(fixed);
+        return animation(name, periodTicks / 20.0, tracks);
+    }
+
+    /**
+     * Bakes a pose held at a frozen phase (e.g. a crouch while standing still): at each phase across the loop, the
+     * Java animation's targets, which the parts settle on when the phase stops moving. {@code channels} read targets
+     * ({@code vFinal}), not the smoothed state.
+     */
+    static String bakePose(String name, double periodTicks, Map<String, Channel> channels, Map<String, String[]> templates,
+        BiConsumer<ModelBendsPlayer, Float> animate) {
+        int samples = (int)Math.round(periodTicks * 8);
+        Map<String, List<float[]>> recorded = new LinkedHashMap<String, List<float[]>>();
+        for (String channel : channels.keySet()) recorded.put(channel, new ArrayList<float[]>());
+        for (int k = 0; k <= samples; ++k) {
+            ModelBendsPlayer model = model(0, 0);
+            animate.accept(model, (float)(periodTicks * k / samples));
+            for (Map.Entry<String, Channel> channel : channels.entrySet()) recorded.get(channel.getKey()).add(channel.getValue().read(model));
+        }
+        Map<String, String> tracks = new LinkedHashMap<String, String>();
+        for (String channel : channels.keySet()) {
+            tracks.put(channel, keyframes(recorded.get(channel), periodTicks / 20.0, samples, templates.get(channel)));
+        }
         return animation(name, periodTicks / 20.0, tracks);
     }
 
@@ -180,7 +217,11 @@ final class AnimationBaking {
      * One keyframe if the channel holds still. Otherwise the fewest samples that keep the linear keyframes within
      * {@link #TOLERANCE} degrees of the recorded motion (Ramer-Douglas-Peucker), always keeping both loop ends.
      */
-    private static String keyframes(List<float[]> values, double seconds, int samples) {
+    private static String keyframes(List<float[]> values, double seconds, int samples, String[] template) {
+        // Axes written as a fixed expression don't need keyframes of their own.
+        for (float[] v : values) {
+            for (int i = 0; i < 3; ++i) if (template != null && template[i] != null && !template[i].contains("%s")) v[i] = 0;
+        }
         boolean still = true;
         for (float[] v : values) {
             for (int i = 0; i < 3; ++i) still &= Math.abs(v[i] - values.get(0)[i]) < 0.01f;
@@ -197,7 +238,7 @@ final class AnimationBaking {
             if (!keep[k]) continue;
             float[] v = values.get(k);
             track.append(first ? "" : ", ").append(String.format(Locale.ROOT, "\"%.4f\": [%s, %s, %s]",
-                seconds * k / samples, number(v[0]), number(v[1]), number(v[2])));
+                seconds * k / samples, axis(v[0], template, 0), axis(v[1], template, 1), axis(v[2], template, 2)));
             first = false;
         }
         return track.append('}').toString();
@@ -221,6 +262,11 @@ final class AnimationBaking {
         keep[worst] = true;
         simplify(values, from, worst, keep);
         simplify(values, worst, to, keep);
+    }
+
+    private static String axis(float value, String[] template, int axis) {
+        if (template == null || template[axis] == null) return number(value);
+        return "\"" + template[axis].replace("%s", number(value)) + "\"";
     }
 
     static String number(float value) {
@@ -254,7 +300,7 @@ final class AnimationBaking {
 
     /**
      * Plays {@code java} and {@code baked} side by side after a settling time and returns the worst difference in
-     * degrees of any part, the whole-body rotation and the held item's rotation (and the body offset, in tenths of a
+     * degrees of any part, the whole-body rotation and the held item's rotation (and the body offset, in fifths of a
      * pixel). The baked animation plays at 60 fps; the Java one runs at 480 fps, like the bake, so a target it switches
      * on a threshold switches at that moment rather than on whichever 60 fps frame crosses it.
      */
@@ -268,7 +314,8 @@ final class AnimationBaking {
         float worst = 0;
         float step = TICKS_PER_FRAME / 8;
         float javaTicks = 0;
-        for (float ticks = 0; ticks < 800; ticks += TICKS_PER_FRAME) {
+        // Settle for 500 ticks: some Java parts ease very slowly (the sneak's elbows at 0.01 per tick).
+        for (float ticks = 0; ticks < 1100; ticks += TICKS_PER_FRAME) {
             final float now = ticks;
             while (javaTicks <= ticks + step / 2) {
                 final float javaNow = javaTicks;
@@ -276,7 +323,7 @@ final class AnimationBaking {
                 javaTicks += step;
             }
             frame(bakedModel, m -> baked.accept(m, now));
-            if (ticks < 200) continue;
+            if (ticks < 500) continue;
             float[] differences = new Snapshot(javaModel).differences(new Snapshot(bakedModel));
             for (int i = 0; i < differences.length; ++i) {
                 if (!excluded.contains(i) && differences[i] > worst) {
@@ -303,13 +350,13 @@ final class AnimationBaking {
             this.offset = new Vector3f(model.renderOffset.vSmooth);
         }
 
-        /** Degrees per part, then root, item, and the offset in tenths of a pixel. */
+        /** Degrees per part, then root, item, and the offset in fifths of a pixel. */
         float[] differences(Snapshot other) {
             float[] result = new float[this.parts.size() + 3];
             for (int i = 0; i < this.parts.size(); ++i) result[i] = angleBetween(this.parts.get(i), other.parts.get(i));
             result[this.parts.size()] = maxDifference(this.root, other.root);
             result[this.parts.size() + 1] = maxDifference(this.item, other.item);
-            result[this.parts.size() + 2] = maxDifference(this.offset, other.offset) * 10;
+            result[this.parts.size() + 2] = maxDifference(this.offset, other.offset) * 5;
             return result;
         }
 
@@ -320,7 +367,7 @@ final class AnimationBaking {
             }
             names.add("root rotation");
             names.add("held item");
-            names.add("root offset (tenths of a pixel)");
+            names.add("root offset (fifths of a pixel)");
             return names.get(index);
         }
     }

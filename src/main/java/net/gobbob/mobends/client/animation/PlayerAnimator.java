@@ -86,6 +86,55 @@ public final class PlayerAnimator {
         return true;
     }
 
+    /** How long switching between looping locomotion animations blends, as their Java smoothing eased them. */
+    static final double LOCOMOTION_BLEND = 0.25;
+
+    /**
+     * Loops {@code animation.mobends.player.<name>} from {@code file} on the player's age, in {@code slot}.
+     *
+     * @return false if the file or animation is missing.
+     */
+    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+        String animation = "animation.mobends.player." + name;
+        Animation loaded = find(file, animation);
+        if (loaded == null) return false;
+        double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
+        return play(model, data, file, animation, seconds, slot, LOCOMOTION_BLEND);
+    }
+
+    /**
+     * Plays {@code <name>} and, over it, {@code <name>_swing} weighted by how strongly the limbs swing, both at the
+     * stride's phase: one animation loop per stride (vanilla's limb swing times 0.6662 radians), so the animation keeps
+     * pace with the walk whatever its length.
+     *
+     * @return false if the file or either animation is missing.
+     */
+    public static boolean playStride(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+        String main = "animation.mobends.player." + name, swing = main + "_swing";
+        Animation mainAnimation = find(file, main), swingAnimation = find(file, swing);
+        if (mainAnimation == null || swingAnimation == null) return false;
+        double stride = model.armSwing * 0.6662 / (2 * Math.PI);
+        stride -= Math.floor(stride);
+        play(model, data, file, main, stride * mainAnimation.length(), slot, LOCOMOTION_BLEND);
+        play(model, data, file, swing, stride * swingAnimation.length(), slot + "_swing", LOCOMOTION_BLEND,
+            Math.max(0, Math.min(1, model.armSwingAmount)));
+        return true;
+    }
+
+    /**
+     * Plays {@code <name>} at the stride's phase, without a swing layer (e.g. the sneak crouch over standing).
+     *
+     * @return false if the file or animation is missing.
+     */
+    public static boolean playStridePose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+        String animation = "animation.mobends.player." + name;
+        Animation loaded = find(file, animation);
+        if (loaded == null) return false;
+        double stride = model.armSwing * 0.6662 / (2 * Math.PI);
+        stride -= Math.floor(stride);
+        return play(model, data, file, animation, stride * loaded.length(), slot, LOCOMOTION_BLEND);
+    }
+
     /** From the usual ease rate toward following keyframes, over a blend's progress from 0 to 1. */
     static float blendRate(float progress) {
         return progress >= 1 ? FOLLOW_RATE : EASE_RATE + (BLEND_END_RATE - EASE_RATE) * progress * progress;
@@ -109,6 +158,8 @@ public final class PlayerAnimator {
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
                 case "query.mobends_holding": return isHolding(data) ? 1 : 0;
                 case "query.mobends_travel_pitch": return data == null ? 0 : data.divingTravelPitch;
+                // An axis set to q.mobends_keep is left to the animations before this one (e.g. a sneak over a walk).
+                case "query.mobends_keep": return Double.NaN;
                 default: return 0;
             }
         };
@@ -160,6 +211,7 @@ public final class PlayerAnimator {
             if (bone.aim() == null || !tracks.containsKey(bone.aim().id)) setPosition(part, track, snapshot, rate, weight);
             KeyframeStack scale = track.scaleKeyFrames();
             if (has(scale.xKeyframes())) part.scaleX = mix(part.scaleX, snapshot.getScaleX(), weight);
+            // (A kept scale axis stays at what earlier animations set, like rotations and positions.)
             if (has(scale.yKeyframes())) part.scaleY = mix(part.scaleY, snapshot.getScaleY(), weight);
             if (has(scale.zKeyframes())) part.scaleZ = mix(part.scaleZ, snapshot.getScaleZ(), weight);
         }
@@ -208,7 +260,9 @@ public final class PlayerAnimator {
         if (has(position.zKeyframes())) target.setSmoothZ(mix(target.vFinal.z, snapshot.getTranslateZ(), weight), rate);
     }
 
+    /** {@code to} at {@code weight}; NaN (q.mobends_keep) leaves {@code from} as it is. */
     private static float mix(float from, float to, float weight) {
+        if (Float.isNaN(to)) return from;
         return weight >= 1 ? to : from + (to - from) * weight;
     }
 
@@ -236,9 +290,9 @@ public final class PlayerAnimator {
         if (free) {
             item.scaleX = item.scaleY = item.scaleZ = 1;
         }
-        if (has(scale.xKeyframes())) item.scaleX = snapshot.getScaleX();
-        if (has(scale.yKeyframes())) item.scaleY = snapshot.getScaleY();
-        if (has(scale.zKeyframes())) item.scaleZ = snapshot.getScaleZ();
+        if (has(scale.xKeyframes())) item.scaleX = mix(item.scaleX, snapshot.getScaleX(), 1);
+        if (has(scale.yKeyframes())) item.scaleY = mix(item.scaleY, snapshot.getScaleY(), 1);
+        if (has(scale.zKeyframes())) item.scaleZ = mix(item.scaleZ, snapshot.getScaleZ(), 1);
     }
 
     private static ItemBone itemBone(ModelBendsPlayer model, Bone bone) {

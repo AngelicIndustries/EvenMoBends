@@ -67,6 +67,15 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   Both `dive` and `dive_holding` use the same coordinated recovery, retaining the underwater stroke's extended
   reach, folded pull, and travel-dependent body tilt. The elbows ease into extension without bending backward:
   the forearm's edge-mounted hinge would otherwise expose an open gap at the elbow.
+- `stand.animation.json`: `stand`, looping on the player's age (breathing, arm sway).
+- `walk.animation.json` / `sprint.animation.json`: `walk` / `sprint` and `walk_swing` / `sprint_swing`. These are
+  timed by the stride, not the clock: one loop of the animation is one stride (vanilla's limb swing times 0.6662
+  radians), so it keeps pace with the player's speed whatever the animation's length (the lengths are the usual
+  cadence, for previewing). `_swing` holds the arms' and legs' swing at full strength and plays over the main one as
+  strongly as the limbs swing. Switching between stand, walk and sprint blends over 0.25 s.
+- `sneak.animation.json`: `sneak_walk` / `sneak_walk_swing` replace the walk while sneaking on the move; `sneak` is
+  the crouch over standing, held at the stride's phase where the player stopped, and uses `q.mobends_keep` for the
+  axes it leaves to the stand.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
@@ -94,6 +103,11 @@ Positions an animation stops setting ease back to zero.
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
 `q.mobends_ticks_after_punch`, `q.mobends_holding` (1 with something in the main hand, else 0),
 `q.mobends_travel_pitch` (degrees the dive leans below horizontal along the travel direction, within +-35, eased).
+An axis set to `q.mobends_keep` isn't applied: it keeps what the animations before this one set (e.g. a crouch that
+bends the legs forward but leaves their sideways turn to the walk underneath).
+
+`MovementAnimationTest` keeps stand, walk, sprint and sneak within 1.5 degrees of their Java originals (bake with
+`MOBENDS_BAKE_MOVEMENT=1`, which overwrites those four files).
 
 The swim and dive files started as bakes of the old Java animations. Their moving arms are now deliberately
 reauthored. `SwimAnimationTest` and `DiveAnimationTest` retain the 1.5-degree parity checks for the unchanged

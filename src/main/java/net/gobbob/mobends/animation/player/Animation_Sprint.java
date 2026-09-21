@@ -1,6 +1,10 @@
 package net.gobbob.mobends.animation.player;
 
+import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.data.Data_Player;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.EntityData;
@@ -18,7 +22,22 @@ extends Animation {
 
     @Override
     public void animate(EntityLivingBase argEntity, ModelBase argModel, EntityData argData) {
-        ModelBendsPlayer model = (ModelBendsPlayer)argModel;
+        play((ModelBendsPlayer)argModel, (Data_Player)argData);
+    }
+
+    /**
+     * Plays {@code player/sprint.animation.json}: {@code sprint} at the stride's phase (one loop per stride, so it
+     * keeps pace with the walk) and {@code sprint_swing} over it as strongly as the limbs swing. Falls back to the
+     * Java sprint below if the file is missing.
+     */
+    public static void play(ModelBendsPlayer model, Data_Player data) {
+        if (!PlayerAnimator.playStride(model, data, FILE, "sprint", "locomotion")) apply(model);
+    }
+
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/sprint");
+
+    /** The original Java sprint, kept as the reference the Blockbench sprint was baked from. */
+    public static void apply(ModelBendsPlayer model) {
         ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothX(1.1f * (float)((double)(MathHelper.cos(model.armSwing * 0.6662f + (float)Math.PI) * 2.0f * model.armSwingAmount * 0.5f) / Math.PI * 180.0));
         ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothX(1.1f * (float)((double)(MathHelper.cos(model.armSwing * 0.6662f) * 2.0f * model.armSwingAmount * 0.5f) / Math.PI * 180.0));
         ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothZ(5.0f, 0.3f);
