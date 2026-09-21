@@ -344,7 +344,7 @@ extends ModelBiped {
             } else if (touchingWater && !groundedInWater) {
                 if (aqua.available) {
                     // With AA, being in water alone does not mean the player is swimming horizontally.
-                    if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.apply(this, data.ticks, false);
+                    if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.play(this, data, false);
                 } else if (!this.shouldAnimateDiving(argEntity, data) || !this.animatePlayer("diving", argEntity, data)) {
                     this.animatePlayer("swimming", argEntity, data);
                 }

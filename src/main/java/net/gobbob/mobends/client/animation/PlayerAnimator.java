@@ -33,8 +33,10 @@ import net.minecraft.util.ResourceLocation;
 public final class PlayerAnimator {
     public static final ResourceLocation PUNCH = new ResourceLocation(MoBends.MODID, "player/punch");
 
-    /** Smoothing rate for keyframed motion: about one frame behind at 60 fps, none at 20. */
-    static final float FOLLOW_RATE = 2.0f;
+    /** Smoothing rate for keyframed motion: none, the parts are exactly where the keyframes say. */
+    static final float FOLLOW_RATE = 1000.0f;
+    /** The fastest a blend-in eases: exact at 60 fps, before handing over to {@link #FOLLOW_RATE}. */
+    static final float BLEND_END_RATE = 3.0f;
     /** Smoothing rate for held poses, as most procedural animations use. */
     static final float EASE_RATE = 0.3f;
 
@@ -71,9 +73,9 @@ public final class PlayerAnimator {
         return true;
     }
 
-    /** From the usual ease rate to following keyframes, over a blend's progress from 0 to 1. */
+    /** From the usual ease rate toward following keyframes, over a blend's progress from 0 to 1. */
     static float blendRate(float progress) {
-        return EASE_RATE + (FOLLOW_RATE - EASE_RATE) * progress * progress;
+        return progress >= 1 ? FOLLOW_RATE : EASE_RATE + (BLEND_END_RATE - EASE_RATE) * progress * progress;
     }
 
     public static Animation find(ResourceLocation file, String name) {

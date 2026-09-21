@@ -1,6 +1,9 @@
 package net.gobbob.mobends.animation.player;
 
-import net.gobbob.mobends.animation.Animation;
+import com.geckolib.cache.animation.Animation;
+import net.gobbob.mobends.MoBends;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -11,7 +14,7 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.MathHelper;
 
 public class Animation_Swimming
-extends Animation {
+extends net.gobbob.mobends.animation.Animation {
     @Override
     public String getName() {
         return "swimming";
@@ -21,9 +24,33 @@ extends Animation {
     public void animate(EntityLivingBase argEntity, ModelBase argModel, EntityData argData) {
         ModelBendsPlayer model = (ModelBendsPlayer)argModel;
         Data_Player data = (Data_Player)argData;
-        apply(model, data.ticks, data.motion.x != 0.0f || data.motion.z != 0.0f);
+        play(model, data, data.motion.x != 0.0f || data.motion.z != 0.0f);
     }
 
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/swim");
+
+    /**
+     * Plays the Blockbench swim from {@code player/swim.animation.json}: {@code swim} / {@code swim_idle} for the
+     * upper body and {@code swim_legs} / {@code swim_idle_legs} for the kick, which loops at its own speed. Falls
+     * back to the Java swim below if the file is missing.
+     */
+    public static void play(ModelBendsPlayer model, Data_Player data, boolean moving) {
+        String upper = moving ? "swim" : "swim_idle";
+        boolean played = loop(model, data, upper, "swim_upper");
+        played &= loop(model, data, upper + "_legs", "swim_legs");
+        if (!played) apply(model, data.ticks, moving);
+    }
+
+    private static boolean loop(ModelBendsPlayer model, Data_Player data, String name, String slot) {
+        String animation = "animation.mobends.player." + name;
+        Animation loaded = PlayerAnimator.find(FILE, animation);
+        if (loaded == null) return false;
+        double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
+        // Blend when switching between moving and idle, as the Java swim eased between them.
+        return PlayerAnimator.play(model, data, FILE, animation, seconds, slot, 0.5);
+    }
+
+    /** The original Java swim, kept as the reference the Blockbench swim was baked from. */
     public static void apply(ModelBendsPlayer model, float ticks, boolean moving) {
         float armSway = (MathHelper.cos(ticks * 0.1625f) + 1.0f) / 2.0f;
         float armSway2 = (-MathHelper.sin(ticks * 0.1625f) + 1.0f) / 2.0f;

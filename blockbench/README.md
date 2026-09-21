@@ -34,8 +34,13 @@ follows the look with its own rotation.
 
 ## Animations
 
-Player animations live in `src/main/resources/assets/mobends/geckolib/animations/player/`: `punch.animation.json`
-(the empty-hand punch) and `item_test.animation.json` (`item_spin`, `item_throw`: examples of item bones). Salamander loads them through the resource manager, so a resource pack can replace any of
+Player animations live in `src/main/resources/assets/mobends/geckolib/animations/player/`:
+
+- `punch.animation.json`: the empty-hand punch.
+- `swim.animation.json`: surface swimming. `swim` (moving) and `swim_idle` animate the upper body, including the held
+  item's swing on `rightItem`; `swim_legs` and `swim_idle_legs` kick at their own speed and play at the same time.
+  Time is the player's age, looping each animation; switching between moving and idle blends over 0.5 s.
+- `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
 To edit one:
@@ -51,7 +56,8 @@ Time is seconds since the punch. `punch_right` / `punch_left` (3 s) snap the fis
 settle back into the stance by 1.1 s; the `_moving` versions (0.5 s) only animate the upper body, so the walk keeps
 the legs.
 
-Bones with motion (more than one keyframe, or Molang like following the look) follow their keyframes as authored. Bones with a single keyframe hold
+Bones with motion (more than one keyframe, or Molang like following the look) are exactly where their keyframes put
+them. Bones with a single keyframe hold
 that pose and ease into it at Mo' Bends' usual rate, which is what blends a punch in from walking or standing.
 Bones and axes an animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole
 body.
