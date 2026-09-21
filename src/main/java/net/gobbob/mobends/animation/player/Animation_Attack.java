@@ -73,7 +73,9 @@ extends Animation {
         String name = "animation.mobends.player." + (stance ? "punch_stance"
             : (data.fistPunchArm ? "punch_right" : "punch_left") + (moving ? "_moving" : ""));
         String fist = data.fistPunchArm ? "right" : "left";
-        return PlayerAnimator.play(model, data, PlayerAnimator.PUNCH, name, data.ticksAfterPunch / 20.0, bone -> {
+        // The punch plays from the hit; the stance from when it takes over, 10 ticks later.
+        double seconds = (stance ? data.ticksAfterPunch - 10.0f : data.ticksAfterPunch) / 20.0;
+        return PlayerAnimator.play(model, data, PlayerAnimator.PUNCH, name, seconds, bone -> {
             // The same easing as the original punch: the punching arm snaps, the body turns, the rest settles.
             if (!stance && (bone.equals(fist + "Arm") || bone.equals(fist + "ForeArm"))) return 0.9f;
             if (!stance && bone.equals("body")) return 0.6f;

@@ -52,9 +52,12 @@ class PunchAnimationTest {
                     for (float yaw : YAWS) {
                         ModelBendsPlayer java = model(pitch, yaw);
                         Animation_Attack_Punch.animate(null, java, data(right, moving));
-                        ModelBendsPlayer file = model(pitch, yaw);
-                        play(file, data(right, moving), name);
-                        assertSamePose(java, file, right ? Bone.RIGHT_ARM : Bone.LEFT_ARM, name + " pitch " + pitch + " yaw " + yaw);
+                        for (double seconds : new double[] {0, 0.2, 0.49}) {
+                            ModelBendsPlayer file = model(pitch, yaw);
+                            play(file, data(right, moving), name, seconds);
+                            assertSamePose(java, file, right ? Bone.RIGHT_ARM : Bone.LEFT_ARM,
+                                name + " at " + seconds + "s, pitch " + pitch + " yaw " + yaw);
+                        }
                     }
                 }
             }
@@ -67,9 +70,11 @@ class PunchAnimationTest {
             for (float yaw : YAWS) {
                 ModelBendsPlayer java = model(pitch, yaw);
                 Animation_Attack_PunchStance.animate(null, java, data(true, false));
-                ModelBendsPlayer file = model(pitch, yaw);
-                play(file, data(true, false), "animation.mobends.player.punch_stance");
-                assertSamePose(java, file, null, "stance pitch " + pitch + " yaw " + yaw);
+                for (double seconds : new double[] {0, 1.2, 2.49}) {
+                    ModelBendsPlayer file = model(pitch, yaw);
+                    play(file, data(true, false), "animation.mobends.player.punch_stance", seconds);
+                    assertSamePose(java, file, null, "stance at " + seconds + "s, pitch " + pitch + " yaw " + yaw);
+                }
             }
         }
     }
@@ -111,11 +116,11 @@ class PunchAnimationTest {
         assertEquals(expected.vFinal.z, actual.vFinal.z, 1e-3f, context + " z");
     }
 
-    private static void play(ModelBendsPlayer model, Data_Player data, String name) throws Exception {
+    private static void play(ModelBendsPlayer model, Data_Player data, String name, double seconds) throws Exception {
         Animation animation = animations().getAnimation(name);
         assertNotNull(animation, name);
         PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, 0, PlayerAnimator.context(model, data)), bone -> 0.3f);
+            AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)), bone -> 0.3f);
     }
 
     private static BakedAnimations animations() throws Exception {

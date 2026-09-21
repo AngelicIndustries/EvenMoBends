@@ -39,7 +39,8 @@ To edit one:
    `resourcepacks/test/assets/mobends/geckolib/animations/player/punch.animation.json` (with a `pack.mcmeta`),
    enable the pack and press F3+T.
 
-An animation gives the target pose; the parts ease toward it with Mo' Bends' usual smoothing. Bones and axes an
+Time is seconds since the animation started: the punch plays for 0.5 s from the hit, then the stance plays from
+0 until 2.5 s. An animation gives the target pose; the parts ease toward it with Mo' Bends' usual smoothing. Bones and axes an
 animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole body.
 
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
