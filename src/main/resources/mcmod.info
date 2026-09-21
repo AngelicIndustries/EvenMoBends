@@ -11,6 +11,6 @@
     "credits": "Based on Mo' Bends 0.20.1 by Iwo Plaza / GobBob.",
     "logoFile": "logo.png",
     "screenshots": [],
-    "dependencies": []
+    "dependencies": ["salamander"]
   }
 ]
