@@ -20,9 +20,15 @@ import net.minecraft.client.model.TexturedQuad;
  * <p>Aim bones ({@code rightArmAim}, {@code leftArmAim}) have no geometry and no part of their own. They sit at the
  * shoulder between the body and the arm so an animation can turn the whole arm (e.g. to follow the look) outside
  * the arm's own pose; {@link PlayerAnimator} folds them into the arm's rotation.
+ *
+ * <p>Item bones have no geometry either. {@code rightItem}/{@code leftItem} hang from the forearm at the grip, where
+ * the held item is drawn; {@code rightItemFree}/{@code leftItemFree} hang from {@code root} at the same point at
+ * rest, for items that leave the hand (thrown, caught). The item is drawn at each of its bones whose scale isn't 0.
  */
 public final class PlayerRig {
     public static final String ROOT = "root";
+    /** The grip (where held items are drawn) is this far down the arm from the shoulder pivot, in pixels. */
+    public static final float GRIP_DROP = 9.0f;
 
     /** Bones in parent-before-child order. */
     public enum Bone {
@@ -34,6 +40,10 @@ public final class PlayerRig {
         LEFT_ARM_AIM("leftArmAim", "body"),
         LEFT_ARM("leftArm", "leftArmAim"),
         LEFT_FORE_ARM("leftForeArm", "leftArm"),
+        RIGHT_ITEM("rightItem", "rightForeArm"),
+        LEFT_ITEM("leftItem", "leftForeArm"),
+        RIGHT_ITEM_FREE("rightItemFree", ROOT),
+        LEFT_ITEM_FREE("leftItemFree", ROOT),
         RIGHT_LEG("rightLeg", ROOT),
         RIGHT_FORE_LEG("rightForeLeg", "rightLeg"),
         LEFT_LEG("leftLeg", ROOT),
@@ -51,7 +61,11 @@ public final class PlayerRig {
         public ModelRendererBends part(ModelBendsPlayer model) {
             switch (this) {
                 case RIGHT_ARM_AIM:
-                case LEFT_ARM_AIM: return null;
+                case LEFT_ARM_AIM:
+                case RIGHT_ITEM:
+                case LEFT_ITEM:
+                case RIGHT_ITEM_FREE:
+                case LEFT_ITEM_FREE: return null;
                 case BODY: return (ModelRendererBends)model.bipedBody;
                 case HEAD: return (ModelRendererBends)model.bipedHead;
                 case RIGHT_ARM: return (ModelRendererBends)model.bipedRightArm;
@@ -69,6 +83,17 @@ public final class PlayerRig {
         /** The arm an aim bone turns, or null for other bones. */
         public Bone aimed() {
             return this == RIGHT_ARM_AIM ? RIGHT_ARM : this == LEFT_ARM_AIM ? LEFT_ARM : null;
+        }
+
+        /** The arm whose hand an item bone belongs to, or null for other bones. */
+        public Bone holdingArm() {
+            switch (this) {
+                case RIGHT_ITEM:
+                case RIGHT_ITEM_FREE: return RIGHT_ARM;
+                case LEFT_ITEM:
+                case LEFT_ITEM_FREE: return LEFT_ARM;
+                default: return null;
+            }
         }
 
         /** The aim bone above this arm, or null for other bones. */
@@ -99,6 +124,11 @@ public final class PlayerRig {
     /** The pivot of a bone in model space at rest (Y down, pixels). */
     public static float[] restPivot(ModelBendsPlayer model, Bone bone) {
         if (bone.aimed() != null) return restPivot(model, bone.aimed());
+        if (bone.holdingArm() != null) {
+            float[] grip = restPivot(model, bone.holdingArm());
+            grip[1] += GRIP_DROP;
+            return grip;
+        }
         float[] pivot = new float[3];
         for (Bone b = bone; b != null; b = b.parentBone()) {
             ModelRenderer part = b.part(model);

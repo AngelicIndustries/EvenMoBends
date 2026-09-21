@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
+import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -90,6 +91,10 @@ public final class PlayerAnimator {
             }
             Bone bone = Bone.byId(track.boneName());
             if (bone == null || bone.aimed() != null) continue; // Aim bones are folded into their arm below.
+            if (bone.holdingArm() != null) {
+                applyItem(itemBone(model, bone), bone.parent.equals(PlayerRig.ROOT), track, snapshot, rate);
+                continue;
+            }
             ModelRendererBends part = bone.part(model);
             KeyframeStack rotation = track.rotationKeyFrames();
             if (animates(rotation)) clearPreRotation(part, rate);
@@ -160,6 +165,35 @@ public final class PlayerAnimator {
         return fallback;
     }
 
+    /**
+     * Item bones: rotation and position as for parts; scale shows or hides the item there. An animated free bone
+     * shows the item unless its scale is keyed to 0.
+     */
+    private static void applyItem(ItemBone item, boolean free, BoneAnimation track, BoneSnapshot snapshot, float rate) {
+        setRotation(item.rotation, track.rotationKeyFrames(), snapshot, rate);
+        KeyframeStack position = track.positionKeyFrames();
+        if (has(position.xKeyframes())) item.position.setSmoothX(snapshot.getTranslateX(), rate);
+        if (has(position.yKeyframes())) item.position.setSmoothY(-snapshot.getTranslateY(), rate);
+        if (has(position.zKeyframes())) item.position.setSmoothZ(snapshot.getTranslateZ(), rate);
+        KeyframeStack scale = track.scaleKeyFrames();
+        if (free) {
+            item.scaleX = item.scaleY = item.scaleZ = 1;
+        }
+        if (has(scale.xKeyframes())) item.scaleX = snapshot.getScaleX();
+        if (has(scale.yKeyframes())) item.scaleY = snapshot.getScaleY();
+        if (has(scale.zKeyframes())) item.scaleZ = snapshot.getScaleZ();
+    }
+
+    private static ItemBone itemBone(ModelBendsPlayer model, Bone bone) {
+        switch (bone) {
+            case RIGHT_ITEM: return model.rightItem;
+            case RIGHT_ITEM_FREE: return model.rightItemFree;
+            case LEFT_ITEM: return model.leftItem;
+            case LEFT_ITEM_FREE: return model.leftItemFree;
+            default: throw new IllegalArgumentException(bone.id);
+        }
+    }
+
     /** Authored rotations replace procedural pre-rotations, which Blockbench bones don't have. */
     private static void clearPreRotation(ModelRendererBends part, float rate) {
         part.pre_rotation.setSmoothX(0, rate);
@@ -187,9 +221,17 @@ public final class PlayerAnimator {
 
     /** Salamander stores Bedrock rotations in radians with X and Y negated; parts use Bedrock degrees. */
     private static void setRotation(SmoothVector3f target, KeyframeStack keyframes, BoneSnapshot snapshot, float rate) {
-        if (has(keyframes.xKeyframes())) target.setSmoothX(-snapshot.getRotX() * RAD_TO_DEG, rate);
-        if (has(keyframes.yKeyframes())) target.setSmoothY(-snapshot.getRotY() * RAD_TO_DEG, rate);
-        if (has(keyframes.zKeyframes())) target.setSmoothZ(snapshot.getRotZ() * RAD_TO_DEG, rate);
+        if (has(keyframes.xKeyframes())) target.setSmoothX(nearest(-snapshot.getRotX() * RAD_TO_DEG, target.vSmooth.x), rate);
+        if (has(keyframes.yKeyframes())) target.setSmoothY(nearest(-snapshot.getRotY() * RAD_TO_DEG, target.vSmooth.y), rate);
+        if (has(keyframes.zKeyframes())) target.setSmoothZ(nearest(snapshot.getRotZ() * RAD_TO_DEG, target.vSmooth.z), rate);
+    }
+
+    /**
+     * The same single-axis angle, give or take whole turns, closest to where the part is now, so a looping spin
+     * wrapping from 360 back to 0 degrees keeps turning forward instead of smoothing back.
+     */
+    static float nearest(float angle, float current) {
+        return angle + 360.0f * Math.round((current - angle) / 360.0f);
     }
 
     /** Follow a bone that moves; ease into a bone that only holds a pose. */

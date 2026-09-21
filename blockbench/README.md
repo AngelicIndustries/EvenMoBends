@@ -20,14 +20,21 @@ Bones: `root` → `body` → `head`, `rightArmAim` → `rightArm` → `rightFore
 `leftArmAim` → `leftArm` → `leftForeArm`; `root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`.
 Forearms and forelegs hinge at the elbow and knee exactly as in game.
 
+Item bones: `rightForeArm` → `rightItem` (and `leftForeArm` → `leftItem`) sit at the grip where held items are
+drawn; `root` → `rightItemFree` / `leftItemFree` sit at the same point at rest, for items that leave the hand. The
+item is drawn at each of its bones whose scale isn't 0: the hand bone shows it unless scaled to 0, a free bone only
+while an animation keys it (with a non-zero scale). Item bones start from the item's usual look in the hand; their
+rotation and position turn and move it from there. They have no cubes; to see an item while animating, add a cube
+under the bone in Blockbench (only the exported animation matters to the game).
+
 The aim bones have no cubes. They turn the whole arm about the shoulder, outside the arm's own rotation, so
 "point where the player looks" (aim X = `q.mobends_head_pitch`) combines cleanly with any arm pose, such as the
 punch's twisted fist (`rightArm` = `[-90, 0, 120]`). In game they are folded into the arm's rotation.
 
 ## Animations
 
-Player animations live in `src/main/resources/assets/mobends/geckolib/animations/player/` (currently only
-`punch.animation.json`). Salamander loads them through the resource manager, so a resource pack can replace any of
+Player animations live in `src/main/resources/assets/mobends/geckolib/animations/player/`: `punch.animation.json`
+(the empty-hand punch) and `item_test.animation.json` (`item_spin`, `item_throw`: examples of item bones). Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
 To edit one:
@@ -53,3 +60,9 @@ Positions an animation stops setting ease back to zero.
 
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
 `q.mobends_ticks_after_punch`.
+
+## Trying an animation in game
+
+`/evenmobends play <file> <animation>` loops an animation on your own player on top of everything else, e.g.
+`/evenmobends play player/item_test item_throw` while holding a sword. Tab completes files and names;
+`/evenmobends stop` ends it. After exporting over a resource pack's file, F3+T reloads it while it keeps playing.

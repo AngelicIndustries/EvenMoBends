@@ -6,6 +6,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.CommonProxy;
+import net.gobbob.mobends.client.animation.CommandEvenMoBends;
 import net.gobbob.mobends.client.render.BlinkingTextures;
 import net.gobbob.mobends.client.renderer.entity.RenderBlinkingPig;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
@@ -20,6 +21,7 @@ import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.entity.passive.EntityPig;
+import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 
@@ -53,6 +55,7 @@ extends CommonProxy {
         // while retaining EFR's crown render pass when that mod is present.
         RenderingRegistry.registerEntityRenderingHandler(EntityPig.class, createPigRenderer());
         EtFuturumRequiemCompat.registerBoatRenderers();
+        ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 
     private static Render createPigRenderer() {

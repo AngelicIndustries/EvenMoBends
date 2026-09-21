@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.SmoothVector3f;
@@ -28,6 +29,10 @@ extends EntityData {
     public SmoothVector3f renderOffset = new SmoothVector3f();
     public SmoothVector3f renderRotation = new SmoothVector3f();
     public SmoothVector3f renderItemRotation = new SmoothVector3f();
+    public final ItemBone rightItem = new ItemBone(false);
+    public final ItemBone rightItemFree = new ItemBone(true);
+    public final ItemBone leftItem = new ItemBone(false);
+    public final ItemBone leftItemFree = new ItemBone(true);
     public SwordTrail swordTrail = new SwordTrail();
     public boolean sprintJumpLeg = false;
     public boolean fistPunchArm = false;
@@ -85,6 +90,10 @@ extends EntityData {
         this.renderOffset.set(argModel.renderOffset);
         this.renderRotation.set(argModel.renderRotation);
         this.renderItemRotation.set(argModel.renderItemRotation);
+        this.rightItem.set(argModel.rightItem);
+        this.rightItemFree.set(argModel.rightItemFree);
+        this.leftItem.set(argModel.leftItem);
+        this.leftItemFree.set(argModel.leftItemFree);
         this.swordTrail = argModel.swordTrail;
     }
 

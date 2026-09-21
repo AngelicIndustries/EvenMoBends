@@ -6,6 +6,7 @@ import com.geckolib.animation.state.ModelPose;
 import com.geckolib.cache.model.BakedGeoModel;
 import com.geckolib.loading.loader.GeckoLibGsonLoader;
 import com.geckolib.renderer.base.GeoModelRenderer;
+import com.geckolib.renderer.base.GeoRenderTransforms;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import java.io.IOException;
@@ -90,6 +91,99 @@ class PlayerRigTest {
         for (boolean slim : new boolean[] {false, true}) {
             assertSameMesh(slim, rotations, true);
         }
+    }
+
+    /**
+     * The item bones are where the game draws held items: Salamander's frame for {@code rightItem} and
+     * {@code rightItemFree} must equal RenderBendsPlayer's grip frame with the item bone applied, in any pose.
+     */
+    @Test
+    void itemBonesMatchTheGameGrip() {
+        Random random = new Random(99);
+        for (boolean slim : new boolean[] {false, true}) {
+            for (int trial = 0; trial < 40; ++trial) {
+                ModelBendsPlayer model = model(slim);
+                BakedGeoModel baked = new GeckoLibGsonLoader()
+                    .loadModel(new ResourceLocation("mobends", "geckolib/models/player.geo.json"), export(slim));
+                ModelPose pose = ModelPose.create(baked);
+                Map<Bone, float[]> rotations = new EnumMap<Bone, float[]>(Bone.class);
+                Map<Bone, float[]> translations = new EnumMap<Bone, float[]>(Bone.class);
+                Map<Bone, float[]> scales = new EnumMap<Bone, float[]>(Bone.class);
+                for (Bone bone : Bone.values()) {
+                    float[] r = {random.nextFloat() * 360 - 180, random.nextFloat() * 360 - 180, random.nextFloat() * 360 - 180};
+                    float[] t = {random.nextFloat() * 16 - 8, random.nextFloat() * 16 - 8, random.nextFloat() * 16 - 8};
+                    rotations.put(bone, r);
+                    translations.put(bone, t);
+                    pose.get(bone.id).get().setRotation(-r[0] * DEG, -r[1] * DEG, r[2] * DEG).setTranslation(t[0], t[1], t[2]);
+                    if (bone.holdingArm() != null) {
+                        float[] k = {0.5f + random.nextFloat(), 0.5f + random.nextFloat(), 0.5f + random.nextFloat()};
+                        scales.put(bone, k);
+                        pose.get(bone.id).get().setScale(k[0], k[1], k[2]);
+                    }
+                }
+                GeoRenderTransforms frames = GeoModelRenderer.captureTransforms(baked, pose);
+                String context = (slim ? "slim" : "classic") + " trial " + trial + ": ";
+                // root has its own pose here; the game applies root as the whole-body transform before the model,
+                // so compare the item frames relative to root.
+                Matrix4f fromRoot = frames.getBone(PlayerRig.ROOT).get().modelSpaceMatrix().invert();
+
+                // RenderBendsPlayer: rightArm.postRender (body, arm, forearm, forearm pivot undone), 9 px down.
+                Matrix4f hand = partFrame(model, Bone.BODY, rotations, translations);
+                hand.mul(partFrame(model, Bone.RIGHT_ARM, rotations, translations));
+                hand.mul(partFrame(model, Bone.RIGHT_FORE_ARM, rotations, translations));
+                ModelRenderer fore = model.bipedRightForeArm;
+                hand.translate(-fore.rotationPointX, -fore.rotationPointY, -fore.rotationPointZ).translate(0, PlayerRig.GRIP_DROP, 0);
+                hand.mul(itemFrame(rotations.get(Bone.RIGHT_ITEM), translations.get(Bone.RIGHT_ITEM), scales.get(Bone.RIGHT_ITEM)));
+                assertSameFrame(hand, new Matrix4f(fromRoot).mul(frames.getBone("rightItem").get().modelSpaceMatrix()), context + "rightItem");
+
+                // The free item starts at the resting grip in the model's root frame.
+                float[] grip = PlayerRig.restPivot(model, Bone.RIGHT_ITEM_FREE);
+                Matrix4f free = new Matrix4f().translate(grip[0], grip[1], grip[2]);
+                free.mul(itemFrame(rotations.get(Bone.RIGHT_ITEM_FREE), translations.get(Bone.RIGHT_ITEM_FREE), scales.get(Bone.RIGHT_ITEM_FREE)));
+                assertSameFrame(free, new Matrix4f(fromRoot).mul(frames.getBone("rightItemFree").get().modelSpaceMatrix()),
+                    context + "rightItemFree");
+            }
+        }
+    }
+
+    /** A part's transform relative to its parent part in the game: animated pivot, then rotation (aims folded). */
+    private static Matrix4f partFrame(ModelBendsPlayer model, Bone bone, Map<Bone, float[]> rotations,
+        Map<Bone, float[]> translations) {
+        ModelRenderer part = bone.part(model);
+        float[] r = rotations.get(bone);
+        float[] t = modelOffset(translations.get(bone));
+        if (bone.aim() != null) {
+            float[] a = rotations.get(bone.aim());
+            double[] aim = EulerZYX.matrix(a[0], a[1], a[2]);
+            r = EulerZYX.angles(EulerZYX.multiply(aim, EulerZYX.matrix(r[0], r[1], r[2])), r);
+            float[] aimOffset = modelOffset(translations.get(bone.aim()));
+            float[] armOffset = t;
+            t = new float[3];
+            for (int row = 0; row < 3; ++row) {
+                t[row] = aimOffset[row]
+                    + (float)(aim[row * 3] * armOffset[0] + aim[row * 3 + 1] * armOffset[1] + aim[row * 3 + 2] * armOffset[2]);
+            }
+        }
+        return new Matrix4f().translate(part.rotationPointX + t[0], part.rotationPointY + t[1], part.rotationPointZ + t[2])
+            .rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG);
+    }
+
+    /** ItemBone.apply: translate, rotate Z, Y, X, scale. */
+    private static Matrix4f itemFrame(float[] r, float[] bedrockOffset, float[] k) {
+        float[] t = modelOffset(bedrockOffset);
+        return new Matrix4f().translate(t[0], t[1], t[2]).rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG)
+            .scale(k[0], k[1], k[2]);
+    }
+
+    /**
+     * Compares a model-space frame (pixels, Y down) with a Salamander frame (blocks, Y up, X mirrored). The frame's
+     * position maps like any point; its local axes only change units and direction, since they start at the pivot.
+     */
+    private static void assertSameFrame(Matrix4f expected, Matrix4f salamander, String context) {
+        Matrix4f toModel = new Matrix4f().translate(0, 24, 0).scale(-16, -16, 16);
+        Matrix4f localAxes = new Matrix4f().scale(-16, -16, 16);
+        Matrix4f actual = new Matrix4f(toModel).mul(salamander).mul(localAxes.invert());
+        if (!expected.equals(actual, 0.002f)) throw new AssertionError(context + "\nexpected\n" + expected + "actual\n" + actual);
     }
 
     /** A detached hand: the forearm moved away from the elbow while the arm is raised. */

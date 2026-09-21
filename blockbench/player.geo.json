@@ -958,6 +958,46 @@
           ]
         },
         {
+          "name": "rightItem",
+          "parent": "rightForeArm",
+          "pivot": [
+            -5,
+            13,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftItem",
+          "parent": "leftForeArm",
+          "pivot": [
+            5,
+            13,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightItemFree",
+          "parent": "root",
+          "pivot": [
+            -5,
+            13,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftItemFree",
+          "parent": "root",
+          "pivot": [
+            5,
+            13,
+            0
+          ],
+          "cubes": []
+        },
+        {
           "name": "rightLeg",
           "parent": "root",
           "pivot": [

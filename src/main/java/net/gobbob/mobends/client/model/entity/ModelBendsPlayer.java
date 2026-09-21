@@ -8,6 +8,8 @@ import net.gobbob.mobends.animation.player.Animation_AquaAcrobatics;
 import net.gobbob.mobends.animation.player.Animation_Blocking;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.animation.player.Animation_Swimming;
+import net.gobbob.mobends.client.animation.AnimationPreview;
+import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.ModelBoxBends;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
@@ -49,6 +51,11 @@ extends ModelBiped {
     public SmoothVector3f renderOffset = new SmoothVector3f();
     public SmoothVector3f renderRotation = new SmoothVector3f();
     public SmoothVector3f renderItemRotation = new SmoothVector3f();
+    /** Held-item transforms from the rig's item bones: in the hand, and free of it. */
+    public final ItemBone rightItem = new ItemBone(false);
+    public final ItemBone rightItemFree = new ItemBone(true);
+    public final ItemBone leftItem = new ItemBone(false);
+    public final ItemBone leftItemFree = new ItemBone(true);
     public SwordTrail swordTrail = new SwordTrail();
     public float headRotationX;
     public float headRotationY;
@@ -293,11 +300,16 @@ extends ModelBiped {
         this.renderOffset.set(data.renderOffset);
         this.renderRotation.set(data.renderRotation);
         this.renderItemRotation.set(data.renderItemRotation);
+        this.setItemBones(data);
         this.swordTrail = data.swordTrail;
         if (Data_Player.get(argEntity.getEntityId()).canBeUpdated()) {
             this.renderOffset.setSmooth(new Vector3f(0.0f, -1.0f, 0.0f), 0.5f);
             this.renderRotation.setSmooth(new Vector3f(0.0f, 0.0f, 0.0f), 0.5f);
             this.renderItemRotation.setSmooth(new Vector3f(0.0f, 0.0f, 0.0f), 0.5f);
+            this.rightItem.resetScale();
+            this.rightItemFree.resetScale();
+            this.leftItem.resetScale();
+            this.leftItemFree.resetScale();
             ((ModelRendererBends)this.bipedHead).resetScale();
             ((ModelRendererBends)this.bipedHeadwear).resetScale();
             ((ModelRendererBends)this.bipedBody).resetScale();
@@ -375,6 +387,7 @@ extends ModelBiped {
             if (!(rowing && boat.driver)) {
                 Animation_Blocking.apply(this, blockingHands);
             }
+            AnimationPreview.apply(this, data, argEntity);
             ((ModelRendererBends)this.bipedHead).update(data.ticksPerFrame);
             ((ModelRendererBends)this.bipedHeadwear).update(data.ticksPerFrame);
             ((ModelRendererBends)this.bipedBody).update(data.ticksPerFrame);
@@ -389,6 +402,10 @@ extends ModelBiped {
             this.renderOffset.update(data.ticksPerFrame);
             this.renderRotation.update(data.ticksPerFrame);
             this.renderItemRotation.update(data.ticksPerFrame);
+            this.rightItem.update(data.ticksPerFrame);
+            this.rightItemFree.update(data.ticksPerFrame);
+            this.leftItem.update(data.ticksPerFrame);
+            this.leftItemFree.update(data.ticksPerFrame);
             this.swordTrail.update(data.ticksPerFrame);
             data.updatedThisFrame = true;
         }
@@ -442,12 +459,20 @@ extends ModelBiped {
         GL11.glRotatef((float)this.renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
     }
 
+    private void setItemBones(Data_Player data) {
+        this.rightItem.set(data.rightItem);
+        this.rightItemFree.set(data.rightItemFree);
+        this.leftItem.set(data.leftItem);
+        this.leftItemFree.set(data.leftItemFree);
+    }
+
     public void updateWithEntityData(AbstractClientPlayer argPlayer) {
         Data_Player data = Data_Player.get(argPlayer.getEntityId());
         if (data != null) {
             this.renderOffset.set(data.renderOffset);
             this.renderRotation.set(data.renderRotation);
             this.renderItemRotation.set(data.renderItemRotation);
+            this.setItemBones(data);
         }
     }
 

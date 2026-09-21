@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import java.util.UUID;
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
+import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.render.BlinkingTextures;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
@@ -355,83 +356,102 @@ extends RenderPlayer {
             GL11.glPopMatrix();
         }
         if ((itemstack1 = argPlayer.inventory.getCurrentItem()) != null && event.renderItem) {
-            IItemRenderer customRenderer;
-            boolean is3D;
-            GL11.glPushMatrix();
-            this.modelBipedMain.bipedRightArm.postRender(0.0625f);
-            GL11.glTranslatef((float)0.0f, (float)0.5625f, (float)0.0f);
-            if (this.modelBipedMain instanceof ModelBendsPlayer) {
-                GL11.glRotatef((float)((ModelBendsPlayer)this.modelBipedMain).renderItemRotation.vSmooth.x, (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)((ModelBendsPlayer)this.modelBipedMain).renderItemRotation.vSmooth.y, (float)0.0f, (float)-1.0f, (float)0.0f);
-                GL11.glRotatef((float)((ModelBendsPlayer)this.modelBipedMain).renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
-            }
-            GL11.glTranslatef((float)-0.0625f, (float)-0.125f, (float)0.0625f);
             if (argPlayer.fishEntity != null) {
                 itemstack1 = new ItemStack(Items.stick);
             }
-            EnumAction enumaction = null;
-            if (argPlayer.getItemInUseCount() > 0) {
-                enumaction = itemstack1.getItemUseAction();
-            }
-            boolean bl2 = is3D = (customRenderer = MinecraftForgeClient.getItemRenderer(itemstack1, IItemRenderer.ItemRenderType.EQUIPPED)) != null && customRenderer.shouldUseRenderHelper(IItemRenderer.ItemRenderType.EQUIPPED, itemstack1, IItemRenderer.ItemRendererHelper.BLOCK_3D);
-            if (is3D || itemstack1.getItem() instanceof ItemBlock && RenderBlocks.renderItemIn3d(Block.getBlockFromItem(itemstack1.getItem()).getRenderType())) {
-                f2 = 0.5f;
-                GL11.glTranslatef((float)0.0f, (float)0.1875f, (float)-0.3125f);
-                GL11.glRotatef((float)20.0f, (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-                GL11.glScalef((float)(-(f2 *= 0.75f)), (float)(-f2), (float)f2);
-            } else if (itemstack1.getItem() == Items.bow) {
-                f2 = 0.625f;
-                GL11.glTranslatef((float)0.0f, (float)0.125f, (float)0.3125f);
-                GL11.glRotatef((float)-20.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-                GL11.glScalef((float)f2, (float)(-f2), (float)f2);
-                GL11.glRotatef((float)-100.0f, (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-            } else if (itemstack1.getItem().isFull3D()) {
-                f2 = 0.625f;
-                if (itemstack1.getItem().shouldRotateAroundWhenRendering()) {
-                    GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
-                    GL11.glTranslatef((float)0.0f, (float)-0.125f, (float)0.0f);
+            ModelBendsPlayer bends = this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
+            if (bends == null || bends.rightItem.isVisible()) {
+                GL11.glPushMatrix();
+                this.modelBipedMain.bipedRightArm.postRender(0.0625f);
+                GL11.glTranslatef(0.0f, PlayerRig.GRIP_DROP * 0.0625f, 0.0f);
+                if (bends != null) {
+                    bends.rightItem.apply(0.0625f);
+                    GL11.glRotatef((float)bends.renderItemRotation.vSmooth.x, (float)1.0f, (float)0.0f, (float)0.0f);
+                    GL11.glRotatef((float)bends.renderItemRotation.vSmooth.y, (float)0.0f, (float)-1.0f, (float)0.0f);
+                    GL11.glRotatef((float)bends.renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
                 }
-                // Backhand may be using the other hand, and Just A Shield may suppress
-                // sword blocking. Respect their final per-hand flag, not just the use timer.
-                if (this.modelBipedMain.heldItemRight == 3 && enumaction == EnumAction.block) {
-                    GL11.glTranslatef((float)0.05f, (float)0.0f, (float)-0.1f);
-                    GL11.glRotatef((float)-50.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-                    GL11.glRotatef((float)-10.0f, (float)1.0f, (float)0.0f, (float)0.0f);
-                    GL11.glRotatef((float)-60.0f, (float)0.0f, (float)0.0f, (float)1.0f);
-                }
-                GL11.glTranslatef((float)0.0f, (float)0.1875f, (float)0.0f);
-                GL11.glScalef((float)f2, (float)(-f2), (float)f2);
-                GL11.glRotatef((float)-100.0f, (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-            } else {
-                f2 = 0.375f;
-                GL11.glTranslatef((float)0.25f, (float)0.1875f, (float)-0.1875f);
-                GL11.glScalef((float)f2, (float)f2, (float)f2);
-                GL11.glRotatef((float)60.0f, (float)0.0f, (float)0.0f, (float)1.0f);
-                GL11.glRotatef((float)-90.0f, (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)20.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+                this.renderHeldItem(argPlayer, itemstack1);
+                GL11.glPopMatrix();
             }
-            if (itemstack1.getItem().requiresMultipleRenderPasses()) {
-                for (int k = 0; k < itemstack1.getItem().getRenderPasses(itemstack1.getItemDamage()); ++k) {
-                    int i = itemstack1.getItem().getColorFromItemStack(itemstack1, k);
-                    float f12 = (float)(i >> 16 & 0xFF) / 255.0f;
-                    float f3 = (float)(i >> 8 & 0xFF) / 255.0f;
-                    float f4 = (float)(i & 0xFF) / 255.0f;
-                    GL11.glColor4f((float)f12, (float)f3, (float)f4, (float)1.0f);
-                    this.renderManager.itemRenderer.renderItem(argPlayer, itemstack1, k);
-                }
-            } else {
-                int k = itemstack1.getItem().getColorFromItemStack(itemstack1, 0);
-                float f11 = (float)(k >> 16 & 0xFF) / 255.0f;
-                float f12 = (float)(k >> 8 & 0xFF) / 255.0f;
-                float f3 = (float)(k & 0xFF) / 255.0f;
-                GL11.glColor4f((float)f11, (float)f12, (float)f3, (float)1.0f);
-                this.renderManager.itemRenderer.renderItem(argPlayer, itemstack1, 0);
+            if (bends != null && bends.rightItemFree.isVisible()) {
+                // A free item hangs from the model root, at the resting grip, so it can leave the hand.
+                GL11.glPushMatrix();
+                float[] grip = PlayerRig.restPivot(bends, PlayerRig.Bone.RIGHT_ITEM_FREE);
+                GL11.glTranslatef(grip[0] * 0.0625f, grip[1] * 0.0625f, grip[2] * 0.0625f);
+                bends.rightItemFree.apply(0.0625f);
+                this.renderHeldItem(argPlayer, itemstack1);
+                GL11.glPopMatrix();
             }
-            GL11.glPopMatrix();
         }
         MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
+    }
+
+    /** Vanilla's per-item placement from the grip, then the draw. */
+    private void renderHeldItem(AbstractClientPlayer argPlayer, ItemStack itemstack1) {
+        IItemRenderer customRenderer;
+        boolean is3D;
+        float f2;
+        GL11.glTranslatef((float)-0.0625f, (float)-0.125f, (float)0.0625f);
+        EnumAction enumaction = null;
+        if (argPlayer.getItemInUseCount() > 0) {
+            enumaction = itemstack1.getItemUseAction();
+        }
+        boolean bl2 = is3D = (customRenderer = MinecraftForgeClient.getItemRenderer(itemstack1, IItemRenderer.ItemRenderType.EQUIPPED)) != null && customRenderer.shouldUseRenderHelper(IItemRenderer.ItemRenderType.EQUIPPED, itemstack1, IItemRenderer.ItemRendererHelper.BLOCK_3D);
+        if (is3D || itemstack1.getItem() instanceof ItemBlock && RenderBlocks.renderItemIn3d(Block.getBlockFromItem(itemstack1.getItem()).getRenderType())) {
+            f2 = 0.5f;
+            GL11.glTranslatef((float)0.0f, (float)0.1875f, (float)-0.3125f);
+            GL11.glRotatef((float)20.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+            GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+            GL11.glScalef((float)(-(f2 *= 0.75f)), (float)(-f2), (float)f2);
+        } else if (itemstack1.getItem() == Items.bow) {
+            f2 = 0.625f;
+            GL11.glTranslatef((float)0.0f, (float)0.125f, (float)0.3125f);
+            GL11.glRotatef((float)-20.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+            GL11.glScalef((float)f2, (float)(-f2), (float)f2);
+            GL11.glRotatef((float)-100.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+            GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+        } else if (itemstack1.getItem().isFull3D()) {
+            f2 = 0.625f;
+            if (itemstack1.getItem().shouldRotateAroundWhenRendering()) {
+                GL11.glRotatef((float)180.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+                GL11.glTranslatef((float)0.0f, (float)-0.125f, (float)0.0f);
+            }
+            // Backhand may be using the other hand, and Just A Shield may suppress
+            // sword blocking. Respect their final per-hand flag, not just the use timer.
+            if (this.modelBipedMain.heldItemRight == 3 && enumaction == EnumAction.block) {
+                GL11.glTranslatef((float)0.05f, (float)0.0f, (float)-0.1f);
+                GL11.glRotatef((float)-50.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+                GL11.glRotatef((float)-10.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+                GL11.glRotatef((float)-60.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+            }
+            GL11.glTranslatef((float)0.0f, (float)0.1875f, (float)0.0f);
+            GL11.glScalef((float)f2, (float)(-f2), (float)f2);
+            GL11.glRotatef((float)-100.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+            GL11.glRotatef((float)45.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+        } else {
+            f2 = 0.375f;
+            GL11.glTranslatef((float)0.25f, (float)0.1875f, (float)-0.1875f);
+            GL11.glScalef((float)f2, (float)f2, (float)f2);
+            GL11.glRotatef((float)60.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+            GL11.glRotatef((float)-90.0f, (float)1.0f, (float)0.0f, (float)0.0f);
+            GL11.glRotatef((float)20.0f, (float)0.0f, (float)0.0f, (float)1.0f);
+        }
+        if (itemstack1.getItem().requiresMultipleRenderPasses()) {
+            for (int k = 0; k < itemstack1.getItem().getRenderPasses(itemstack1.getItemDamage()); ++k) {
+                int i = itemstack1.getItem().getColorFromItemStack(itemstack1, k);
+                float f12 = (float)(i >> 16 & 0xFF) / 255.0f;
+                float f3 = (float)(i >> 8 & 0xFF) / 255.0f;
+                float f4 = (float)(i & 0xFF) / 255.0f;
+                GL11.glColor4f((float)f12, (float)f3, (float)f4, (float)1.0f);
+                this.renderManager.itemRenderer.renderItem(argPlayer, itemstack1, k);
+            }
+        } else {
+            int k = itemstack1.getItem().getColorFromItemStack(itemstack1, 0);
+            float f11 = (float)(k >> 16 & 0xFF) / 255.0f;
+            float f12 = (float)(k >> 8 & 0xFF) / 255.0f;
+            float f3 = (float)(k & 0xFF) / 255.0f;
+            GL11.glColor4f((float)f11, (float)f12, (float)f3, (float)1.0f);
+            this.renderManager.itemRenderer.renderItem(argPlayer, itemstack1, 0);
+        }
     }
 }

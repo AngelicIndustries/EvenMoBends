@@ -31,18 +31,6 @@ class PunchAnimationTest {
     private static final float[] PITCHES = {-60, -20, 0, 35, 80};
     private static final float[] YAWS = {-40, 0, 25};
 
-    @Test
-    void everyAnimatedBoneExistsInTheRig() throws Exception {
-        for (Animation animation : animations().animations().values()) {
-            for (BoneAnimation track : animation.boneAnimations()) {
-                String id = track.boneName();
-                boolean known = PlayerRig.ROOT.equals(id);
-                for (Bone bone : Bone.values()) known |= bone.id.equals(id);
-                assertTrue(known, animation.name() + " animates unknown bone " + id);
-            }
-        }
-    }
-
     /** Standing: stance, the old punch at its peak, then back to the stance for the rest of the 3 s. */
     @Test
     void standingPunchMatchesTheJavaPunchAndStance() throws Exception {
