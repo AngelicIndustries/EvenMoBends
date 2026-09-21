@@ -342,8 +342,18 @@
           ]
         },
         {
-          "name": "rightArm",
+          "name": "rightArmAim",
           "parent": "body",
+          "pivot": [
+            -5,
+            22,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightArm",
+          "parent": "rightArmAim",
           "pivot": [
             -5,
             22,
@@ -640,8 +650,18 @@
           ]
         },
         {
-          "name": "leftArm",
+          "name": "leftArmAim",
           "parent": "body",
+          "pivot": [
+            5,
+            22,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftArm",
+          "parent": "leftArmAim",
           "pivot": [
             5,
             22,

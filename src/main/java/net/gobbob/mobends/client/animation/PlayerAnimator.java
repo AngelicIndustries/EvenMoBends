@@ -8,6 +8,7 @@ import com.geckolib.cache.animation.BoneAnimation;
 import com.geckolib.cache.animation.Keyframe;
 import com.geckolib.cache.animation.KeyframeStack;
 import com.geckolib.loading.math.MolangContext;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -75,30 +76,68 @@ public final class PlayerAnimator {
     }
 
     static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, Smoothing smoothing) {
+        Map<String, BoneAnimation> tracks = new HashMap<String, BoneAnimation>();
         for (BoneAnimation track : animation.boneAnimations()) {
+            if (pose.containsKey(track.boneName())) tracks.put(track.boneName(), track);
+        }
+        for (BoneAnimation track : tracks.values()) {
             BoneSnapshot snapshot = pose.get(track.boneName());
-            if (snapshot == null) continue;
             float rate = smoothing.rate(track.boneName());
             if (PlayerRig.ROOT.equals(track.boneName())) {
                 applyRoot(model, track, snapshot, rate);
                 continue;
             }
-            Bone bone = bone(track.boneName());
-            if (bone == null) continue;
+            Bone bone = Bone.byId(track.boneName());
+            if (bone == null || bone.aimed() != null) continue; // Aim bones are folded into their arm below.
             ModelRendererBends part = bone.part(model);
             KeyframeStack rotation = track.rotationKeyFrames();
-            if (animates(rotation)) {
-                // Authored rotations replace procedural pre-rotations, which Blockbench bones don't have.
-                part.pre_rotation.setSmoothX(0, rate);
-                part.pre_rotation.setSmoothY(0, rate);
-                part.pre_rotation.setSmoothZ(0, rate);
-            }
+            if (animates(rotation)) clearPreRotation(part, rate);
             setRotation(part.rotation, rotation, snapshot, rate);
             KeyframeStack scale = track.scaleKeyFrames();
             if (has(scale.xKeyframes())) part.scaleX = snapshot.getScaleX();
             if (has(scale.yKeyframes())) part.scaleY = snapshot.getScaleY();
             if (has(scale.zKeyframes())) part.scaleZ = snapshot.getScaleZ();
         }
+        for (Bone aim : new Bone[] {Bone.RIGHT_ARM_AIM, Bone.LEFT_ARM_AIM}) {
+            BoneAnimation aimTrack = tracks.get(aim.id);
+            if (aimTrack == null || !animates(aimTrack.rotationKeyFrames())) continue;
+            Bone arm = aim.aimed();
+            applyAimedArm(arm.part(model), aimTrack, pose.get(aim.id), tracks.get(arm.id), pose.get(arm.id),
+                smoothing.rate(arm.id));
+        }
+    }
+
+    /** Folds the aim bone's rotation into the arm: one rotation equal to aim, then arm. */
+    private static void applyAimedArm(ModelRendererBends part, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
+        BoneAnimation armTrack, BoneSnapshot armSnapshot, float rate) {
+        float[] aim = degrees(aimTrack.rotationKeyFrames(), aimSnapshot, new float[3]);
+        // Arm axes the animation leaves out keep what earlier animations set.
+        float[] target = {part.rotation.vFinal.x, part.rotation.vFinal.y, part.rotation.vFinal.z};
+        float[] arm = armTrack == null ? target : degrees(armTrack.rotationKeyFrames(), armSnapshot, target);
+        // Of the equivalent angle sets, take the one nearest where the arm is now.
+        float[] now = {part.rotation.vSmooth.x, part.rotation.vSmooth.y, part.rotation.vSmooth.z};
+        float[] combined = EulerZYX.angles(
+            EulerZYX.multiply(EulerZYX.matrix(aim[0], aim[1], aim[2]), EulerZYX.matrix(arm[0], arm[1], arm[2])), now);
+        clearPreRotation(part, rate);
+        part.rotation.setSmoothX(combined[0], rate);
+        part.rotation.setSmoothY(combined[1], rate);
+        part.rotation.setSmoothZ(combined[2], rate);
+    }
+
+    /** Authored rotations replace procedural pre-rotations, which Blockbench bones don't have. */
+    private static void clearPreRotation(ModelRendererBends part, float rate) {
+        part.pre_rotation.setSmoothX(0, rate);
+        part.pre_rotation.setSmoothY(0, rate);
+        part.pre_rotation.setSmoothZ(0, rate);
+    }
+
+    /** Keyframed axes in part degrees; others are taken from {@code fallback}. */
+    private static float[] degrees(KeyframeStack keyframes, BoneSnapshot snapshot, float[] fallback) {
+        if (snapshot == null) return fallback;
+        if (has(keyframes.xKeyframes())) fallback[0] = -snapshot.getRotX() * RAD_TO_DEG;
+        if (has(keyframes.yKeyframes())) fallback[1] = -snapshot.getRotY() * RAD_TO_DEG;
+        if (has(keyframes.zKeyframes())) fallback[2] = snapshot.getRotZ() * RAD_TO_DEG;
+        return fallback;
     }
 
     /** {@code root} drives the whole-body transform: rotation to renderRotation, position to renderOffset. */
@@ -123,12 +162,5 @@ public final class PlayerAnimator {
 
     private static boolean has(Keyframe[] keyframes) {
         return keyframes != null && keyframes.length > 0;
-    }
-
-    private static Bone bone(String id) {
-        for (Bone bone : Bone.values()) {
-            if (bone.id.equals(id)) return bone;
-        }
-        return null;
     }
 }

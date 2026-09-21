@@ -16,9 +16,13 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 1. Blockbench: *File → Open Model* and pick `player.geo.json`, then drag a 64×64 skin onto the texture panel.
 2. Animate in the *Animate* tab. Bone rotations are the in-game part rotations in degrees.
 
-Bones: `root` → `body` → `head`, `rightArm` → `rightForeArm`, `leftArm` → `leftForeArm`;
-`root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`. Forearms and forelegs hinge at the elbow and
-knee exactly as in game.
+Bones: `root` → `body` → `head`, `rightArmAim` → `rightArm` → `rightForeArm`,
+`leftArmAim` → `leftArm` → `leftForeArm`; `root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`.
+Forearms and forelegs hinge at the elbow and knee exactly as in game.
+
+The aim bones have no cubes. They turn the whole arm about the shoulder, outside the arm's own rotation, so
+"point where the player looks" (aim X = `q.mobends_head_pitch`) combines cleanly with any arm pose, such as the
+punch's twisted fist (`rightArm` = `[-90, 0, 120]`). In game they are folded into the arm's rotation.
 
 ## Animations
 

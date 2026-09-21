@@ -16,6 +16,10 @@ import net.minecraft.client.model.TexturedQuad;
  * <p>Coordinates: a Mo' Bends model-space point {@code (x, y, z)} (Y down, origin at the neck) is the Bedrock
  * point {@code (x, 24 - y, z)} (Y up, origin at the feet). Bedrock bone rotations equal
  * {@link ModelRendererBends#rotation} in degrees, applied in the same Z, Y, X order.
+ *
+ * <p>Aim bones ({@code rightArmAim}, {@code leftArmAim}) have no geometry and no part of their own. They sit at the
+ * shoulder between the body and the arm so an animation can turn the whole arm (e.g. to follow the look) outside
+ * the arm's own pose; {@link PlayerAnimator} folds them into the arm's rotation.
  */
 public final class PlayerRig {
     public static final String ROOT = "root";
@@ -24,9 +28,11 @@ public final class PlayerRig {
     public enum Bone {
         BODY("body", ROOT),
         HEAD("head", "body"),
-        RIGHT_ARM("rightArm", "body"),
+        RIGHT_ARM_AIM("rightArmAim", "body"),
+        RIGHT_ARM("rightArm", "rightArmAim"),
         RIGHT_FORE_ARM("rightForeArm", "rightArm"),
-        LEFT_ARM("leftArm", "body"),
+        LEFT_ARM_AIM("leftArmAim", "body"),
+        LEFT_ARM("leftArm", "leftArmAim"),
         LEFT_FORE_ARM("leftForeArm", "leftArm"),
         RIGHT_LEG("rightLeg", ROOT),
         RIGHT_FORE_LEG("rightForeLeg", "rightLeg"),
@@ -41,8 +47,11 @@ public final class PlayerRig {
             this.parent = parent;
         }
 
+        /** The model part this bone drives, or null for an aim bone. */
         public ModelRendererBends part(ModelBendsPlayer model) {
             switch (this) {
+                case RIGHT_ARM_AIM:
+                case LEFT_ARM_AIM: return null;
                 case BODY: return (ModelRendererBends)model.bipedBody;
                 case HEAD: return (ModelRendererBends)model.bipedHead;
                 case RIGHT_ARM: return (ModelRendererBends)model.bipedRightArm;
@@ -55,6 +64,23 @@ public final class PlayerRig {
                 case LEFT_FORE_LEG: return (ModelRendererBends)model.bipedLeftForeLeg;
                 default: throw new AssertionError(this);
             }
+        }
+
+        /** The arm an aim bone turns, or null for other bones. */
+        public Bone aimed() {
+            return this == RIGHT_ARM_AIM ? RIGHT_ARM : this == LEFT_ARM_AIM ? LEFT_ARM : null;
+        }
+
+        /** The aim bone above this arm, or null for other bones. */
+        public Bone aim() {
+            return this == RIGHT_ARM ? RIGHT_ARM_AIM : this == LEFT_ARM ? LEFT_ARM_AIM : null;
+        }
+
+        public static Bone byId(String id) {
+            for (Bone bone : values()) {
+                if (bone.id.equals(id)) return bone;
+            }
+            return null;
         }
 
         public Bone parentBone() {
@@ -72,9 +98,11 @@ public final class PlayerRig {
 
     /** The pivot of a bone in model space at rest (Y down, pixels). */
     public static float[] restPivot(ModelBendsPlayer model, Bone bone) {
+        if (bone.aimed() != null) return restPivot(model, bone.aimed());
         float[] pivot = new float[3];
         for (Bone b = bone; b != null; b = b.parentBone()) {
             ModelRenderer part = b.part(model);
+            if (part == null) continue;
             pivot[0] += part.rotationPointX;
             pivot[1] += part.rotationPointY;
             pivot[2] += part.rotationPointZ;
@@ -105,7 +133,7 @@ public final class PlayerRig {
             json.add("pivot", vector(pivot[0], 24 - pivot[1], pivot[2]));
             JsonArray cubes = new JsonArray();
             ModelRendererBends part = bone.part(model);
-            addCubes(cubes, part, pivot, model);
+            if (part != null) addCubes(cubes, part, pivot, model);
             json.add("cubes", cubes);
             bones.add(json);
         }

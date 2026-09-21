@@ -75,6 +75,20 @@ class PlayerRigTest {
         }
     }
 
+    /** Aim bones turn the whole arm about the shoulder; the arm's own pose (here a twist) applies inside it. */
+    @Test
+    void aimedArmMatchesModel() {
+        Map<Bone, float[]> rotations = new EnumMap<Bone, float[]>(Bone.class);
+        rotations.put(Bone.RIGHT_ARM_AIM, new float[] {35, 0, 0});
+        rotations.put(Bone.RIGHT_ARM, new float[] {-90, 0, 120});
+        rotations.put(Bone.LEFT_ARM_AIM, new float[] {-50, -30, 0});
+        rotations.put(Bone.LEFT_ARM, new float[] {-90, 0, -120});
+        rotations.put(Bone.LEFT_FORE_ARM, new float[] {-45, 0, 0});
+        for (boolean slim : new boolean[] {false, true}) {
+            assertSameMesh(slim, rotations, true);
+        }
+    }
+
     /** A single bent elbow and knee, the case the rig exists for. */
     @Test
     void bentForearmMatchesModel() {
@@ -113,10 +127,16 @@ class PlayerRigTest {
         List<float[][]> expected = new ArrayList<float[][]>();
         Map<Bone, Matrix4f> matrices = new EnumMap<Bone, Matrix4f>(Bone.class);
         for (Bone bone : Bone.values()) {
-            Bone parent = bone.parentBone();
-            Matrix4f matrix = new Matrix4f(parent == null ? new Matrix4f() : matrices.get(parent));
             ModelRenderer part = bone.part(model);
+            if (part == null) continue; // Aim bones have no part; they are folded into their arm.
+            Bone parent = bone.parentBone();
+            if (parent != null && parent.part(model) == null) parent = parent.parentBone();
+            Matrix4f matrix = new Matrix4f(parent == null ? new Matrix4f() : matrices.get(parent));
             float[] r = rotations.containsKey(bone) ? rotations.get(bone) : new float[3];
+            if (bone.aim() != null && rotations.containsKey(bone.aim())) {
+                float[] a = rotations.get(bone.aim());
+                r = EulerZYX.angles(EulerZYX.multiply(EulerZYX.matrix(a[0], a[1], a[2]), EulerZYX.matrix(r[0], r[1], r[2])), r);
+            }
             // ModelRendererBends: translate to the rotation point, then rotate Z, Y, X.
             matrix.translate(part.rotationPointX, part.rotationPointY, part.rotationPointZ)
                 .rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG);
@@ -151,7 +171,10 @@ class PlayerRigTest {
         }
     }
 
-    /** Same four vertices in any order, positions within 0.001 px and UVs within 0.001 texels. */
+    /**
+     * Same four vertices in any order, positions within 0.002 px and UVs within 0.002 texels. Folding an aim bone
+     * into its arm near gimbal lock costs a little float precision, still far below a visible difference.
+     */
     private static boolean sameQuad(float[][] a, float[][] b, boolean uvs) {
         boolean[] used = new boolean[b.length];
         for (float[] va : a) {
@@ -160,7 +183,7 @@ class PlayerRigTest {
                 if (used[i]) continue;
                 boolean close = true;
                 for (int c = 0; c < (uvs ? 5 : 3); ++c) {
-                    if (Math.abs(va[c] - b[i][c]) > 0.001f) close = false;
+                    if (Math.abs(va[c] - b[i][c]) > 0.002f) close = false;
                 }
                 if (close) {
                     used[i] = true;

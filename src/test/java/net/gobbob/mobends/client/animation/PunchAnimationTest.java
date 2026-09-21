@@ -21,7 +21,6 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.SmoothVector3f;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 import sun.misc.Unsafe;
 
@@ -76,17 +75,18 @@ class PunchAnimationTest {
     }
 
     /**
-     * Every target angle matches, except the punching arm: the Java punch reached it through a pre-rotation that
-     * Blockbench bones can't express, so there only the arm's direction must match (the fist's twist is dropped).
+     * Every target angle matches. The punching arm got its aim from a pre-rotation, which the Blockbench punch
+     * expresses with an aim bone folded into the arm's rotation, so there the arm's whole orientation must match.
      */
     private static void assertSamePose(ModelBendsPlayer java, ModelBendsPlayer file, Bone aimedArm, String context) {
         for (Bone bone : Bone.values()) {
             ModelRendererBends expected = bone.part(java);
             ModelRendererBends actual = bone.part(file);
+            if (expected == null) continue;
             if (bone == aimedArm) {
-                Vector3f want = direction(expected);
-                Vector3f got = direction(actual);
-                assertTrue(want.distance(got) < 1e-4f, context + ": " + bone.id + " points " + got + ", expected " + want);
+                Matrix4f want = orientation(expected);
+                Matrix4f got = orientation(actual);
+                assertTrue(want.equals(got, 1e-4f), context + ": " + bone.id + " orientation\n" + got + "expected\n" + want);
                 continue;
             }
             assertTargets(expected.rotation, actual.rotation, context + ": " + bone.id + " rotation");
@@ -96,14 +96,13 @@ class PunchAnimationTest {
         assertTargets(java.renderOffset, file.renderOffset, context + ": renderOffset");
     }
 
-    /** Where a limb points (its local +Y, down the arm) after pre-rotation and rotation, in its parent's space. */
-    private static Vector3f direction(ModelRendererBends part) {
+    /** A part's target orientation: pre-rotation (-Y, X, Z) then rotation (Z, Y, X), as ModelRendererBends renders. */
+    private static Matrix4f orientation(ModelRendererBends part) {
         org.lwjgl.util.vector.Vector3f pre = part.pre_rotation.vFinal;
         org.lwjgl.util.vector.Vector3f rot = part.rotation.vFinal;
-        Matrix4f matrix = new Matrix4f()
+        return new Matrix4f()
             .rotateY(-pre.y * DEG).rotateX(pre.x * DEG).rotateZ(pre.z * DEG)
             .rotateZ(rot.z * DEG).rotateY(rot.y * DEG).rotateX(rot.x * DEG);
-        return matrix.transformDirection(new Vector3f(0, 1, 0));
     }
 
     private static void assertTargets(SmoothVector3f expected, SmoothVector3f actual, String context) {
