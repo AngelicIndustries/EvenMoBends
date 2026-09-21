@@ -95,6 +95,20 @@ class PunchAnimationTest {
         assertTrue(mid > guard + 1 && mid < out - 1, "forearm mid-punch at " + mid);
     }
 
+    /** Bone positions move the part's pivot, e.g. a hand detached from the elbow mid-punch. */
+    @Test
+    void bonePositionsMoveParts() throws Exception {
+        String json = "{\"format_version\": \"1.8.0\", \"animations\": {\"animation.test\": {\"animation_length\": 0.5,"
+            + " \"bones\": {\"rightForeArm\": {\"position\": {\"0.0\": [0, 0, 0], \"0.4\": [1, 2, 11], \"0.5\": [0, 0, 0]}}}}}}";
+        Animation animation = new GeckoLibGsonLoader().loadAnimations(new java.io.StringReader(json)).getAnimation("animation.test");
+        ModelBendsPlayer model = model(0, 0);
+        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, 0.4, PlayerAnimator.context(model, null)));
+        org.lwjgl.util.vector.Vector3f position = ((ModelRendererBends)model.bipedRightForeArm).position.vFinal;
+        assertEquals(1, position.x, 1e-4f);
+        assertEquals(-2, position.y, 1e-4f, "Bedrock up is model -Y");
+        assertEquals(11, position.z, 1e-4f);
+    }
+
     /** Moving bones follow their keyframes; bones that only hold a pose ease into it. */
     @Test
     void movingBonesFollowAndHeldBonesEase() throws Exception {

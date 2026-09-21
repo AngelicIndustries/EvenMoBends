@@ -48,5 +48,8 @@ that pose and ease into it at Mo' Bends' usual rate, which is what blends a punc
 Bones and axes an animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole
 body.
 
+Bone positions work on every bone: moving `rightForeArm` detaches the hand (held item included) from the elbow.
+Positions an animation stops setting ease back to zero.
+
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
 `q.mobends_ticks_after_punch`.

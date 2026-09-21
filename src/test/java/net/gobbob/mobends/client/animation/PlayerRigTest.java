@@ -66,11 +66,14 @@ class PlayerRigTest {
         for (boolean slim : new boolean[] {false, true}) {
             for (int trial = 0; trial < 25; ++trial) {
                 Map<Bone, float[]> rotations = new EnumMap<Bone, float[]>(Bone.class);
+                Map<Bone, float[]> translations = new EnumMap<Bone, float[]>(Bone.class);
                 for (Bone bone : Bone.values()) {
                     rotations.put(bone, new float[] {
                         random.nextFloat() * 360 - 180, random.nextFloat() * 360 - 180, random.nextFloat() * 360 - 180});
+                    translations.put(bone, new float[] {
+                        random.nextFloat() * 16 - 8, random.nextFloat() * 16 - 8, random.nextFloat() * 16 - 8});
                 }
-                assertSameMesh(slim, rotations, true);
+                assertSameMesh(slim, rotations, translations, true);
             }
         }
     }
@@ -86,6 +89,21 @@ class PlayerRigTest {
         rotations.put(Bone.LEFT_FORE_ARM, new float[] {-45, 0, 0});
         for (boolean slim : new boolean[] {false, true}) {
             assertSameMesh(slim, rotations, true);
+        }
+    }
+
+    /** A detached hand: the forearm moved away from the elbow while the arm is raised. */
+    @Test
+    void movedForearmMatchesModel() {
+        Map<Bone, float[]> rotations = new EnumMap<Bone, float[]>(Bone.class);
+        rotations.put(Bone.RIGHT_ARM_AIM, new float[] {20, 0, 0});
+        rotations.put(Bone.RIGHT_ARM, new float[] {-90, 0, 120});
+        Map<Bone, float[]> translations = new EnumMap<Bone, float[]>(Bone.class);
+        translations.put(Bone.RIGHT_FORE_ARM, new float[] {0, 0, 11});
+        translations.put(Bone.LEFT_ARM_AIM, new float[] {1, 2, 3});
+        translations.put(Bone.LEFT_ARM, new float[] {0, -3, 0});
+        for (boolean slim : new boolean[] {false, true}) {
+            assertSameMesh(slim, rotations, translations, true);
         }
     }
 
@@ -114,6 +132,12 @@ class PlayerRigTest {
     }
 
     private static void assertSameMesh(boolean slim, Map<Bone, float[]> rotations, boolean compareUvs) {
+        assertSameMesh(slim, rotations, new EnumMap<Bone, float[]>(Bone.class), compareUvs);
+    }
+
+    /** Rotations in degrees and translations in Bedrock pixels, per bone. */
+    private static void assertSameMesh(boolean slim, Map<Bone, float[]> rotations, Map<Bone, float[]> translations,
+        boolean compareUvs) {
         ModelBendsPlayer model = model(slim);
         BakedGeoModel baked = new GeckoLibGsonLoader()
             .loadModel(new ResourceLocation("mobends", "geckolib/models/player.geo.json"), export(slim));
@@ -122,6 +146,10 @@ class PlayerRigTest {
             float[] r = entry.getValue();
             // Salamander stores Bedrock rotations with X and Y negated, in radians.
             pose.get(entry.getKey().id).get().setRotation(-r[0] * DEG, -r[1] * DEG, r[2] * DEG);
+        }
+        for (Map.Entry<Bone, float[]> entry : translations.entrySet()) {
+            float[] t = entry.getValue();
+            pose.get(entry.getKey().id).get().setTranslation(t[0], t[1], t[2]);
         }
 
         List<float[][]> expected = new ArrayList<float[][]>();
@@ -133,12 +161,22 @@ class PlayerRigTest {
             if (parent != null && parent.part(model) == null) parent = parent.parentBone();
             Matrix4f matrix = new Matrix4f(parent == null ? new Matrix4f() : matrices.get(parent));
             float[] r = rotations.containsKey(bone) ? rotations.get(bone) : new float[3];
-            if (bone.aim() != null && rotations.containsKey(bone.aim())) {
-                float[] a = rotations.get(bone.aim());
-                r = EulerZYX.angles(EulerZYX.multiply(EulerZYX.matrix(a[0], a[1], a[2]), EulerZYX.matrix(r[0], r[1], r[2])), r);
+            // Bedrock (x, y, z) pixels is a model-space offset (x, -y, z) of the pivot.
+            float[] t = modelOffset(translations.get(bone));
+            if (bone.aim() != null) {
+                float[] a = rotations.containsKey(bone.aim()) ? rotations.get(bone.aim()) : new float[3];
+                double[] aim = EulerZYX.matrix(a[0], a[1], a[2]);
+                r = EulerZYX.angles(EulerZYX.multiply(aim, EulerZYX.matrix(r[0], r[1], r[2])), r);
+                float[] aimOffset = modelOffset(translations.get(bone.aim()));
+                float[] armOffset = t;
+                t = new float[3];
+                for (int row = 0; row < 3; ++row) {
+                    t[row] = aimOffset[row]
+                        + (float)(aim[row * 3] * armOffset[0] + aim[row * 3 + 1] * armOffset[1] + aim[row * 3 + 2] * armOffset[2]);
+                }
             }
-            // ModelRendererBends: translate to the rotation point, then rotate Z, Y, X.
-            matrix.translate(part.rotationPointX, part.rotationPointY, part.rotationPointZ)
+            // ModelRendererBends: translate to the animated pivot, then rotate Z, Y, X.
+            matrix.translate(part.rotationPointX + t[0], part.rotationPointY + t[1], part.rotationPointZ + t[2])
                 .rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG);
             matrices.put(bone, matrix);
             collectQuads(model, part, matrix, expected);
@@ -201,6 +239,10 @@ class PlayerRigTest {
             text.append(String.format(Locale.ROOT, "(%.3f %.3f %.3f | %.3f %.3f) ", v[0], v[1], v[2], v[3], v[4]));
         }
         return text.toString();
+    }
+
+    private static float[] modelOffset(float[] bedrock) {
+        return bedrock == null ? new float[3] : new float[] {bedrock[0], -bedrock[1], bedrock[2]};
     }
 
     private static void collectQuads(ModelBendsPlayer model, ModelRenderer part, Matrix4f matrix, List<float[][]> out) {

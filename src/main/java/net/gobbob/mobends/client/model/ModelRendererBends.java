@@ -16,6 +16,8 @@ public class ModelRendererBends
 extends ModelRenderer {
     public SmoothVector3f rotation = new SmoothVector3f();
     public SmoothVector3f pre_rotation = new SmoothVector3f();
+    /** Animated translation in model pixels, added to the rotation point (i.e. in the parent's frame). */
+    public SmoothVector3f position = new SmoothVector3f();
     public float scaleX;
     public float scaleY;
     public float scaleZ;
@@ -82,7 +84,7 @@ extends ModelRenderer {
         // head looking exactly level) would leak its tilt into the siblings rendered after it (the arms).
         boolean preRotated = this.pre_rotation.getX() != 0.0f || this.pre_rotation.getY() != 0.0f || this.pre_rotation.getZ() != 0.0f;
         if (this.rotateAngleX == 0.0f && this.rotateAngleY == 0.0f && this.rotateAngleZ == 0.0f && !preRotated) {
-            if (this.rotationPointX == 0.0f && this.rotationPointY == 0.0f && this.rotationPointZ == 0.0f) {
+            if (this.pivotX() == 0.0f && this.pivotY() == 0.0f && this.pivotZ() == 0.0f) {
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -96,7 +98,7 @@ extends ModelRenderer {
                     }
                 }
             } else {
-                GL11.glTranslatef((float)(this.rotationPointX * p_78785_1_), (float)(this.rotationPointY * p_78785_1_), (float)(this.rotationPointZ * p_78785_1_));
+                GL11.glTranslatef((float)(this.pivotX() * p_78785_1_), (float)(this.pivotY() * p_78785_1_), (float)(this.pivotZ() * p_78785_1_));
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -109,11 +111,11 @@ extends ModelRenderer {
                         ((ModelRenderer)this.childModels.get(i)).render(p_78785_1_);
                     }
                 }
-                GL11.glTranslatef((float)(-this.rotationPointX * p_78785_1_), (float)(-this.rotationPointY * p_78785_1_), (float)(-this.rotationPointZ * p_78785_1_));
+                GL11.glTranslatef((float)(-this.pivotX() * p_78785_1_), (float)(-this.pivotY() * p_78785_1_), (float)(-this.pivotZ() * p_78785_1_));
             }
         } else {
             GL11.glPushMatrix();
-            GL11.glTranslatef((float)(this.rotationPointX * p_78785_1_), (float)(this.rotationPointY * p_78785_1_), (float)(this.rotationPointZ * p_78785_1_));
+            GL11.glTranslatef((float)(this.pivotX() * p_78785_1_), (float)(this.pivotY() * p_78785_1_), (float)(this.pivotZ() * p_78785_1_));
             GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
             GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
             GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -140,9 +142,22 @@ extends ModelRenderer {
         GL11.glTranslatef((float)(-this.offsetX), (float)(-this.offsetY), (float)(-this.offsetZ));
     }
 
+    protected float pivotX() {
+        return this.rotationPointX + this.position.getX();
+    }
+
+    protected float pivotY() {
+        return this.rotationPointY + this.position.getY();
+    }
+
+    protected float pivotZ() {
+        return this.rotationPointZ + this.position.getZ();
+    }
+
     public void update(float p_78785_1_) {
         this.rotation.update(p_78785_1_);
         this.pre_rotation.update(p_78785_1_);
+        this.position.update(p_78785_1_);
         this.updateBends(p_78785_1_);
     }
 
@@ -157,15 +172,15 @@ extends ModelRenderer {
         this.updateBends(p_78794_1_);
         if (!this.isHidden && this.showModel) {
             if (this.rotateAngleX == 0.0f && this.rotateAngleY == 0.0f && this.rotateAngleZ == 0.0f) {
-                if (this.rotationPointX != 0.0f || this.rotationPointY != 0.0f || this.rotationPointZ != 0.0f) {
-                    GL11.glTranslatef((float)(this.rotationPointX * p_78794_1_), (float)(this.rotationPointY * p_78794_1_), (float)(this.rotationPointZ * p_78794_1_));
+                if (this.pivotX() != 0.0f || this.pivotY() != 0.0f || this.pivotZ() != 0.0f) {
+                    GL11.glTranslatef((float)(this.pivotX() * p_78794_1_), (float)(this.pivotY() * p_78794_1_), (float)(this.pivotZ() * p_78794_1_));
                     GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                     GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                     GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
                     GL11.glScalef((float)this.scaleX, (float)this.scaleY, (float)this.scaleZ);
                 }
             } else {
-                GL11.glTranslatef((float)(this.rotationPointX * p_78794_1_), (float)(this.rotationPointY * p_78794_1_), (float)(this.rotationPointZ * p_78794_1_));
+                GL11.glTranslatef((float)(this.pivotX() * p_78794_1_), (float)(this.pivotY() * p_78794_1_), (float)(this.pivotZ() * p_78794_1_));
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -226,6 +241,11 @@ extends ModelRenderer {
             this.pre_rotation.vFinal.set((ReadableVector3f)argBox.pre_rotation.vFinal);
             this.pre_rotation.vSmooth.set((ReadableVector3f)argBox.pre_rotation.vSmooth);
             this.pre_rotation.smoothness.set((ReadableVector3f)argBox.pre_rotation.smoothness);
+            this.position.vOld.set((ReadableVector3f)argBox.position.vOld);
+            this.position.completion.set((ReadableVector3f)argBox.position.completion);
+            this.position.vFinal.set((ReadableVector3f)argBox.position.vFinal);
+            this.position.vSmooth.set((ReadableVector3f)argBox.position.vSmooth);
+            this.position.smoothness.set((ReadableVector3f)argBox.position.smoothness);
             this.scaleX = argBox.scaleX;
             this.scaleY = argBox.scaleY;
             this.scaleZ = argBox.scaleZ;

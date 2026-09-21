@@ -94,6 +94,7 @@ public final class PlayerAnimator {
             KeyframeStack rotation = track.rotationKeyFrames();
             if (animates(rotation)) clearPreRotation(part, rate);
             setRotation(part.rotation, rotation, snapshot, rate);
+            if (bone.aim() == null || !tracks.containsKey(bone.aim().id)) setPosition(part, track, snapshot, rate);
             KeyframeStack scale = track.scaleKeyFrames();
             if (has(scale.xKeyframes())) part.scaleX = snapshot.getScaleX();
             if (has(scale.yKeyframes())) part.scaleY = snapshot.getScaleY();
@@ -101,7 +102,7 @@ public final class PlayerAnimator {
         }
         for (Bone aim : new Bone[] {Bone.RIGHT_ARM_AIM, Bone.LEFT_ARM_AIM}) {
             BoneAnimation aimTrack = tracks.get(aim.id);
-            if (aimTrack == null || !animates(aimTrack.rotationKeyFrames())) continue;
+            if (aimTrack == null) continue;
             Bone arm = aim.aimed();
             BoneAnimation armTrack = tracks.get(arm.id);
             float rate = Math.max(rate(aimTrack), armTrack == null ? EASE_RATE : rate(armTrack));
@@ -109,21 +110,54 @@ public final class PlayerAnimator {
         }
     }
 
-    /** Folds the aim bone's rotation into the arm: one rotation equal to aim, then arm. */
+    /**
+     * Folds the aim bone into the arm: one rotation equal to aim then arm, and the arm's offset carried by the aim's
+     * rotation on top of the aim's own offset.
+     */
     private static void applyAimedArm(ModelRendererBends part, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
         BoneAnimation armTrack, BoneSnapshot armSnapshot, float rate) {
         float[] aim = degrees(aimTrack.rotationKeyFrames(), aimSnapshot, new float[3]);
-        // Arm axes the animation leaves out keep what earlier animations set.
-        float[] target = {part.rotation.vFinal.x, part.rotation.vFinal.y, part.rotation.vFinal.z};
-        float[] arm = armTrack == null ? target : degrees(armTrack.rotationKeyFrames(), armSnapshot, target);
-        // Of the equivalent angle sets, take the one nearest where the arm is now.
-        float[] now = {part.rotation.vSmooth.x, part.rotation.vSmooth.y, part.rotation.vSmooth.z};
-        float[] combined = EulerZYX.angles(
-            EulerZYX.multiply(EulerZYX.matrix(aim[0], aim[1], aim[2]), EulerZYX.matrix(arm[0], arm[1], arm[2])), now);
-        clearPreRotation(part, rate);
-        part.rotation.setSmoothX(combined[0], rate);
-        part.rotation.setSmoothY(combined[1], rate);
-        part.rotation.setSmoothZ(combined[2], rate);
+        double[] aimMatrix = EulerZYX.matrix(aim[0], aim[1], aim[2]);
+        KeyframeStack armRotation = armTrack == null ? KeyframeStack.EMPTY : armTrack.rotationKeyFrames();
+        if (animates(aimTrack.rotationKeyFrames()) || animates(armRotation)) {
+            // Arm axes the animation leaves out keep what earlier animations set.
+            float[] target = {part.rotation.vFinal.x, part.rotation.vFinal.y, part.rotation.vFinal.z};
+            float[] arm = degrees(armRotation, armSnapshot, target);
+            // Of the equivalent angle sets, take the one nearest where the arm is now.
+            float[] now = {part.rotation.vSmooth.x, part.rotation.vSmooth.y, part.rotation.vSmooth.z};
+            float[] combined = EulerZYX.angles(EulerZYX.multiply(aimMatrix, EulerZYX.matrix(arm[0], arm[1], arm[2])), now);
+            clearPreRotation(part, rate);
+            part.rotation.setSmoothX(combined[0], rate);
+            part.rotation.setSmoothY(combined[1], rate);
+            part.rotation.setSmoothZ(combined[2], rate);
+        }
+        KeyframeStack armPosition = armTrack == null ? KeyframeStack.EMPTY : armTrack.positionKeyFrames();
+        if (animates(aimTrack.positionKeyFrames()) || animates(armPosition)) {
+            float[] offset = modelPosition(aimTrack.positionKeyFrames(), aimSnapshot, new float[3]);
+            float[] arm = modelPosition(armPosition, armSnapshot, new float[3]);
+            for (int row = 0; row < 3; ++row) {
+                offset[row] += (float)(aimMatrix[row * 3] * arm[0] + aimMatrix[row * 3 + 1] * arm[1] + aimMatrix[row * 3 + 2] * arm[2]);
+            }
+            part.position.setSmoothX(offset[0], rate);
+            part.position.setSmoothY(offset[1], rate);
+            part.position.setSmoothZ(offset[2], rate);
+        }
+    }
+
+    /** A bone's translation moves the part's pivot: Bedrock (x, y, z) pixels is model (x, -y, z). */
+    private static void setPosition(ModelRendererBends part, BoneAnimation track, BoneSnapshot snapshot, float rate) {
+        KeyframeStack position = track.positionKeyFrames();
+        if (has(position.xKeyframes())) part.position.setSmoothX(snapshot.getTranslateX(), rate);
+        if (has(position.yKeyframes())) part.position.setSmoothY(-snapshot.getTranslateY(), rate);
+        if (has(position.zKeyframes())) part.position.setSmoothZ(snapshot.getTranslateZ(), rate);
+    }
+
+    private static float[] modelPosition(KeyframeStack keyframes, BoneSnapshot snapshot, float[] fallback) {
+        if (snapshot == null) return fallback;
+        if (has(keyframes.xKeyframes())) fallback[0] = snapshot.getTranslateX();
+        if (has(keyframes.yKeyframes())) fallback[1] = -snapshot.getTranslateY();
+        if (has(keyframes.zKeyframes())) fallback[2] = snapshot.getTranslateZ();
+        return fallback;
     }
 
     /** Authored rotations replace procedural pre-rotations, which Blockbench bones don't have. */
