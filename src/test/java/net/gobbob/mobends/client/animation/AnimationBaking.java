@@ -259,7 +259,12 @@ final class AnimationBaking {
      * on a threshold switches at that moment rather than on whichever 60 fps frame crosses it.
      */
     static float compare(ModelBendsPlayer javaModel, ModelBendsPlayer bakedModel, BiConsumer<ModelBendsPlayer, Float> java,
-        BiConsumer<ModelBendsPlayer, Float> baked, String[] where) {
+        BiConsumer<ModelBendsPlayer, Float> baked, String[] where, String... authoredParts) {
+        java.util.Set<Integer> excluded = new java.util.HashSet<>();
+        int count = new Snapshot(javaModel).differences(new Snapshot(bakedModel)).length;
+        for (int i = 0; i < count; ++i) {
+            for (String name : authoredParts) if (Snapshot.name(i).equals(name)) excluded.add(i);
+        }
         float worst = 0;
         float step = TICKS_PER_FRAME / 8;
         float javaTicks = 0;
@@ -274,7 +279,7 @@ final class AnimationBaking {
             if (ticks < 200) continue;
             float[] differences = new Snapshot(javaModel).differences(new Snapshot(bakedModel));
             for (int i = 0; i < differences.length; ++i) {
-                if (differences[i] > worst) {
+                if (!excluded.contains(i) && differences[i] > worst) {
                     worst = differences[i];
                     where[0] = Snapshot.name(i) + " at tick " + ticks;
                 }

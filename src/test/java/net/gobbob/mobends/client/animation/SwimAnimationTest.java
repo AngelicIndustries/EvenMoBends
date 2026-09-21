@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The Blockbench swim ({@code player/swim.animation.json}) was baked from the Java swim as it looks in game, and must
- * keep matching it. Run with {@code MOBENDS_BAKE_SWIM=1} to bake it again.
+ * keep matching it outside the deliberately reauthored moving arms. Never re-bake over authored changes.
  */
 class SwimAnimationTest {
     static final Path FILE = Paths.get("src/main/resources/assets/mobends/geckolib/animations/player/swim.animation.json");
@@ -41,7 +41,7 @@ class SwimAnimationTest {
     }
 
     @Test
-    void swimMatchesTheJavaSwim() throws Exception {
+    void idleAndUneditedMovingPartsMatchTheJavaSwim() throws Exception {
         BakedAnimations file = AnimationBaking.load(FILE);
         for (boolean moving : new boolean[] {true, false}) {
             String upper = moving ? "swim" : "swim_idle";
@@ -57,7 +57,7 @@ class SwimAnimationTest {
                             PlayerAnimator.apply(model, animation,
                                 AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, null)));
                         }
-                    }, where);
+                    }, where, moving ? new String[] {"rightArm", "rightForeArm", "leftArm", "leftForeArm"} : new String[0]);
                 assertTrue(worst < 1.5f, upper + ", look " + look[0] + "/" + look[1] + ": differs by " + worst
                     + " degrees (" + where[0] + ")");
             }

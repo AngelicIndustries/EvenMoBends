@@ -54,9 +54,19 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   With something in the hand, `swim_holding` / `swim_idle_holding` (and `swim_legs_holding` /
   `swim_idle_legs_holding`) are used instead when the file has them: duplicate an animation in Blockbench and rename
   the copy with `_holding` to give the occupied hand its own stroke. Switching also blends over 0.5 s.
+  Both moving strokes retain a folded pull and an extended reach. The elbow opens before the shoulder returns
+  inward, keeping the recovery away from the face, but retains a soft bend through the return instead of locking
+  straight. The elbow opening follows the hand's inward path so it cannot briefly push the hand outward again
+  during recovery. Extension finishes after the shoulder turns into the next outward pull. Beyond 35 degrees of
+  head yaw, Molang gradually shortens the inward reach and opens the elbow further; looking ahead keeps the fuller stroke. `swim_holding` leaves extra
+  room for the item, with its rotation following the shoulder and elbow at the original grip. The period, body
+  motion, kick, and idle animations are unchanged.
 - `dive.animation.json`: swimming fully underwater. `dive` (upper body; `dive_holding` if present, for an occupied
   hand) leans with the travel direction through `q.mobends_travel_pitch`; the legs play `dive_legs_still` and
   `dive_legs` over it as strongly as the player moves (full kick from 0.18 blocks per tick).
+  Both `dive` and `dive_holding` use the same coordinated recovery, retaining the underwater stroke's extended
+  reach, folded pull, and travel-dependent body tilt. The elbows ease into extension without bending backward:
+  the forearm's edge-mounted hinge would otherwise expose an open gap at the elbow.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
@@ -85,9 +95,13 @@ Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the 
 `q.mobends_ticks_after_punch`, `q.mobends_holding` (1 with something in the main hand, else 0),
 `q.mobends_travel_pitch` (degrees the dive leans below horizontal along the travel direction, within +-35, eased).
 
-The swim and dive files were baked from the old Java animations (`SwimAnimationTest`, `DiveAnimationTest`, run with
-`MOBENDS_BAKE_SWIM=1` / `MOBENDS_BAKE_DIVE=1`), whose parity checks keep them within 1.5 degrees of those. Once you
-change them on purpose, update or drop the parity check.
+The swim and dive files started as bakes of the old Java animations. Their moving arms are now deliberately
+reauthored. `SwimAnimationTest` and `DiveAnimationTest` retain the 1.5-degree parity checks for the unchanged
+parts; idle swimming still has full parity. `HoldingSwimAnimationTest` checks hand/item clearance, loop closure,
+that the stroke still bends for the pull and extends for the reach, a continuous inward hand recovery, and dive
+elbows that do not hyperextend.
+Do not re-bake with `MOBENDS_BAKE_SWIM=1` or `MOBENDS_BAKE_DIVE=1`: baking replaces the entire file and discards
+both the edited empty-hand strokes and the `_holding` variants.
 
 ## Trying an animation in game
 

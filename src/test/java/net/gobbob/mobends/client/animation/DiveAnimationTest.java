@@ -23,7 +23,7 @@ import sun.misc.Unsafe;
 
 /**
  * The Blockbench dive ({@code player/dive.animation.json}) was baked from the Java dive as it looks in game, and must
- * keep matching it for any travel direction and speed. Run with {@code MOBENDS_BAKE_DIVE=1} to bake it again.
+ * keep matching it outside the deliberately reauthored arms, for any travel direction and speed.
  */
 class DiveAnimationTest {
     static final Path FILE = Paths.get("src/main/resources/assets/mobends/geckolib/animations/player/dive.animation.json");
@@ -61,7 +61,7 @@ class DiveAnimationTest {
     }
 
     @Test
-    void diveMatchesTheJavaDive() throws Exception {
+    void uneditedDivePartsMatchTheJavaDive() throws Exception {
         BakedAnimations file = AnimationBaking.load(FILE);
         Animation upper = file.getAnimation("animation.mobends.player.dive");
         Animation legs = file.getAnimation("animation.mobends.player.dive_legs");
@@ -79,7 +79,7 @@ class DiveAnimationTest {
                         play(model, data, upper, ticks, 1);
                         play(model, data, still, ticks, 1);
                         play(model, data, legs, ticks, kick);
-                    }, where);
+                    }, where, "rightArm", "rightForeArm", "leftArm", "leftForeArm");
                 assertTrue(worst < 1.5f, String.format("motion %s/%s/%s, look %s/%s: differs by %s degrees (%s)",
                     motion[0], motion[1], motion[2], look[0], look[1], worst, where[0]));
             }
