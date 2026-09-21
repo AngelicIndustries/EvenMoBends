@@ -183,8 +183,18 @@
           ]
         },
         {
-          "name": "head",
+          "name": "neck",
           "parent": "body",
+          "pivot": [
+            0,
+            24,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "head",
+          "parent": "neck",
           "pivot": [
             0,
             24,

@@ -141,11 +141,13 @@ class PunchAnimationTest {
         assertTargets(java.renderOffset, file.renderOffset, context + ": renderOffset");
     }
 
-    /** A part's target orientation: pre-rotation (-Y, X, Z) then rotation (Z, Y, X), as ModelRendererBends renders. */
+    /** A part's target orientation: aim (Z, Y, X), pre-rotation (-Y, X, Z), rotation (Z, Y, X), as rendered. */
     private static Matrix4f orientation(ModelRendererBends part) {
+        org.lwjgl.util.vector.Vector3f aim = part.aim.vFinal;
         org.lwjgl.util.vector.Vector3f pre = part.pre_rotation.vFinal;
         org.lwjgl.util.vector.Vector3f rot = part.rotation.vFinal;
         return new Matrix4f()
+            .rotateZ(aim.z * DEG).rotateY(aim.y * DEG).rotateX(aim.x * DEG)
             .rotateY(-pre.y * DEG).rotateX(pre.x * DEG).rotateZ(pre.z * DEG)
             .rotateZ(rot.z * DEG).rotateY(rot.y * DEG).rotateX(rot.x * DEG);
     }

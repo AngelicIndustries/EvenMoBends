@@ -50,10 +50,30 @@ public final class PlayerAnimator {
      */
     public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
         double seconds) {
+        return play(model, data, file, name, seconds, null, 0);
+    }
+
+    /**
+     * As {@link #play(ModelBendsPlayer, Data_Player, ResourceLocation, String, double)}, blending in over
+     * {@code blendSeconds} whenever {@code slot} starts playing this animation, e.g. when swimming switches from
+     * moving to idle: bones ease toward it at first, then follow its keyframes.
+     */
+    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double blendSeconds) {
         Animation animation = find(file, name);
         if (animation == null) return false;
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)));
+        float maxRate = FOLLOW_RATE;
+        if (slot != null && data != null && blendSeconds > 0) {
+            float blended = (float)(data.ticksPlaying(slot, file + "#" + name) / (blendSeconds * 20));
+            if (blended < 1) maxRate = blendRate(blended);
+        }
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate);
         return true;
+    }
+
+    /** From the usual ease rate to following keyframes, over a blend's progress from 0 to 1. */
+    static float blendRate(float progress) {
+        return EASE_RATE + (FOLLOW_RATE - EASE_RATE) * progress * progress;
     }
 
     public static Animation find(ResourceLocation file, String name) {
@@ -78,19 +98,23 @@ public final class PlayerAnimator {
     }
 
     static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose) {
+        apply(model, animation, pose, FOLLOW_RATE);
+    }
+
+    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate) {
         Map<String, BoneAnimation> tracks = new HashMap<String, BoneAnimation>();
         for (BoneAnimation track : animation.boneAnimations()) {
             if (pose.containsKey(track.boneName())) tracks.put(track.boneName(), track);
         }
         for (BoneAnimation track : tracks.values()) {
             BoneSnapshot snapshot = pose.get(track.boneName());
-            float rate = rate(track);
+            float rate = rate(track, maxRate);
             if (PlayerRig.ROOT.equals(track.boneName())) {
                 applyRoot(model, track, snapshot, rate);
                 continue;
             }
             Bone bone = Bone.byId(track.boneName());
-            if (bone == null || bone.aimed() != null) continue; // Aim bones are folded into their arm below.
+            if (bone == null || bone.aimed() != null) continue; // Aim bones drive their part's aim below.
             if (bone.holdingArm() != null) {
                 applyItem(itemBone(model, bone), bone.parent.equals(PlayerRig.ROOT), track, snapshot, rate);
                 continue;
@@ -105,43 +129,34 @@ public final class PlayerAnimator {
             if (has(scale.yKeyframes())) part.scaleY = snapshot.getScaleY();
             if (has(scale.zKeyframes())) part.scaleZ = snapshot.getScaleZ();
         }
-        for (Bone aim : new Bone[] {Bone.RIGHT_ARM_AIM, Bone.LEFT_ARM_AIM}) {
+        for (Bone aim : new Bone[] {Bone.NECK, Bone.RIGHT_ARM_AIM, Bone.LEFT_ARM_AIM}) {
             BoneAnimation aimTrack = tracks.get(aim.id);
             if (aimTrack == null) continue;
-            Bone arm = aim.aimed();
-            BoneAnimation armTrack = tracks.get(arm.id);
-            float rate = Math.max(rate(aimTrack), armTrack == null ? EASE_RATE : rate(armTrack));
-            applyAimedArm(arm.part(model), aimTrack, pose.get(aim.id), armTrack, pose.get(arm.id), rate);
+            Bone limb = aim.aimed();
+            BoneAnimation limbTrack = tracks.get(limb.id);
+            float rate = Math.max(rate(aimTrack, maxRate), limbTrack == null ? 0 : rate(limbTrack, maxRate));
+            applyAim(limb.part(model), aimTrack, pose.get(aim.id), limbTrack, pose.get(limb.id), rate);
         }
     }
 
     /**
-     * Folds the aim bone into the arm: one rotation equal to aim then arm, and the arm's offset carried by the aim's
-     * rotation on top of the aim's own offset.
+     * An aim bone turns the part at its pivot before the part's own rotation. Positions compose: the aim's offset,
+     * plus the part's offset turned by the aim.
      */
-    private static void applyAimedArm(ModelRendererBends part, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
-        BoneAnimation armTrack, BoneSnapshot armSnapshot, float rate) {
-        float[] aim = degrees(aimTrack.rotationKeyFrames(), aimSnapshot, new float[3]);
-        double[] aimMatrix = EulerZYX.matrix(aim[0], aim[1], aim[2]);
-        KeyframeStack armRotation = armTrack == null ? KeyframeStack.EMPTY : armTrack.rotationKeyFrames();
-        if (animates(aimTrack.rotationKeyFrames()) || animates(armRotation)) {
-            // Arm axes the animation leaves out keep what earlier animations set.
-            float[] target = {part.rotation.vFinal.x, part.rotation.vFinal.y, part.rotation.vFinal.z};
-            float[] arm = degrees(armRotation, armSnapshot, target);
-            // Of the equivalent angle sets, take the one nearest where the arm is now.
-            float[] now = {part.rotation.vSmooth.x, part.rotation.vSmooth.y, part.rotation.vSmooth.z};
-            float[] combined = EulerZYX.angles(EulerZYX.multiply(aimMatrix, EulerZYX.matrix(arm[0], arm[1], arm[2])), now);
+    private static void applyAim(ModelRendererBends part, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
+        BoneAnimation partTrack, BoneSnapshot partSnapshot, float rate) {
+        if (animates(aimTrack.rotationKeyFrames())) {
             clearPreRotation(part, rate);
-            part.rotation.setSmoothX(combined[0], rate);
-            part.rotation.setSmoothY(combined[1], rate);
-            part.rotation.setSmoothZ(combined[2], rate);
+            setRotation(part.aim, aimTrack.rotationKeyFrames(), aimSnapshot, rate);
         }
-        KeyframeStack armPosition = armTrack == null ? KeyframeStack.EMPTY : armTrack.positionKeyFrames();
-        if (animates(aimTrack.positionKeyFrames()) || animates(armPosition)) {
+        KeyframeStack partPosition = partTrack == null ? KeyframeStack.EMPTY : partTrack.positionKeyFrames();
+        if (animates(aimTrack.positionKeyFrames()) || animates(partPosition)) {
+            float[] aim = {part.aim.vFinal.x, part.aim.vFinal.y, part.aim.vFinal.z};
+            double[] turn = EulerZYX.matrix(aim[0], aim[1], aim[2]);
             float[] offset = modelPosition(aimTrack.positionKeyFrames(), aimSnapshot, new float[3]);
-            float[] arm = modelPosition(armPosition, armSnapshot, new float[3]);
+            float[] own = modelPosition(partPosition, partSnapshot, new float[3]);
             for (int row = 0; row < 3; ++row) {
-                offset[row] += (float)(aimMatrix[row * 3] * arm[0] + aimMatrix[row * 3 + 1] * arm[1] + aimMatrix[row * 3 + 2] * arm[2]);
+                offset[row] += (float)(turn[row * 3] * own[0] + turn[row * 3 + 1] * own[1] + turn[row * 3 + 2] * own[2]);
             }
             part.position.setSmoothX(offset[0], rate);
             part.position.setSmoothY(offset[1], rate);
@@ -201,15 +216,6 @@ public final class PlayerAnimator {
         part.pre_rotation.setSmoothZ(0, rate);
     }
 
-    /** Keyframed axes in part degrees; others are taken from {@code fallback}. */
-    private static float[] degrees(KeyframeStack keyframes, BoneSnapshot snapshot, float[] fallback) {
-        if (snapshot == null) return fallback;
-        if (has(keyframes.xKeyframes())) fallback[0] = -snapshot.getRotX() * RAD_TO_DEG;
-        if (has(keyframes.yKeyframes())) fallback[1] = -snapshot.getRotY() * RAD_TO_DEG;
-        if (has(keyframes.zKeyframes())) fallback[2] = snapshot.getRotZ() * RAD_TO_DEG;
-        return fallback;
-    }
-
     /** {@code root} drives the whole-body transform: rotation to renderRotation, position to renderOffset. */
     private static void applyRoot(ModelBendsPlayer model, BoneAnimation track, BoneSnapshot snapshot, float rate) {
         setRotation(model.renderRotation, track.rotationKeyFrames(), snapshot, rate);
@@ -234,15 +240,23 @@ public final class PlayerAnimator {
         return angle + 360.0f * Math.round((current - angle) / 360.0f);
     }
 
-    /** Follow a bone that moves; ease into a bone that only holds a pose. */
-    static float rate(BoneAnimation track) {
+    /**
+     * Follow a bone that moves (several keyframes, or Molang such as following the look); ease into a bone that only
+     * holds a pose. Never faster than {@code maxRate}, which blends a newly started animation in.
+     */
+    static float rate(BoneAnimation track, float maxRate) {
+        return Math.min(maxRate, moves(track) ? FOLLOW_RATE : EASE_RATE);
+    }
+
+    private static boolean moves(BoneAnimation track) {
+        if (!track.getUsedVariables().isEmpty()) return true;
         for (KeyframeStack stack : new KeyframeStack[] {
             track.rotationKeyFrames(), track.positionKeyFrames(), track.scaleKeyFrames()}) {
             for (Keyframe[] axis : new Keyframe[][] {stack.xKeyframes(), stack.yKeyframes(), stack.zKeyframes()}) {
-                if (axis != null && axis.length > 1) return FOLLOW_RATE;
+                if (axis != null && axis.length > 1) return true;
             }
         }
-        return EASE_RATE;
+        return false;
     }
 
     private static boolean animates(KeyframeStack stack) {

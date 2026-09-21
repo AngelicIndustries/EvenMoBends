@@ -17,9 +17,10 @@ import net.minecraft.client.model.TexturedQuad;
  * point {@code (x, 24 - y, z)} (Y up, origin at the feet). Bedrock bone rotations equal
  * {@link ModelRendererBends#rotation} in degrees, applied in the same Z, Y, X order.
  *
- * <p>Aim bones ({@code rightArmAim}, {@code leftArmAim}) have no geometry and no part of their own. They sit at the
- * shoulder between the body and the arm so an animation can turn the whole arm (e.g. to follow the look) outside
- * the arm's own pose; {@link PlayerAnimator} folds them into the arm's rotation.
+ * <p>Aim bones ({@code rightArmAim}, {@code leftArmAim}, {@code neck}) have no geometry and no part of their own.
+ * They sit at the pivot between the body and the arm or head, so an animation can turn the whole limb (follow the
+ * look, swim sideways, tilt the head back) outside its own pose. They drive the part's
+ * {@link ModelRendererBends#aim} rotation.
  *
  * <p>Item bones have no geometry either. {@code rightItem}/{@code leftItem} hang from the forearm at the grip, where
  * the held item is drawn; {@code rightItemFree}/{@code leftItemFree} hang from {@code root} at the same point at
@@ -33,7 +34,8 @@ public final class PlayerRig {
     /** Bones in parent-before-child order. */
     public enum Bone {
         BODY("body", ROOT),
-        HEAD("head", "body"),
+        NECK("neck", "body"),
+        HEAD("head", "neck"),
         RIGHT_ARM_AIM("rightArmAim", "body"),
         RIGHT_ARM("rightArm", "rightArmAim"),
         RIGHT_FORE_ARM("rightForeArm", "rightArm"),
@@ -60,6 +62,7 @@ public final class PlayerRig {
         /** The model part this bone drives, or null for an aim bone. */
         public ModelRendererBends part(ModelBendsPlayer model) {
             switch (this) {
+                case NECK:
                 case RIGHT_ARM_AIM:
                 case LEFT_ARM_AIM:
                 case RIGHT_ITEM:
@@ -80,9 +83,14 @@ public final class PlayerRig {
             }
         }
 
-        /** The arm an aim bone turns, or null for other bones. */
+        /** The part an aim bone turns, or null for other bones. */
         public Bone aimed() {
-            return this == RIGHT_ARM_AIM ? RIGHT_ARM : this == LEFT_ARM_AIM ? LEFT_ARM : null;
+            switch (this) {
+                case NECK: return HEAD;
+                case RIGHT_ARM_AIM: return RIGHT_ARM;
+                case LEFT_ARM_AIM: return LEFT_ARM;
+                default: return null;
+            }
         }
 
         /** The arm whose hand an item bone belongs to, or null for other bones. */
@@ -96,9 +104,14 @@ public final class PlayerRig {
             }
         }
 
-        /** The aim bone above this arm, or null for other bones. */
+        /** The aim bone above this part, or null for parts without one. */
         public Bone aim() {
-            return this == RIGHT_ARM ? RIGHT_ARM_AIM : this == LEFT_ARM ? LEFT_ARM_AIM : null;
+            switch (this) {
+                case HEAD: return NECK;
+                case RIGHT_ARM: return RIGHT_ARM_AIM;
+                case LEFT_ARM: return LEFT_ARM_AIM;
+                default: return null;
+            }
         }
 
         public static Bone byId(String id) {

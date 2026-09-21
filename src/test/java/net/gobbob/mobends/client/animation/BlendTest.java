@@ -1,0 +1,40 @@
+package net.gobbob.mobends.client.animation;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.lang.reflect.Field;
+import net.gobbob.mobends.data.Data_Player;
+import org.junit.jupiter.api.Test;
+import sun.misc.Unsafe;
+
+class BlendTest {
+    @Test
+    void blendEasesInThenFollows() {
+        assertEquals(PlayerAnimator.EASE_RATE, PlayerAnimator.blendRate(0), 1e-6f);
+        assertEquals(PlayerAnimator.FOLLOW_RATE, PlayerAnimator.blendRate(1), 1e-6f);
+    }
+
+    @Test
+    void slotTimingRestartsOnSwitchOrPause() throws Exception {
+        Data_Player data = data();
+        data.ticks = 100;
+        assertEquals(0, data.ticksPlaying("swim_upper", "moving"), 1e-6f);
+        // Played every frame, as the game does.
+        while (data.ticks < 110) {
+            data.ticks += 0.5f;
+            data.ticksPlaying("swim_upper", "moving");
+        }
+        assertEquals(10, data.ticksPlaying("swim_upper", "moving"), 1e-6f);
+        assertEquals(0, data.ticksPlaying("swim_legs", "moving"), 1e-6f, "slots are independent");
+        data.ticks = 111;
+        assertEquals(0, data.ticksPlaying("swim_upper", "idle"), 1e-6f, "switching animation restarts");
+        data.ticks = 120;
+        assertEquals(0, data.ticksPlaying("swim_upper", "idle"), 1e-6f, "not played for a moment restarts");
+    }
+
+    private static Data_Player data() throws Exception {
+        Field field = Unsafe.class.getDeclaredField("theUnsafe");
+        field.setAccessible(true);
+        return (Data_Player)((Unsafe)field.get(null)).allocateInstance(Data_Player.class);
+    }
+}

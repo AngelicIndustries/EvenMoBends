@@ -16,6 +16,11 @@ public class ModelRendererBends
 extends ModelRenderer {
     public SmoothVector3f rotation = new SmoothVector3f();
     public SmoothVector3f pre_rotation = new SmoothVector3f();
+    /**
+     * Animated rotation applied at the pivot before the pre-rotation and rotation, in degrees, Z, Y, X like
+     * {@link #rotation}. Driven by the rig's aim bones (e.g. an arm turned sideways to swim, the head tilted back).
+     */
+    public SmoothVector3f aim = new SmoothVector3f();
     /** Animated translation in model pixels, added to the rotation point (i.e. in the parent's frame). */
     public SmoothVector3f position = new SmoothVector3f();
     public float scaleX;
@@ -82,9 +87,11 @@ extends ModelRenderer {
         GL11.glTranslatef((float)this.offsetX, (float)this.offsetY, (float)this.offsetZ);
         // The unpushed branches below never undo pre_rotation, so a pre-rotated part (e.g. the swimming
         // head looking exactly level) would leak its tilt into the siblings rendered after it (the arms).
-        boolean preRotated = this.pre_rotation.getX() != 0.0f || this.pre_rotation.getY() != 0.0f || this.pre_rotation.getZ() != 0.0f;
+        boolean preRotated = this.pre_rotation.getX() != 0.0f || this.pre_rotation.getY() != 0.0f || this.pre_rotation.getZ() != 0.0f
+            || this.aim.getX() != 0.0f || this.aim.getY() != 0.0f || this.aim.getZ() != 0.0f;
         if (this.rotateAngleX == 0.0f && this.rotateAngleY == 0.0f && this.rotateAngleZ == 0.0f && !preRotated) {
             if (this.pivotX() == 0.0f && this.pivotY() == 0.0f && this.pivotZ() == 0.0f) {
+                this.applyAim();
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -99,6 +106,7 @@ extends ModelRenderer {
                 }
             } else {
                 GL11.glTranslatef((float)(this.pivotX() * p_78785_1_), (float)(this.pivotY() * p_78785_1_), (float)(this.pivotZ() * p_78785_1_));
+                this.applyAim();
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -116,6 +124,7 @@ extends ModelRenderer {
         } else {
             GL11.glPushMatrix();
             GL11.glTranslatef((float)(this.pivotX() * p_78785_1_), (float)(this.pivotY() * p_78785_1_), (float)(this.pivotZ() * p_78785_1_));
+            this.applyAim();
             GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
             GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
             GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -142,6 +151,12 @@ extends ModelRenderer {
         GL11.glTranslatef((float)(-this.offsetX), (float)(-this.offsetY), (float)(-this.offsetZ));
     }
 
+    protected void applyAim() {
+        GL11.glRotatef(this.aim.getZ(), 0.0f, 0.0f, 1.0f);
+        GL11.glRotatef(this.aim.getY(), 0.0f, 1.0f, 0.0f);
+        GL11.glRotatef(this.aim.getX(), 1.0f, 0.0f, 0.0f);
+    }
+
     protected float pivotX() {
         return this.rotationPointX + this.position.getX();
     }
@@ -158,6 +173,8 @@ extends ModelRenderer {
         this.rotation.update(p_78785_1_);
         // Procedural animations stay within a turn; only a looping spin from an animation file goes further.
         this.rotation.wrapTurns(360.0f);
+        this.aim.update(p_78785_1_);
+        this.aim.wrapTurns(360.0f);
         this.pre_rotation.update(p_78785_1_);
         this.position.update(p_78785_1_);
         this.updateBends(p_78785_1_);
@@ -176,6 +193,7 @@ extends ModelRenderer {
             if (this.rotateAngleX == 0.0f && this.rotateAngleY == 0.0f && this.rotateAngleZ == 0.0f) {
                 if (this.pivotX() != 0.0f || this.pivotY() != 0.0f || this.pivotZ() != 0.0f) {
                     GL11.glTranslatef((float)(this.pivotX() * p_78794_1_), (float)(this.pivotY() * p_78794_1_), (float)(this.pivotZ() * p_78794_1_));
+                    this.applyAim();
                     GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                     GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                     GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -183,6 +201,7 @@ extends ModelRenderer {
                 }
             } else {
                 GL11.glTranslatef((float)(this.pivotX() * p_78794_1_), (float)(this.pivotY() * p_78794_1_), (float)(this.pivotZ() * p_78794_1_));
+                this.applyAim();
                 GL11.glRotatef((float)(-this.pre_rotation.getY()), (float)0.0f, (float)1.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getX(), (float)1.0f, (float)0.0f, (float)0.0f);
                 GL11.glRotatef((float)this.pre_rotation.getZ(), (float)0.0f, (float)0.0f, (float)1.0f);
@@ -243,6 +262,11 @@ extends ModelRenderer {
             this.pre_rotation.vFinal.set((ReadableVector3f)argBox.pre_rotation.vFinal);
             this.pre_rotation.vSmooth.set((ReadableVector3f)argBox.pre_rotation.vSmooth);
             this.pre_rotation.smoothness.set((ReadableVector3f)argBox.pre_rotation.smoothness);
+            this.aim.vOld.set((ReadableVector3f)argBox.aim.vOld);
+            this.aim.completion.set((ReadableVector3f)argBox.aim.completion);
+            this.aim.vFinal.set((ReadableVector3f)argBox.aim.vFinal);
+            this.aim.vSmooth.set((ReadableVector3f)argBox.aim.vSmooth);
+            this.aim.smoothness.set((ReadableVector3f)argBox.aim.smoothness);
             this.position.vOld.set((ReadableVector3f)argBox.position.vOld);
             this.position.completion.set((ReadableVector3f)argBox.position.completion);
             this.position.vFinal.set((ReadableVector3f)argBox.position.vFinal);

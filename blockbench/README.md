@@ -16,7 +16,7 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 1. Blockbench: *File → Open Model* and pick `player.geo.json`, then drag a 64×64 skin onto the texture panel.
 2. Animate in the *Animate* tab. Bone rotations are the in-game part rotations in degrees.
 
-Bones: `root` → `body` → `head`, `rightArmAim` → `rightArm` → `rightForeArm`,
+Bones: `root` → `body` → `neck` → `head`, `rightArmAim` → `rightArm` → `rightForeArm`,
 `leftArmAim` → `leftArm` → `leftForeArm`; `root` → `rightLeg` → `rightForeLeg`, `leftLeg` → `leftForeLeg`.
 Forearms and forelegs hinge at the elbow and knee exactly as in game.
 
@@ -27,9 +27,10 @@ while an animation keys it (with a non-zero scale). Item bones start from the it
 rotation and position turn and move it from there. They have no cubes; to see an item while animating, add a cube
 under the bone in Blockbench (only the exported animation matters to the game).
 
-The aim bones have no cubes. They turn the whole arm about the shoulder, outside the arm's own rotation, so
-"point where the player looks" (aim X = `q.mobends_head_pitch`) combines cleanly with any arm pose, such as the
-punch's twisted fist (`rightArm` = `[-90, 0, 120]`). In game they are folded into the arm's rotation.
+The aim bones (`rightArmAim`, `leftArmAim`, `neck`) have no cubes. They turn the whole limb about its pivot, outside
+its own rotation, so "point where the player looks" (aim X = `q.mobends_head_pitch`) combines cleanly with any arm
+pose, such as the punch's twisted fist (`rightArm` = `[-90, 0, 120]`), and a head tilted back by `neck` still
+follows the look with its own rotation.
 
 ## Animations
 
@@ -50,7 +51,7 @@ Time is seconds since the punch. `punch_right` / `punch_left` (3 s) snap the fis
 settle back into the stance by 1.1 s; the `_moving` versions (0.5 s) only animate the upper body, so the walk keeps
 the legs.
 
-Bones with motion (more than one keyframe) follow their keyframes as authored. Bones with a single keyframe hold
+Bones with motion (more than one keyframe, or Molang like following the look) follow their keyframes as authored. Bones with a single keyframe hold
 that pose and ease into it at Mo' Bends' usual rate, which is what blends a punch in from walking or standing.
 Bones and axes an animation doesn't keyframe keep what earlier animations set. `root` moves and turns the whole
 body.

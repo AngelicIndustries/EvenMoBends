@@ -79,7 +79,7 @@ class PlayerRigTest {
         }
     }
 
-    /** Aim bones turn the whole arm about the shoulder; the arm's own pose (here a twist) applies inside it. */
+    /** Aim bones turn the whole limb about its pivot; the limb's own pose (here a twist, a look) applies inside it. */
     @Test
     void aimedArmMatchesModel() {
         Map<Bone, float[]> rotations = new EnumMap<Bone, float[]>(Bone.class);
@@ -88,6 +88,8 @@ class PlayerRigTest {
         rotations.put(Bone.LEFT_ARM_AIM, new float[] {-50, -30, 0});
         rotations.put(Bone.LEFT_ARM, new float[] {-90, 0, -120});
         rotations.put(Bone.LEFT_FORE_ARM, new float[] {-45, 0, 0});
+        rotations.put(Bone.NECK, new float[] {-60, 0, 0});
+        rotations.put(Bone.HEAD, new float[] {20, 35, 0});
         for (boolean slim : new boolean[] {false, true}) {
             assertSameMesh(slim, rotations, true);
         }
@@ -146,25 +148,29 @@ class PlayerRigTest {
         }
     }
 
-    /** A part's transform relative to its parent part in the game: animated pivot, then rotation (aims folded). */
+    /**
+     * A part's transform relative to its parent part in the game: to the animated pivot, then the aim rotation, then
+     * its own rotation (Z, Y, X each). An aim bone's position adds to the part's, which the aim turns.
+     */
     private static Matrix4f partFrame(ModelBendsPlayer model, Bone bone, Map<Bone, float[]> rotations,
         Map<Bone, float[]> translations) {
         ModelRenderer part = bone.part(model);
-        float[] r = rotations.get(bone);
+        float[] r = rotations.containsKey(bone) ? rotations.get(bone) : new float[3];
+        // Bedrock (x, y, z) pixels is a model-space offset (x, -y, z) of the pivot.
         float[] t = modelOffset(translations.get(bone));
+        float[] a = new float[3];
         if (bone.aim() != null) {
-            float[] a = rotations.get(bone.aim());
+            if (rotations.containsKey(bone.aim())) a = rotations.get(bone.aim());
             double[] aim = EulerZYX.matrix(a[0], a[1], a[2]);
-            r = EulerZYX.angles(EulerZYX.multiply(aim, EulerZYX.matrix(r[0], r[1], r[2])), r);
             float[] aimOffset = modelOffset(translations.get(bone.aim()));
-            float[] armOffset = t;
+            float[] own = t;
             t = new float[3];
             for (int row = 0; row < 3; ++row) {
-                t[row] = aimOffset[row]
-                    + (float)(aim[row * 3] * armOffset[0] + aim[row * 3 + 1] * armOffset[1] + aim[row * 3 + 2] * armOffset[2]);
+                t[row] = aimOffset[row] + (float)(aim[row * 3] * own[0] + aim[row * 3 + 1] * own[1] + aim[row * 3 + 2] * own[2]);
             }
         }
         return new Matrix4f().translate(part.rotationPointX + t[0], part.rotationPointY + t[1], part.rotationPointZ + t[2])
+            .rotateZ(a[2] * DEG).rotateY(a[1] * DEG).rotateX(a[0] * DEG)
             .rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG);
     }
 
@@ -254,24 +260,7 @@ class PlayerRigTest {
             Bone parent = bone.parentBone();
             if (parent != null && parent.part(model) == null) parent = parent.parentBone();
             Matrix4f matrix = new Matrix4f(parent == null ? new Matrix4f() : matrices.get(parent));
-            float[] r = rotations.containsKey(bone) ? rotations.get(bone) : new float[3];
-            // Bedrock (x, y, z) pixels is a model-space offset (x, -y, z) of the pivot.
-            float[] t = modelOffset(translations.get(bone));
-            if (bone.aim() != null) {
-                float[] a = rotations.containsKey(bone.aim()) ? rotations.get(bone.aim()) : new float[3];
-                double[] aim = EulerZYX.matrix(a[0], a[1], a[2]);
-                r = EulerZYX.angles(EulerZYX.multiply(aim, EulerZYX.matrix(r[0], r[1], r[2])), r);
-                float[] aimOffset = modelOffset(translations.get(bone.aim()));
-                float[] armOffset = t;
-                t = new float[3];
-                for (int row = 0; row < 3; ++row) {
-                    t[row] = aimOffset[row]
-                        + (float)(aim[row * 3] * armOffset[0] + aim[row * 3 + 1] * armOffset[1] + aim[row * 3 + 2] * armOffset[2]);
-                }
-            }
-            // ModelRendererBends: translate to the animated pivot, then rotate Z, Y, X.
-            matrix.translate(part.rotationPointX + t[0], part.rotationPointY + t[1], part.rotationPointZ + t[2])
-                .rotateZ(r[2] * DEG).rotateY(r[1] * DEG).rotateX(r[0] * DEG);
+            matrix.mul(partFrame(model, bone, rotations, translations));
             matrices.put(bone, matrix);
             collectQuads(model, part, matrix, expected);
         }
