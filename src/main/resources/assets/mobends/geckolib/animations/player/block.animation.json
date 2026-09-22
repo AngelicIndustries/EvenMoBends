@@ -1,0 +1,24 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mobends.player.block_right": {
+			"loop": true,
+			"animation_length": 1.0000,
+			"bones": {
+				"rightArm": {"rotation": {"0.0000": [-24, -30, 0]}},
+				"rightArmAim": {"rotation": {"0.0000": [0, 0, 0]}},
+				"rightForeArm": {"rotation": {"0.0000": [-30, 0, 0]}},
+				"rightItem": {"rotation": {"0.0000": [0, 0, 0]}}
+			}
+		},
+		"animation.mobends.player.block_left": {
+			"loop": true,
+			"animation_length": 1.0000,
+			"bones": {
+				"leftArm": {"rotation": {"0.0000": [-24, 0, 0]}},
+				"leftArmAim": {"rotation": {"0.0000": [0, 0, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [-30, 0, 0]}}
+			}
+		}
+	}
+}

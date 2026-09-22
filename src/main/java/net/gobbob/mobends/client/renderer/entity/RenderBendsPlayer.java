@@ -7,6 +7,7 @@ import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.render.BlinkingTextures;
+import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
@@ -203,19 +204,6 @@ extends RenderPlayer {
             this.modelArmor = new ModelBendsPlayer(0.5f);
             this.refreshModel = MoBends.refreshModel;
         }
-        Data_Player data = Data_Player.get(p_76986_1_.getEntityId());
-        float f2 = this.interpolateRotation(p_76986_1_.prevRenderYawOffset, p_76986_1_.renderYawOffset, p_76986_9_);
-        float f3 = this.interpolateRotation(p_76986_1_.prevRotationYawHead, p_76986_1_.rotationYawHead, p_76986_9_);
-        if (((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data) {
-            GL11.glPushMatrix();
-            float f5 = 0.0625f;
-            float f4 = this.handleRotationFloat(p_76986_1_, p_76986_9_);
-            this.rotateSuperCorpse(p_76986_1_, f4, f2, p_76986_9_);
-            GL11.glTranslatef((float)0.0f, (float)(-24.0f * f5 - 0.0078125f - 2.0f * f5), (float)0.0f);
-            GL11.glScalef((float)f5, (float)f5, (float)f5);
-            data.swordTrail.render((ModelBendsPlayer)this.mainModel);
-            GL11.glPopMatrix();
-        }
         super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
     }
 
@@ -255,6 +243,10 @@ extends RenderPlayer {
             return;
         }
         GL11.glColor3f((float)1.0f, (float)1.0f, (float)1.0f);
+        ModelBendsPlayer trailModel = this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
+        SwordTrail trail = trailModel != null && ((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data
+            ? trailModel.swordTrail : null;
+        this.trailFrame = trail != null ? trail.modelview() : null;
         ItemStack itemstack = argPlayer.inventory.armorItemInSlot(3);
         if (itemstack != null && event.renderHelmet) {
             float f1;
@@ -370,7 +362,7 @@ extends RenderPlayer {
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.y, (float)0.0f, (float)-1.0f, (float)0.0f);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
                 }
-                this.renderHeldItem(argPlayer, itemstack1);
+                this.renderHeldItem(argPlayer, itemstack1, trail != null && trail.takeSample() ? trail : null);
                 GL11.glPopMatrix();
             }
             if (bends != null && bends.rightItemFree.isVisible()) {
@@ -379,15 +371,19 @@ extends RenderPlayer {
                 float[] grip = PlayerRig.restPivot(bends, PlayerRig.Bone.RIGHT_ITEM_FREE);
                 GL11.glTranslatef(grip[0] * 0.0625f, grip[1] * 0.0625f, grip[2] * 0.0625f);
                 bends.rightItemFree.apply(0.0625f);
-                this.renderHeldItem(argPlayer, itemstack1);
+                this.renderHeldItem(argPlayer, itemstack1, null);
                 GL11.glPopMatrix();
             }
         }
+        if (trail != null) trail.render();
         MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
     }
 
-    /** Vanilla's per-item placement from the grip, then the draw. */
-    private void renderHeldItem(AbstractClientPlayer argPlayer, ItemStack itemstack1) {
+    /** The modelview the player model draws in, while drawing its equipment with the sword trail on. */
+    private float[] trailFrame;
+
+    /** Vanilla's per-item placement from the grip, then the draw; {@code trail} (may be null) samples the blade. */
+    private void renderHeldItem(AbstractClientPlayer argPlayer, ItemStack itemstack1, SwordTrail trail) {
         IItemRenderer customRenderer;
         boolean is3D;
         float f2;
@@ -436,6 +432,7 @@ extends RenderPlayer {
             GL11.glRotatef((float)-90.0f, (float)1.0f, (float)0.0f, (float)0.0f);
             GL11.glRotatef((float)20.0f, (float)0.0f, (float)0.0f, (float)1.0f);
         }
+        if (trail != null && this.trailFrame != null) trail.sample(this.trailFrame, trail.modelview());
         if (itemstack1.getItem().requiresMultipleRenderPasses()) {
             for (int k = 0; k < itemstack1.getItem().getRenderPasses(itemstack1.getItemDamage()); ++k) {
                 int i = itemstack1.getItem().getColorFromItemStack(itemstack1, k);

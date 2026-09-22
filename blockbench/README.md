@@ -85,6 +85,15 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
 - `jump.animation.json`: timed from liftoff and holding its last frame. `jump`; while walking, `jump_walk` (and
   `jump_walk_swing`) keep the legs striding over it; sprinting, `jump_sprint_right` / `jump_sprint_left` by the leg
   leading this jump.
+- `sword.animation.json`: swinging anything but a pickaxe, axe or block, timed from the click (0.5 s, holding the
+  last frame). The combo clicks through `sword_1`, `sword_2`, `sword_3` (the spin) and back to `sword_1`;
+  `sword_1_moving` / `sword_2_moving` leave the legs to walking, and play (without `root`) while riding.
+  `sword_2` and `sword_3` start where the swing before them was 7 ticks in (a quick click), so switches within the
+  combo run as the swing is keyed. From anywhere else, where the body was fades out over its first 0.15 s: the
+  swing keeps its shape without snapping to its first frame. After a swing, standing still settles into
+  `sword_stance`, sprinting into `sword_stance_sprint` (walking has none). The sword trail follows the blade as it
+  is drawn, so it traces whatever a swing does with the arm and the item.
+- `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
@@ -117,7 +126,12 @@ bends the legs forward but leaves their sideways turn to the walk underneath).
 
 `MovementAnimationTest` keeps stand, walk, sprint and sneak within 1.5 degrees of their Java originals (bake with
 `MOBENDS_BAKE_MOVEMENT=1`, which overwrites those four files); `AirAnimationTest` does the same for fall, climb,
-fly, ride and jump (`MOBENDS_BAKE_AIR=1`).
+fly, ride and jump (`MOBENDS_BAKE_AIR=1`), and `CombatAnimationTest` for the sword swings, stances and blocking
+(`MOBENDS_BAKE_COMBAT=1`), which also checks a whole combo against the Java: within 45 degrees through the
+switches (where the fade eases differently from the Java's per-part rates), and within 1.5 once back in the
+stance. Bakes derive their tracks from what the Java animation sets: axes it leaves alone become `q.mobends_keep`,
+and axes that follow the look get it as Molang. A Java pre-rotation becomes the limb's aim bone (`neck`,
+`rightArmAim`, `leftArmAim`), which turns the limb at the same pivot just before its own rotation.
 
 The swim and dive files started as bakes of the old Java animations. Their moving arms are now deliberately
 reauthored. `SwimAnimationTest` and `DiveAnimationTest` retain the 1.5-degree parity checks for the unchanged

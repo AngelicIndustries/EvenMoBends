@@ -14,8 +14,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.util.SmoothVector3f;
 import org.joml.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -99,6 +101,166 @@ final class AnimationBaking {
         }
     }
 
+    // --- Rig channels derived from a Java animation --------------------------------------------------------------
+
+    private static final float SENTINEL = -12345.0f;
+
+    /** A channel read from the Java model, and which of its axes an animation set (on a {@link #sentinelModel}). */
+    private interface Source {
+        float[] read(ModelBendsPlayer model, boolean target);
+
+        boolean[] set(ModelBendsPlayer model);
+    }
+
+    private static Vector3f value(SmoothVector3f vector, boolean target) {
+        return target ? vector.vFinal : vector.vSmooth;
+    }
+
+    /** One of the Java model's vectors, times {@code signs} per axis. */
+    private static Source vector(Function<ModelBendsPlayer, SmoothVector3f> vector, float x, float y, float z) {
+        return new Source() {
+            public float[] read(ModelBendsPlayer model, boolean target) {
+                Vector3f v = value(vector.apply(model), target);
+                return new float[] {x * v.x, y * v.y, z * v.z};
+            }
+
+            public boolean[] set(ModelBendsPlayer model) {
+                Vector3f v = vector.apply(model).vFinal;
+                return new boolean[] {v.x != SENTINEL, v.y != SENTINEL, v.z != SENTINEL};
+            }
+        };
+    }
+
+    /**
+     * A part's pre-rotation (turning -Y, X, then Z) as the Euler angles of its aim bone, which turns just before it
+     * at the same pivot: exact, and leaves the part's own rotation to the animations before. Set whole if at all.
+     */
+    private static Source aim(PlayerRig.Bone part) {
+        return new Source() {
+            public float[] read(ModelBendsPlayer model, boolean target) {
+                Vector3f pre = value(part.part(model).pre_rotation, target);
+                double[] m = EulerZYX.multiply(EulerZYX.multiply(EulerZYX.matrix(0, -pre.y, 0), EulerZYX.matrix(pre.x, 0, 0)),
+                    EulerZYX.matrix(0, 0, pre.z));
+                return EulerZYX.angles(m, new float[3]);
+            }
+
+            public boolean[] set(ModelBendsPlayer model) {
+                Vector3f v = part.part(model).pre_rotation.vFinal;
+                boolean any = v.x != SENTINEL || v.y != SENTINEL || v.z != SENTINEL;
+                return new boolean[] {any, any, any};
+            }
+        };
+    }
+
+    /** Every Blockbench channel ("bone property") the Java model can drive. */
+    private static Map<String, Source> rigSources() {
+        Map<String, Source> channels = new LinkedHashMap<String, Source>();
+        channels.put("root rotation", vector(m -> m.renderRotation, 1, 1, 1));
+        // renderOffset is the root position as (-x, y, z).
+        channels.put("root position", vector(m -> m.renderOffset, -1, 1, 1));
+        for (PlayerRig.Bone bone : PlayerRig.Bone.values()) {
+            if (bone.part(new ModelBendsPlayer()) == null) continue;
+            channels.put(bone.id + " rotation", vector(m -> bone.part(m).rotation, 1, 1, 1));
+            channels.put((bone.aim() != null ? bone.aim().id : bone.id + " (unsupported pre-rotation)") + " rotation", aim(bone));
+        }
+        // The Java turns the item about X, then -Y, then Z; for one axis at a time that is the item bone's (x, -y, z).
+        channels.put("rightItem rotation", vector(m -> m.renderItemRotation, 1, -1, 1));
+        return channels;
+    }
+
+    /** Baking channels and templates derived from a Java animation; see {@link #derive}. */
+    static final class Derived {
+        final Map<String, Channel> channels = new LinkedHashMap<String, Channel>();
+        final Map<String, String[]> templates = new LinkedHashMap<String, String[]>();
+    }
+
+    /**
+     * The channels a Java animation drives, from what it sets at {@code ticks}: axes it never sets are left to the
+     * animations before it ({@link #KEEP}), and axes that follow the look get it as Molang (e.g.
+     * {@code "q.mobends_head_yaw + %s"}), so bake with the player looking straight ahead. {@code overrides} replace
+     * derived templates per axis (non-null entries), e.g. for an axis following the look nonlinearly.
+     */
+    static Derived derive(BiConsumer<ModelBendsPlayer, Float> animate, Map<String, String[]> overrides, float... ticks) {
+        Derived derived = new Derived();
+        for (Map.Entry<String, Source> channel : rigSources().entrySet()) {
+            String name = channel.getKey();
+            Source source = channel.getValue();
+            boolean[] set = new boolean[3];
+            float[][] pitch = new float[ticks.length][], yaw = new float[ticks.length][];
+            for (int k = 0; k < ticks.length; ++k) {
+                ModelBendsPlayer probe = sentinelModel();
+                animate.accept(probe, ticks[k]);
+                boolean[] setNow = source.set(probe);
+                for (int i = 0; i < 3; ++i) set[i] |= setNow[i];
+                float[] still = target(animate, source, ticks[k], 0, 0);
+                float[] up = target(animate, source, ticks[k], 20, 0), turned = target(animate, source, ticks[k], 0, 20);
+                float[] both = target(animate, source, ticks[k], -30, -30);
+                pitch[k] = new float[3];
+                yaw[k] = new float[3];
+                for (int i = 0; i < 3; ++i) {
+                    pitch[k][i] = Math.round((up[i] - still[i]) / 20 * 100) / 100f;
+                    yaw[k][i] = Math.round((turned[i] - still[i]) / 20 * 100) / 100f;
+                    boolean linear = Math.abs(both[i] - (still[i] - 30 * pitch[k][i] - 30 * yaw[k][i])) < 0.01f;
+                    boolean steady = pitch[k][i] == pitch[0][i] && yaw[k][i] == yaw[0][i];
+                    if (set[i] && (!linear || !steady) && !overridden(overrides, name, i)) {
+                        throw new IllegalStateException(name + " axis " + i + " follows the look nonlinearly; give an override");
+                    }
+                }
+                if (name.contains("unsupported") && (still[0] != 0 || still[1] != 0 || still[2] != 0)) {
+                    throw new IllegalStateException(name + " at " + ticks[k]);
+                }
+            }
+            // Zeroing an unsupported pre-rotation is fine: parts only pre-rotate in the Java.
+            if (name.contains("unsupported") || !(set[0] || set[1] || set[2])) continue;
+            String[] template = new String[3];
+            for (int i = 0; i < 3; ++i) {
+                if (!set[i]) template[i] = KEEP;
+                else if (pitch[0][i] != 0 || yaw[0][i] != 0) template[i] = look(pitch[0][i], yaw[0][i]);
+                if (overridden(overrides, name, i)) template[i] = overrides.get(name)[i];
+            }
+            derived.channels.put(name, m -> source.read(m, false));
+            derived.templates.put(name, template);
+        }
+        return derived;
+    }
+
+    private static boolean overridden(Map<String, String[]> overrides, String channel, int axis) {
+        return overrides != null && overrides.containsKey(channel) && overrides.get(channel)[axis] != null;
+    }
+
+    private static float[] target(BiConsumer<ModelBendsPlayer, Float> animate, Source source, float ticks, float pitch, float yaw) {
+        ModelBendsPlayer model = model(pitch, yaw);
+        animate.accept(model, ticks);
+        return source.read(model, true);
+    }
+
+    private static String look(float pitch, float yaw) {
+        StringBuilder molang = new StringBuilder();
+        for (Object[] query : new Object[][] {{"q.mobends_head_pitch", pitch}, {"q.mobends_head_yaw", yaw}}) {
+            float k = (Float)query[1];
+            if (k == 0) continue;
+            molang.append(molang.length() == 0 ? (k < 0 ? "-" : "") : (k < 0 ? " - " : " + ")).append(query[0]);
+            if (Math.abs(k) != 1) molang.append(" * ").append(number(Math.abs(k)));
+        }
+        return molang.append(" + %s").toString();
+    }
+
+    /** A fresh model with every target the animations set planted with a sentinel, to see what an animation sets. */
+    private static ModelBendsPlayer sentinelModel() {
+        ModelBendsPlayer model = model(0, 0);
+        List<SmoothVector3f> vectors = new ArrayList<SmoothVector3f>();
+        vectors.add(model.renderRotation);
+        vectors.add(model.renderOffset);
+        vectors.add(model.renderItemRotation);
+        for (PlayerRig.Bone bone : PlayerRig.Bone.values()) {
+            if (bone.part(model) == null) continue;
+            vectors.add(bone.part(model).rotation);
+            vectors.add(bone.part(model).pre_rotation);
+        }
+        for (SmoothVector3f vector : vectors) vector.vFinal = new Vector3f(SENTINEL, SENTINEL, SENTINEL);
+        return model;
+    }
+
     // --- Baking ---------------------------------------------------------------------------------------------------
 
     /**
@@ -153,7 +315,7 @@ final class AnimationBaking {
         }
         Map<String, String> tracks = new LinkedHashMap<String, String>();
         for (String channel : channels.keySet()) {
-            tracks.put(channel, keyframes(recorded.get(channel), periodTicks / 20.0, samples, templates.get(channel)));
+            tracks.put(channel, keyframes(unwrap(channel, recorded.get(channel)), periodTicks / 20.0, samples, templates.get(channel)));
         }
         tracks.putAll(fixed);
         return animation(name, periodTicks / 20.0, tracks);
@@ -211,9 +373,22 @@ final class AnimationBaking {
         }
         Map<String, String> tracks = new LinkedHashMap<String, String>();
         for (String channel : channels.keySet()) {
-            tracks.put(channel, keyframes(recorded.get(channel), durationTicks / 20.0, samples, templates.get(channel)));
+            tracks.put(channel, keyframes(unwrap(channel, recorded.get(channel)), durationTicks / 20.0, samples, templates.get(channel)));
         }
         return animation(name, durationTicks / 20.0, tracks, "\"hold_on_last_frame\"");
+    }
+
+    /**
+     * A rotation recorded as it turns past a half turn (e.g. a spin, which the Java wraps back into one turn)
+     * continues in whole turns, so the keyframes turn the same way instead of sweeping back.
+     */
+    private static List<float[]> unwrap(String channel, List<float[]> values) {
+        if (!channel.endsWith(" rotation")) return values;
+        for (int k = 1; k < values.size(); ++k) {
+            float[] previous = values.get(k - 1), v = values.get(k);
+            for (int i = 0; i < 3; ++i) v[i] += 360.0f * Math.round((previous[i] - v[i]) / 360.0f);
+        }
+        return values;
     }
 
     /** A looping animation from "bone property" to JSON track. */
@@ -305,7 +480,9 @@ final class AnimationBaking {
 
     private static String axis(float value, String[] template, int axis) {
         if (template == null || template[axis] == null) return number(value);
-        return "\"" + template[axis].replace("%s", number(value)) + "\"";
+        String molang = template[axis];
+        if (number(value).equals("0") && molang.endsWith(" + %s")) molang = molang.substring(0, molang.length() - 5);
+        return "\"" + molang.replace("%s", number(value)) + "\"";
     }
 
     static String number(float value) {
@@ -388,15 +565,22 @@ final class AnimationBaking {
     static float compareOnce(ModelBendsPlayer javaModel, ModelBendsPlayer bakedModel, BiConsumer<ModelBendsPlayer, Float> before,
         BiConsumer<ModelBendsPlayer, Float> java, BiConsumer<ModelBendsPlayer, Float> baked, double durationTicks, double fromTicks,
         String[] where) {
+        return compareOnce(javaModel, bakedModel, before, before, java, baked, durationTicks, fromTicks, where);
+    }
+
+    /** As above, each side with its own lead-up (e.g. each holding its animation's first frame). */
+    static float compareOnce(ModelBendsPlayer javaModel, ModelBendsPlayer bakedModel, BiConsumer<ModelBendsPlayer, Float> javaBefore,
+        BiConsumer<ModelBendsPlayer, Float> bakedBefore, BiConsumer<ModelBendsPlayer, Float> java, BiConsumer<ModelBendsPlayer, Float> baked,
+        double durationTicks, double fromTicks, String[] where) {
         float step = TICKS_PER_FRAME / 8;
         for (float ticks = 0; ticks < 400; ticks += step) {
             final float now = ticks;
-            frame(javaModel, m -> before.accept(m, now), step);
+            frame(javaModel, m -> javaBefore.accept(m, now), step);
         }
         // Both lead-ups at 480 fps, so the two models start from the same state.
         for (float ticks = 0; ticks < 400; ticks += step) {
             final float now = ticks;
-            frame(bakedModel, m -> before.accept(m, now), step);
+            frame(bakedModel, m -> bakedBefore.accept(m, now), step);
         }
         float worst = 0;
         float javaTicks = 0;
@@ -432,8 +616,10 @@ final class AnimationBaking {
                 if (bone.part(model) != null) this.parts.add(orientation(bone.part(model)));
             }
             this.root = new Vector3f(model.renderRotation.vSmooth);
-            this.item = new Vector3f(model.rightItem.rotation.vSmooth.lengthSquared() > 0
-                ? model.rightItem.rotation.vSmooth : model.renderItemRotation.vSmooth);
+            // The Java turns the item about -Y; the item bone about +Y.
+            Vector3f java = model.renderItemRotation.vSmooth;
+            this.item = model.rightItem.rotation.vSmooth.lengthSquared() > 0
+                ? new Vector3f(model.rightItem.rotation.vSmooth) : new Vector3f(java.x, -java.y, java.z);
             this.offset = new Vector3f(model.renderOffset.vSmooth);
         }
 
@@ -441,7 +627,7 @@ final class AnimationBaking {
         float[] differences(Snapshot other) {
             float[] result = new float[this.parts.size() + 3];
             for (int i = 0; i < this.parts.size(); ++i) result[i] = angleBetween(this.parts.get(i), other.parts.get(i));
-            result[this.parts.size()] = maxDifference(this.root, other.root);
+            result[this.parts.size()] = maxAngleDifference(this.root, other.root);
             result[this.parts.size() + 1] = maxDifference(this.item, other.item);
             result[this.parts.size() + 2] = maxDifference(this.offset, other.offset) * 5;
             return result;
@@ -457,6 +643,15 @@ final class AnimationBaking {
             names.add("root offset (fifths of a pixel)");
             return names.get(index);
         }
+    }
+
+    /** Per axis, give or take whole turns (the Java wraps a spin back into one turn where a file keeps turning). */
+    private static float maxAngleDifference(Vector3f a, Vector3f b) {
+        float worst = 0;
+        for (float d : new float[] {a.x - b.x, a.y - b.y, a.z - b.z}) {
+            worst = Math.max(worst, Math.abs(d - 360.0f * Math.round(d / 360.0f)));
+        }
+        return worst;
     }
 
     private static float maxDifference(Vector3f a, Vector3f b) {

@@ -2,23 +2,15 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
-import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.GUtil;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemSword;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Animation_Attack_Combo2 {
-    public static void animate(EntityPlayer player, ModelBendsPlayer model, Data_Player data) {
+    /** The original Java spinning third sword swing, kept as the reference the Blockbench {@code sword_3} was baked from. */
+    public static void apply(ModelBendsPlayer model, float ticksAfterPunch) {
         float var2;
-        if (data.ticksAfterPunch < 0.5f) {
-            model.swordTrail.reset();
-        }
-        if (player.getCurrentEquippedItem() != null && player.getCurrentEquippedItem().getItem() instanceof ItemSword) {
-            model.swordTrail.add(model);
-        }
-        float attackState = data.ticksAfterPunch / 10.0f;
+        float attackState = ticksAfterPunch / 10.0f;
         float armSwing = attackState * 2.0f;
         armSwing = GUtil.max(armSwing, 1.0f);
         float var5 = attackState * 1.6f;
@@ -27,8 +19,6 @@ public class Animation_Attack_Combo2 {
         for (var2 = 50.0f + 360.0f * var5; var2 > 360.0f; var2 -= 360.0f) {
         }
         if (var > 360.0f) {
-            float var3 = (attackState - data.ticksPerFrame / 10.0f) * 2.0f;
-            var3 = GUtil.max(var3, 1.0f);
             model.renderRotation.vOld.y = var2;
             model.renderRotation.vFinal.y = var2;
             model.renderRotation.completion.y = 0.0f;
@@ -58,8 +48,8 @@ public class Animation_Attack_Combo2 {
         ((ModelRendererBends)model.bipedRightForeArm).rotation.setSmoothX(-20.0f, 0.3f);
         ((ModelRendererBends)model.bipedLeftForeArm).rotation.setSmoothX(-60.0f, 0.3f);
         model.renderItemRotation.setSmoothX(90.0f * attackState, 0.9f);
-        float var61 = data.ticksAfterPunch * 5.0f;
-        float var62 = data.ticksAfterPunch * 5.0f;
+        float var61 = ticksAfterPunch * 5.0f;
+        float var62 = ticksAfterPunch * 5.0f;
         var61 = (MathHelper.cos(var61 * 0.0625f) + 1.0f) / 2.0f * 20.0f;
         var62 = (MathHelper.cos(var62 * 0.0625f) + 1.0f) / 2.0f * 20.0f;
         ((ModelRendererBends)model.bipedRightLeg).rotation.setSmoothY(0.0f, 0.9f);

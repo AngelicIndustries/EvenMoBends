@@ -76,6 +76,12 @@ public final class PlayerAnimator {
      */
     public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds, float weight) {
+        return play(model, data, file, name, seconds, slot, blendSeconds, weight, null);
+    }
+
+    /** As above, leaving out the bones in {@code without} (e.g. the root while riding, where the mount places the body). */
+    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double blendSeconds, float weight, Set<String> without) {
         Animation animation = find(file, name);
         if (animation == null) return false;
         float maxRate = FOLLOW_RATE;
@@ -83,8 +89,44 @@ public final class PlayerAnimator {
             float blended = (float)(data.ticksPlaying(slot, file + "#" + name) / (blendSeconds * 20));
             if (blended < 1) maxRate = blendRate(blended);
         }
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate, weight);
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate, weight, without);
         return true;
+    }
+
+    /**
+     * Plays an animation that starts mid-motion (e.g. a sword swing), timed by the caller, in {@code slot}: where
+     * the parts were when it started fades out over {@code fadeSeconds} ({@link Inertia}), so it neither snaps to its
+     * first frame nor slows its motion down, and held poses are in place by then. Leaves out the bones in
+     * {@code without} (may be null).
+     *
+     * @return false if the file or animation is missing.
+     */
+    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double fadeSeconds, Set<String> without) {
+        Animation animation = find(file, name);
+        if (animation == null) return false;
+        playOnce(model, data, animation, file + "#" + name, seconds, slot, fadeSeconds, without);
+        return true;
+    }
+
+    static void playOnce(ModelBendsPlayer model, Data_Player data, Animation animation, String key, double seconds,
+        String slot, double fadeSeconds, Set<String> without) {
+        Inertia inertia = null;
+        if (data != null && fadeSeconds > 0) {
+            inertia = data.inertia(slot);
+            float elapsed = data.ticksPlaying(slot, key);
+            if (elapsed <= 0) {
+                // The offsets from where the animation was a frame ago, which is where the fade starts.
+                inertia.capture();
+                double previous = Math.max(0, seconds - data.ticksPerFrame / 20.0);
+                apply(model, animation, AnimationProcessor.evaluate(animation, previous, context(model, data)), FOLLOW_RATE, 1,
+                    without, inertia);
+            }
+            inertia.fade((float)((elapsed + data.ticksPerFrame) / (fadeSeconds * 20)));
+            if (!inertia.active()) inertia = null;
+        }
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), FOLLOW_RATE, 1,
+            without, inertia);
     }
 
     /** How long switching between looping locomotion animations blends, as their Java smoothing eased them. */
@@ -205,30 +247,42 @@ public final class PlayerAnimator {
 
     static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight) {
+        apply(model, animation, pose, maxRate, weight, null);
+    }
+
+    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+        float weight, Set<String> without) {
+        apply(model, animation, pose, maxRate, weight, without, null);
+    }
+
+    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+        float weight, Set<String> without, Inertia inertia) {
         if (weight <= 0) return;
         Map<String, BoneAnimation> tracks = new HashMap<String, BoneAnimation>();
         for (BoneAnimation track : animation.boneAnimations()) {
-            if (pose.containsKey(track.boneName())) tracks.put(track.boneName(), track);
+            if (pose.containsKey(track.boneName()) && (without == null || !without.contains(track.boneName()))) {
+                tracks.put(track.boneName(), track);
+            }
         }
         for (BoneAnimation track : tracks.values()) {
             BoneSnapshot snapshot = pose.get(track.boneName());
             float rate = rate(track, maxRate);
             if (weight < 1) rate = Math.max(rate, currentRate(model, track.boneName()));
             if (PlayerRig.ROOT.equals(track.boneName())) {
-                applyRoot(model, track, snapshot, maxRate, weight);
+                applyRoot(model, track, snapshot, maxRate, weight, inertia);
                 continue;
             }
             Bone bone = Bone.byId(track.boneName());
             if (bone == null || bone.aimed() != null) continue; // Aim bones drive their part's aim below.
             if (bone.holdingArm() != null) {
-                applyItem(itemBone(model, bone), bone.parent.equals(PlayerRig.ROOT), track, snapshot, maxRate, weight);
+                applyItem(itemBone(model, bone), bone.id, bone.parent.equals(PlayerRig.ROOT), track, snapshot, maxRate, weight, inertia);
                 continue;
             }
             ModelRendererBends part = bone.part(model);
             KeyframeStack rotation = track.rotationKeyFrames();
             if (animates(rotation)) clearPreRotation(part, rate);
-            setRotation(part.rotation, rotation, snapshot, maxRate, weight);
-            if (bone.aim() == null || !tracks.containsKey(bone.aim().id)) setPosition(part, track, snapshot, maxRate, weight);
+            setRotation(part.rotation, rotation, snapshot, maxRate, weight, inertia, bone.id + " rotation");
+            if (bone.aim() == null || !tracks.containsKey(bone.aim().id)) setPosition(part, bone.id, track, snapshot, maxRate, weight, inertia);
             KeyframeStack scale = track.scaleKeyFrames();
             if (has(scale.xKeyframes())) part.scaleX = mix(part.scaleX, snapshot.getScaleX(), weight);
             // (A kept scale axis stays at what earlier animations set, like rotations and positions.)
@@ -241,7 +295,7 @@ public final class PlayerAnimator {
             Bone limb = aim.aimed();
             BoneAnimation limbTrack = tracks.get(limb.id);
             float rate = Math.max(rate(aimTrack, maxRate), limbTrack == null ? 0 : rate(limbTrack, maxRate));
-            applyAim(limb.part(model), aimTrack, pose.get(aim.id), limbTrack, pose.get(limb.id), rate, maxRate, weight);
+            applyAim(limb.part(model), aim.id, aimTrack, pose.get(aim.id), limbTrack, pose.get(limb.id), rate, maxRate, weight, inertia);
         }
     }
 
@@ -249,11 +303,11 @@ public final class PlayerAnimator {
      * An aim bone turns the part at its pivot before the part's own rotation. Positions compose: the aim's offset,
      * plus the part's offset turned by the aim.
      */
-    private static void applyAim(ModelRendererBends part, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
-        BoneAnimation partTrack, BoneSnapshot partSnapshot, float rate, float maxRate, float weight) {
+    private static void applyAim(ModelRendererBends part, String aimId, BoneAnimation aimTrack, BoneSnapshot aimSnapshot,
+        BoneAnimation partTrack, BoneSnapshot partSnapshot, float rate, float maxRate, float weight, Inertia inertia) {
         if (animates(aimTrack.rotationKeyFrames())) {
             clearPreRotation(part, rate);
-            setRotation(part.aim, aimTrack.rotationKeyFrames(), aimSnapshot, maxRate, weight);
+            setRotation(part.aim, aimTrack.rotationKeyFrames(), aimSnapshot, maxRate, weight, inertia, aimId + " rotation");
         }
         KeyframeStack partPosition = partTrack == null ? KeyframeStack.EMPTY : partTrack.positionKeyFrames();
         if (animates(aimTrack.positionKeyFrames()) || animates(partPosition)) {
@@ -271,10 +325,10 @@ public final class PlayerAnimator {
     }
 
     /** A bone's translation moves the part's pivot: Bedrock (x, y, z) pixels is model (x, -y, z). */
-    private static void setPosition(ModelRendererBends part, BoneAnimation track, BoneSnapshot snapshot, float maxRate,
-        float weight) {
+    private static void setPosition(ModelRendererBends part, String boneId, BoneAnimation track, BoneSnapshot snapshot,
+        float maxRate, float weight, Inertia inertia) {
         setTranslation(part.position, track.positionKeyFrames(), snapshot.getTranslateX(), -snapshot.getTranslateY(),
-            snapshot.getTranslateZ(), maxRate, weight);
+            snapshot.getTranslateZ(), maxRate, weight, inertia, boneId + " position");
     }
 
     /** {@code to} at {@code weight}; NaN (q.mobends_keep) leaves {@code from} as it is. */
@@ -295,11 +349,11 @@ public final class PlayerAnimator {
      * Item bones: rotation and position as for parts; scale shows or hides the item there. An animated free bone
      * shows the item unless its scale is keyed to 0.
      */
-    private static void applyItem(ItemBone item, boolean free, BoneAnimation track, BoneSnapshot snapshot, float maxRate,
-        float weight) {
-        setRotation(item.rotation, track.rotationKeyFrames(), snapshot, maxRate, weight);
+    private static void applyItem(ItemBone item, String boneId, boolean free, BoneAnimation track, BoneSnapshot snapshot,
+        float maxRate, float weight, Inertia inertia) {
+        setRotation(item.rotation, track.rotationKeyFrames(), snapshot, maxRate, weight, inertia, boneId + " rotation");
         setTranslation(item.position, track.positionKeyFrames(), snapshot.getTranslateX(), -snapshot.getTranslateY(),
-            snapshot.getTranslateZ(), maxRate, weight);
+            snapshot.getTranslateZ(), maxRate, weight, inertia, boneId + " position");
         KeyframeStack scale = track.scaleKeyFrames();
         if (free) {
             item.scaleX = item.scaleY = item.scaleZ = 1;
@@ -328,46 +382,62 @@ public final class PlayerAnimator {
 
     /** {@code root} drives the whole-body transform: rotation to renderRotation, position to renderOffset. */
     private static void applyRoot(ModelBendsPlayer model, BoneAnimation track, BoneSnapshot snapshot, float maxRate,
-        float weight) {
-        setRotation(model.renderRotation, track.rotationKeyFrames(), snapshot, maxRate, weight);
+        float weight, Inertia inertia) {
+        setRotation(model.renderRotation, track.rotationKeyFrames(), snapshot, maxRate, weight, inertia, "root rotation");
         setTranslation(model.renderOffset, track.positionKeyFrames(), -snapshot.getTranslateX(), snapshot.getTranslateY(),
-            snapshot.getTranslateZ(), maxRate, weight);
+            snapshot.getTranslateZ(), maxRate, weight, inertia, "root position");
     }
 
-    /** Salamander stores Bedrock rotations in radians with X and Y negated; parts use Bedrock degrees. */
+    /**
+     * Salamander stores Bedrock rotations in radians with X and Y negated; parts use Bedrock degrees. {@code inertia}
+     * (may be null) fades channel {@code key} in from where it was.
+     */
     private static void setRotation(SmoothVector3f target, KeyframeStack keyframes, BoneSnapshot snapshot, float maxRate,
-        float weight) {
+        float weight, Inertia inertia, String key) {
         // Taking the nearest whole turn keeps a spin going forward; a partial blend mixes the angles as authored.
         boolean unwrap = weight >= 1;
-        if (has(keyframes.xKeyframes())) {
-            float angle = -snapshot.getRotX() * RAD_TO_DEG;
-            target.setSmoothX(mix(target.vFinal.x, unwrap ? nearest(angle, target.vSmooth.x) : angle, weight),
-                axisRate(keyframes.xKeyframes(), maxRate, weight, target.smoothness.x));
-        }
-        if (has(keyframes.yKeyframes())) {
-            float angle = -snapshot.getRotY() * RAD_TO_DEG;
-            target.setSmoothY(mix(target.vFinal.y, unwrap ? nearest(angle, target.vSmooth.y) : angle, weight),
-                axisRate(keyframes.yKeyframes(), maxRate, weight, target.smoothness.y));
-        }
-        if (has(keyframes.zKeyframes())) {
-            float angle = snapshot.getRotZ() * RAD_TO_DEG;
-            target.setSmoothZ(mix(target.vFinal.z, unwrap ? nearest(angle, target.vSmooth.z) : angle, weight),
-                axisRate(keyframes.zKeyframes(), maxRate, weight, target.smoothness.z));
+        float[] angles = {-snapshot.getRotX() * RAD_TO_DEG, -snapshot.getRotY() * RAD_TO_DEG, snapshot.getRotZ() * RAD_TO_DEG};
+        float[] shown = {target.vSmooth.x, target.vSmooth.y, target.vSmooth.z};
+        float[] finals = {target.vFinal.x, target.vFinal.y, target.vFinal.z};
+        float[] smoothness = {target.smoothness.x, target.smoothness.y, target.smoothness.z};
+        Keyframe[][] axes = {keyframes.xKeyframes(), keyframes.yKeyframes(), keyframes.zKeyframes()};
+        for (int i = 0; i < 3; ++i) {
+            if (!has(axes[i])) continue;
+            float rate = inertia != null ? FOLLOW_RATE : axisRate(axes[i], maxRate, weight, smoothness[i]);
+            // Only motion unwraps: a held pose eases there the way the angle reads, as the Java poses do.
+            float angle = unwrap && rate >= FOLLOW_RATE ? nearest(angles[i], shown[i]) : angles[i];
+            set(target, i, mix(finals[i], inertial(inertia, key, i, angle, shown[i], rate), weight), rate);
         }
     }
 
-    /** A position: Bedrock (x, y, z) is {@code sign} times that in the target's space, per axis. */
+    /** A position (x, y, z) in the target's space; {@code inertia} as for rotations. */
     private static void setTranslation(SmoothVector3f target, KeyframeStack keyframes, float x, float y, float z,
-        float maxRate, float weight) {
-        if (has(keyframes.xKeyframes())) {
-            target.setSmoothX(mix(target.vFinal.x, x, weight), axisRate(keyframes.xKeyframes(), maxRate, weight, target.smoothness.x));
+        float maxRate, float weight, Inertia inertia, String key) {
+        float[] values = {x, y, z};
+        float[] shown = {target.vSmooth.x, target.vSmooth.y, target.vSmooth.z};
+        float[] finals = {target.vFinal.x, target.vFinal.y, target.vFinal.z};
+        float[] smoothness = {target.smoothness.x, target.smoothness.y, target.smoothness.z};
+        Keyframe[][] axes = {keyframes.xKeyframes(), keyframes.yKeyframes(), keyframes.zKeyframes()};
+        for (int i = 0; i < 3; ++i) {
+            if (!has(axes[i])) continue;
+            float rate = inertia != null ? FOLLOW_RATE : axisRate(axes[i], maxRate, weight, smoothness[i]);
+            set(target, i, mix(finals[i], inertial(inertia, key, i, values[i], shown[i], rate), weight), rate);
         }
-        if (has(keyframes.yKeyframes())) {
-            target.setSmoothY(mix(target.vFinal.y, y, weight), axisRate(keyframes.yKeyframes(), maxRate, weight, target.smoothness.y));
-        }
-        if (has(keyframes.zKeyframes())) {
-            target.setSmoothZ(mix(target.vFinal.z, z, weight), axisRate(keyframes.zKeyframes(), maxRate, weight, target.smoothness.z));
-        }
+    }
+
+    /**
+     * While an animation fades in ({@link #playOnce}), every axis follows it, fading out where it started; otherwise
+     * nothing changes.
+     */
+    private static float inertial(Inertia inertia, String key, int axis, float value, float shown, float rate) {
+        if (inertia == null || rate < FOLLOW_RATE || Float.isNaN(value)) return value;
+        return inertia.apply(key + " " + axis, value, shown);
+    }
+
+    private static void set(SmoothVector3f target, int axis, float value, float rate) {
+        if (axis == 0) target.setSmoothX(value, rate);
+        else if (axis == 1) target.setSmoothY(value, rate);
+        else target.setSmoothZ(value, rate);
     }
 
     private static final Map<Keyframe[], Boolean> AXIS_MOVES = java.util.Collections.synchronizedMap(

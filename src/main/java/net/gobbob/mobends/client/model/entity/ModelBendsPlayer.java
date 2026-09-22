@@ -385,7 +385,7 @@ extends ModelBiped {
                 this.animatePlayer("attack", argEntity, data);
             }
             if (!(rowing && boat.driver)) {
-                Animation_Blocking.apply(this, blockingHands);
+                Animation_Blocking.play(this, data, blockingHands);
             }
             AnimationPreview.apply(this, data, argEntity);
             ((ModelRendererBends)this.bipedHead).update(data.ticksPerFrame);

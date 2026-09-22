@@ -2,16 +2,15 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
-import net.gobbob.mobends.data.Data_Player;
-import net.minecraft.entity.player.EntityPlayer;
 import org.lwjgl.util.vector.Vector3f;
 
 public class Animation_Attack_Stance {
-    public static void animate(EntityPlayer player, ModelBendsPlayer model, Data_Player data) {
-        if (!data.isOnGround()) {
-            return;
-        }
-        if (data.motion.x == 0.0f & data.motion.z == 0.0f) {
+    /**
+     * The original Java sword stance, kept as the reference the Blockbench {@code sword_stance} (standing) and
+     * {@code sword_stance_sprint} were baked from. On the ground only; walking without sprinting has none.
+     */
+    public static void apply(ModelBendsPlayer model, boolean moving, boolean sprinting) {
+        if (!moving) {
             model.renderRotation.setSmoothY(30.0f, 0.3f);
             Vector3f bodyRot = new Vector3f(0.0f, 0.0f, 0.0f);
             bodyRot.x = 20.0f;
@@ -35,7 +34,7 @@ public class Animation_Attack_Stance {
             ((ModelRendererBends)model.bipedLeftForeArm).rotation.setSmoothX(-60.0f, 0.3f);
             model.renderItemRotation.setSmoothX(65.0f, 0.3f);
             model.renderOffset.setSmoothY(-2.0f);
-        } else if (player.isSprinting()) {
+        } else if (sprinting) {
             ((ModelRendererBends)model.bipedBody).rotation.setSmoothY(20.0f, 0.3f);
             ((ModelRendererBends)model.bipedHead).rotation.setSmoothY(model.headRotationY - 20.0f);
             ((ModelRendererBends)model.bipedHead).rotation.setSmoothX(model.headRotationX - 15.0f);

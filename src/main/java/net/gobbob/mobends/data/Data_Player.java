@@ -62,6 +62,14 @@ extends EntityData {
         return this.ticks - startAndLast[0];
     }
 
+    private java.util.Map<String, net.gobbob.mobends.client.animation.Inertia> slotInertia;
+
+    /** The inertialization state of {@code slot}. */
+    public net.gobbob.mobends.client.animation.Inertia inertia(String slot) {
+        if (this.slotInertia == null) this.slotInertia = new java.util.HashMap<String, net.gobbob.mobends.client.animation.Inertia>();
+        return this.slotInertia.computeIfAbsent(slot, s -> new net.gobbob.mobends.client.animation.Inertia());
+    }
+
     public Data_Player(int argEntityID) {
         super(argEntityID);
     }
