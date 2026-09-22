@@ -83,6 +83,12 @@ public final class PlayerAnimator {
     /** As above, leaving out the bones in {@code without} (e.g. the root while riding, where the mount places the body). */
     public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds, float weight, Set<String> without) {
+        return play(model, data, file, name, seconds, slot, blendSeconds, weight, without, false);
+    }
+
+    /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
+    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double blendSeconds, float weight, Set<String> without, boolean mirror) {
         Animation animation = find(file, name);
         if (animation == null) return false;
         float maxRate = FOLLOW_RATE;
@@ -90,7 +96,8 @@ public final class PlayerAnimator {
             float blended = (float)(data.ticksPlaying(slot, file + "#" + name) / (blendSeconds * 20));
             if (blended < 1) maxRate = blendRate(blended);
         }
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate, weight, without);
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate, weight, without,
+            null, mirror);
         return true;
     }
 
@@ -104,14 +111,25 @@ public final class PlayerAnimator {
      */
     public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
         double seconds, String slot, double fadeSeconds, Set<String> without) {
+        return playOnce(model, data, file, name, seconds, slot, fadeSeconds, without, false);
+    }
+
+    /** As above; {@code mirror} plays it on the other side (see {@link #mirror}), e.g. for the off hand. */
+    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double fadeSeconds, Set<String> without, boolean mirror) {
         Animation animation = find(file, name);
         if (animation == null) return false;
-        playOnce(model, data, animation, file + "#" + name, seconds, slot, fadeSeconds, without);
+        playOnce(model, data, animation, file + "#" + name, seconds, slot, fadeSeconds, without, mirror);
         return true;
     }
 
     static void playOnce(ModelBendsPlayer model, Data_Player data, Animation animation, String key, double seconds,
         String slot, double fadeSeconds, Set<String> without) {
+        playOnce(model, data, animation, key, seconds, slot, fadeSeconds, without, false);
+    }
+
+    static void playOnce(ModelBendsPlayer model, Data_Player data, Animation animation, String key, double seconds,
+        String slot, double fadeSeconds, Set<String> without, boolean mirror) {
         Inertia inertia = null;
         if (data != null && fadeSeconds > 0) {
             inertia = data.inertia(slot);
@@ -121,13 +139,13 @@ public final class PlayerAnimator {
                 inertia.capture();
                 double previous = Math.max(0, seconds - data.ticksPerFrame / 20.0);
                 apply(model, animation, AnimationProcessor.evaluate(animation, previous, context(model, data)), FOLLOW_RATE, 1,
-                    without, inertia);
+                    without, inertia, mirror);
             }
             inertia.fade((float)((elapsed + data.ticksPerFrame) / (fadeSeconds * 20)));
             if (!inertia.active()) inertia = null;
         }
         apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), FOLLOW_RATE, 1,
-            without, inertia);
+            without, inertia, mirror);
     }
 
     /**
@@ -137,13 +155,21 @@ public final class PlayerAnimator {
     public static final Set<String> LEFT_ARM = java.util.Collections.unmodifiableSet(new HashSet<String>(java.util.Arrays.asList(
         Bone.LEFT_ARM_AIM.id, Bone.LEFT_ARM.id, Bone.LEFT_FORE_ARM.id, Bone.LEFT_ITEM.id, Bone.LEFT_ITEM_FREE.id)));
 
-    /** {@link #LEFT_ARM} if the off hand holds something, else none; plus {@code others} (may be null). */
-    public static Set<String> freeHandsOnly(Data_Player data, Set<String> others) {
-        if (!isOffhandHolding(data)) return others;
-        if (others == null) return LEFT_ARM;
-        Set<String> both = new HashSet<String>(LEFT_ARM);
+    /** The right arm's bones: an off-hand action plays without them while the main hand holds something. */
+    public static final Set<String> RIGHT_ARM = java.util.Collections.unmodifiableSet(new HashSet<String>(java.util.Arrays.asList(
+        Bone.RIGHT_ARM_AIM.id, Bone.RIGHT_ARM.id, Bone.RIGHT_FORE_ARM.id, Bone.RIGHT_ITEM.id, Bone.RIGHT_ITEM_FREE.id)));
+
+    /** {@code arm} plus {@code others} (may be null). */
+    public static Set<String> union(Set<String> arm, Set<String> others) {
+        if (others == null) return arm;
+        Set<String> both = new HashSet<String>(arm);
         both.addAll(others);
         return both;
+    }
+
+    /** {@link #LEFT_ARM} if the off hand holds something, else none; plus {@code others} (may be null). */
+    public static Set<String> freeHandsOnly(Data_Player data, Set<String> others) {
+        return isOffhandHolding(data) ? union(LEFT_ARM, others) : others;
     }
 
     /** Whether the player's off hand holds something (Backhand; false outside a running world). */
@@ -175,11 +201,17 @@ public final class PlayerAnimator {
     /** As above, leaving out the bones in {@code without} (may be null). */
     public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without) {
+        return playLoop(model, data, file, name, slot, weight, without, false);
+    }
+
+    /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
+    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+        float weight, Set<String> without, boolean mirror) {
         String animation = "animation.mobends.player." + name;
         Animation loaded = find(file, animation);
         if (loaded == null) return false;
         double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
-        return play(model, data, file, animation, seconds, slot, LOCOMOTION_BLEND, weight, without);
+        return play(model, data, file, animation, seconds, slot, LOCOMOTION_BLEND, weight, without, mirror);
     }
 
     /** Plays a held pose (the animation at 0 s) from {@code file}, blending in when {@code slot} switches to it. */
@@ -295,22 +327,33 @@ public final class PlayerAnimator {
 
     static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight, Set<String> without, Inertia inertia) {
+        apply(model, animation, pose, maxRate, weight, without, inertia, false);
+    }
+
+    /**
+     * As above; {@code mirror} plays the animation on the other side (right and left bones swapped, mirrored across
+     * the body's middle), e.g. a right-hand swing for the off hand. {@code without} names bones as they end up.
+     */
+    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+        float weight, Set<String> without, Inertia inertia, boolean mirror) {
         if (weight <= 0) return;
+        if (mirror) pose = mirror(pose);
         Map<String, BoneAnimation> tracks = new HashMap<String, BoneAnimation>();
         for (BoneAnimation track : animation.boneAnimations()) {
-            if (pose.containsKey(track.boneName()) && (without == null || !without.contains(track.boneName()))) {
-                tracks.put(track.boneName(), track);
-            }
+            String name = mirror ? mirrorName(track.boneName()) : track.boneName();
+            if (pose.containsKey(name) && (without == null || !without.contains(name))) tracks.put(name, track);
         }
-        for (BoneAnimation track : tracks.values()) {
-            BoneSnapshot snapshot = pose.get(track.boneName());
+        for (Map.Entry<String, BoneAnimation> entry : tracks.entrySet()) {
+            String name = entry.getKey();
+            BoneAnimation track = entry.getValue();
+            BoneSnapshot snapshot = pose.get(name);
             float rate = rate(track, maxRate);
-            if (weight < 1) rate = Math.max(rate, currentRate(model, track.boneName()));
-            if (PlayerRig.ROOT.equals(track.boneName())) {
+            if (weight < 1) rate = Math.max(rate, currentRate(model, name));
+            if (PlayerRig.ROOT.equals(name)) {
                 applyRoot(model, track, snapshot, maxRate, weight, inertia);
                 continue;
             }
-            Bone bone = Bone.byId(track.boneName());
+            Bone bone = Bone.byId(name);
             if (bone == null || bone.aimed() != null) continue; // Aim bones drive their part's aim below.
             if (bone.holdingArm() != null) {
                 applyItem(itemBone(model, bone), bone.id, bone.parent.equals(PlayerRig.ROOT), track, snapshot, maxRate, weight, inertia);
@@ -335,6 +378,28 @@ public final class PlayerAnimator {
             float rate = Math.max(rate(aimTrack, maxRate), limbTrack == null ? 0 : rate(limbTrack, maxRate));
             applyAim(limb.part(model), aim.id, aimTrack, pose.get(aim.id), limbTrack, pose.get(limb.id), rate, maxRate, weight, inertia);
         }
+    }
+
+    /** The bone on the other side ({@code rightArm} and {@code leftArm}, ...); others are their own mirror. */
+    static String mirrorName(String name) {
+        if (name.startsWith("right")) return "left" + name.substring(5);
+        if (name.startsWith("left")) return "right" + name.substring(4);
+        return name;
+    }
+
+    /**
+     * A pose mirrored across the body's middle, the X axis: each bone takes the other side's values, turned
+     * (x, -y, -z) and moved (-x, y, z). (Salamander keeps X and Y rotations negated, which doesn't change that.)
+     */
+    static Map<String, BoneSnapshot> mirror(Map<String, BoneSnapshot> pose) {
+        Map<String, BoneSnapshot> mirrored = new HashMap<String, BoneSnapshot>();
+        for (Map.Entry<String, BoneSnapshot> entry : pose.entrySet()) {
+            BoneSnapshot snapshot = entry.getValue().copy();
+            snapshot.setRotation(snapshot.getRotX(), -snapshot.getRotY(), -snapshot.getRotZ());
+            snapshot.setTranslateX(-snapshot.getTranslateX());
+            mirrored.put(mirrorName(entry.getKey()), snapshot);
+        }
+        return mirrored;
     }
 
     /**

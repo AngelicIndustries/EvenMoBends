@@ -7,7 +7,9 @@ import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.render.BlinkingTextures;
+import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.client.renderer.SwordTrail;
+import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
@@ -376,7 +378,34 @@ extends RenderPlayer {
             }
         }
         if (trail != null) trail.render();
-        MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
+        // Backhand draws the off-hand item from the left arm here; put it at the leftItem bone.
+        ModelRendererBends_SeperatedChild leftArm = trailModel != null && trailModel.bipedLeftArm instanceof ModelRendererBends_SeperatedChild
+            && BackhandCompat.getOffhandItem(argPlayer) != null ? (ModelRendererBends_SeperatedChild)trailModel.bipedLeftArm : null;
+        if (leftArm != null) leftArm.afterPostRender = () -> placeOffhandItem(trailModel);
+        try {
+            MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
+        } finally {
+            if (leftArm != null) leftArm.afterPostRender = null;
+        }
+    }
+
+    /**
+     * After the left arm's postRender, for Backhand's off-hand item: moves to the grip and the leftItem bone, then
+     * mirrored like the right hand's placement, and undoes the offsets Backhand applies next for vanilla's arm (it
+     * moves by the arm's pivot, mirrors, moves by it again, then 7 px down), so the item lands as the right hand's
+     * would, mirrored.
+     */
+    private static void placeOffhandItem(ModelBendsPlayer model) {
+        float s = 0.0625f;
+        ModelRenderer arm = model.bipedLeftArm;
+        GL11.glTranslatef(0.0f, PlayerRig.GRIP_DROP * s, 0.0f);
+        model.leftItem.apply(s);
+        GL11.glScalef(-1.0f, 1.0f, 1.0f);
+        // The right hand's (-1, -2, 1) px from the grip, then Backhand's (-1, 7, 1) undone.
+        GL11.glTranslatef(0.0f, -9.0f * s, 0.0f);
+        GL11.glTranslatef(-arm.rotationPointX * s, -arm.rotationPointY * s, -arm.rotationPointZ * s);
+        GL11.glScalef(-1.0f, 1.0f, 1.0f);
+        GL11.glTranslatef(-arm.rotationPointX * s, -arm.rotationPointY * s, -arm.rotationPointZ * s);
     }
 
     /** The modelview the player model draws in, while drawing its equipment with the sword trail on. */

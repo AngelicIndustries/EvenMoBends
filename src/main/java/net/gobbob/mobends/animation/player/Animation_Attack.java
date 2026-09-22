@@ -12,6 +12,8 @@ import net.gobbob.mobends.animation.player.Animation_Attack_PunchStance;
 import net.gobbob.mobends.animation.player.Animation_Attack_Stance;
 import net.gobbob.mobends.client.animation.PlayerAnimator;
 import net.gobbob.mobends.client.animation.PlayerRig;
+import net.gobbob.mobends.compat.BackhandCompat;
+import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
@@ -20,6 +22,10 @@ import net.gobbob.mobends.pack.BendsPack;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemAxe;
+import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraft.util.ResourceLocation;
@@ -69,6 +75,44 @@ extends Animation {
             }
         }
     }
+
+    /**
+     * Backhand's off hand, over whatever the main hand does, for {@link #OFFHAND_TICKS} after it starts a swing: an
+     * empty hand punches ({@code punch_left}); a pickaxe or a block mines, an axe chops, and anything else swings
+     * through the sword combo, each the main hand's animation mirrored. While the main hand holds something its arm
+     * is left alone, and riding leaves the root to the mount.
+     */
+    public static void playOffhand(EntityPlayer player, ModelBendsPlayer model, Data_Player data) {
+        if (!CompatibilityPolicy.isBackhandLoaded() || data.ticksAfterOffhandPunch >= OFFHAND_TICKS) return;
+        ItemStack item = BackhandCompat.getOffhandItem(player);
+        boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
+        Set<String> keepMain = player.getHeldItem() != null ? PlayerAnimator.RIGHT_ARM : null;
+        Set<String> without = player.isRiding() ? PlayerAnimator.union(RIDING_MASK, keepMain) : keepMain;
+        double seconds = data.ticksAfterOffhandPunch / 20.0;
+        if (item == null) {
+            if (PlayerAnimationConfig.isEnabled("punch")) {
+                PlayerAnimator.play(model, data, PlayerAnimator.PUNCH, "animation.mobends.player.punch_left" + (moving ? "_moving" : ""),
+                    seconds, "offhand", 0, 1, without);
+            }
+        } else if (item.getItem() instanceof ItemPickaxe || Block.getBlockFromItem(item.getItem()) != Blocks.air) {
+            if (PlayerAnimationConfig.isEnabled("mining")) {
+                PlayerAnimator.playLoop(model, data, Animation_Mining.FILE, "mine_swing", "offhand", 1, without, true);
+            }
+        } else if (item.getItem() instanceof ItemAxe) {
+            if (PlayerAnimationConfig.isEnabled("axe")) {
+                PlayerAnimator.playLoop(model, data, Animation_Axe.FILE, "axe_swing", "offhand", 1, without, true);
+            }
+        } else {
+            int attack = data.currentOffhandAttack;
+            if (attack >= 1 && attack <= 3 && PlayerAnimationConfig.isEnabled("swordCombo" + attack)) {
+                String name = "animation.mobends.player.sword_" + attack + (attack < 3 && (moving || player.isRiding()) ? "_moving" : "");
+                PlayerAnimator.playOnce(model, data, SWORD, name, seconds, "offhand", SWING_FADE, without, true);
+            }
+        }
+    }
+
+    /** How long an off-hand swing plays: a swing is 10 ticks, and mining or chopping keeps restarting it. */
+    public static final float OFFHAND_TICKS = 10;
 
     public static final ResourceLocation SWORD = new ResourceLocation(MoBends.MODID, "player/sword");
     /** While riding, the mount places the body: swings leave the root alone. */

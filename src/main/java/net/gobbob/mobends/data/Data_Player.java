@@ -6,6 +6,8 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.renderer.SwordTrail;
+import net.gobbob.mobends.compat.BackhandCompat;
+import net.minecraft.entity.player.EntityPlayer;
 import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
@@ -37,6 +39,10 @@ extends EntityData {
     public boolean sprintJumpLeg = false;
     public boolean fistPunchArm = false;
     public int currentAttack = 0;
+    /** Backhand's off hand: ticks since it last started swinging, and its place in its own sword combo (0 none). */
+    public float ticksAfterOffhandPunch = 60.0f;
+    public int currentOffhandAttack = 0;
+    private boolean alreadyOffhandPunched;
 
     /** The diving lean along the travel direction, eased (q.mobends_travel_pitch). */
     public float divingTravelPitch;
@@ -150,6 +156,35 @@ extends EntityData {
         super.update(argPartialTicks);
         if (this.ticksAfterPunch > 20.0f) {
             this.currentAttack = 0;
+        }
+        if (this.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)this.getEntity();
+            if (BackhandCompat.getOffSwingProgress(player, argPartialTicks) > 0.0f) {
+                if (!this.alreadyOffhandPunched) {
+                    this.onOffhandPunch(BackhandCompat.getOffhandItem(player) != null);
+                    this.alreadyOffhandPunched = true;
+                }
+            } else {
+                this.alreadyOffhandPunched = false;
+            }
+        }
+        this.ticksAfterOffhandPunch += this.ticksPerFrame;
+        if (this.ticksAfterOffhandPunch > 20.0f) {
+            this.currentOffhandAttack = 0;
+        }
+    }
+
+    /** The off hand started a swing: an empty hand punches, anything else goes through the combo like the main hand. */
+    private void onOffhandPunch(boolean holding) {
+        if (!holding) {
+            this.ticksAfterOffhandPunch = 0.0f;
+        } else if (this.currentOffhandAttack == 0) {
+            this.currentOffhandAttack = 1;
+            this.ticksAfterOffhandPunch = 0.0f;
+        } else if (this.ticksAfterOffhandPunch > 6.0f && this.ticksAfterOffhandPunch < 15.0f) {
+            this.currentOffhandAttack = this.currentOffhandAttack == 1 ? 2
+                : this.currentOffhandAttack == 2 ? (this.getEntity().isRiding() ? 1 : 3) : 1;
+            this.ticksAfterOffhandPunch = 0.0f;
         }
     }
 

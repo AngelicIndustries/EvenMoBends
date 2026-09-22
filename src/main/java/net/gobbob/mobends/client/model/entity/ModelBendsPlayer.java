@@ -5,6 +5,7 @@ import java.util.UUID;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.animation.Animation;
 import net.gobbob.mobends.animation.player.Animation_AquaAcrobatics;
+import net.gobbob.mobends.animation.player.Animation_Attack;
 import net.gobbob.mobends.animation.player.Animation_Blocking;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.animation.player.Animation_Swimming;
@@ -388,6 +389,9 @@ extends ModelBiped {
                 this.animatePlayer("axe", argEntity, data);
             } else {
                 this.animatePlayer("attack", argEntity, data);
+            }
+            if (!(rowing && boat.driver) && (blockingHands & PlayerBlockingCompat.OFF_HAND) == 0) {
+                Animation_Attack.playOffhand(player, this, data);
             }
             if (!(rowing && boat.driver)) {
                 Animation_Blocking.play(this, data, blockingHands);

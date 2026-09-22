@@ -14,6 +14,35 @@ import org.lwjgl.util.vector.Vector3f;
 
 /** With something in the off hand, main-hand animations leave the left arm to what it was doing. */
 class OffhandTest {
+    /** Played mirrored, an animation puts each part where its other-side part goes, reflected across the body's middle. */
+    @Test
+    void mirroredAnimationsAreReflections() throws Exception {
+        String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";
+        for (String[] which : new String[][] {{"sword", "sword_1"}, {"sword", "sword_3"}, {"axe", "axe_swing"}, {"punch", "punch_right"}}) {
+            Animation animation = AnimationBaking.load(Paths.get(dir + which[0] + ".animation.json"))
+                .getAnimation("animation.mobends.player." + which[1]);
+            for (double seconds : new double[] {0, 0.1, 0.2, 0.4}) {
+                ModelBendsPlayer plain = AnimationBaking.model(0, 0), mirrored = AnimationBaking.model(0, 0);
+                AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, animation,
+                    AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
+                AnimationBaking.frame(mirrored, m -> PlayerAnimator.apply(m, animation,
+                    AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(m, null)), 1000, 1, null, null, true), 1000);
+                org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
+                for (Bone bone : Bone.values()) {
+                    if (bone.part(plain) == null) continue;
+                    Bone other = Bone.byId(PlayerAnimator.mirrorName(bone.id));
+                    org.joml.Matrix4f expected = new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(bone.part(plain))).mul(reflect);
+                    float off = AnimationBaking.angleBetween(expected, AnimationBaking.orientation(other.part(mirrored)));
+                    org.junit.jupiter.api.Assertions.assertTrue(off < 0.1f, which[1] + " at " + seconds + ": " + other.id + " off by " + off);
+                    ModelRendererBends a = bone.part(plain), b = other.part(mirrored);
+                    assertEquals(-a.position.vSmooth.x, b.position.vSmooth.x, 1e-4, which[1] + ": " + other.id + " position");
+                }
+                assertEquals(-plain.renderRotation.vSmooth.y, mirrored.renderRotation.vSmooth.y, 1e-3, which[1] + ": root turn");
+                assertEquals(-plain.renderOffset.vSmooth.x, mirrored.renderOffset.vSmooth.x, 1e-4, which[1] + ": root offset");
+            }
+        }
+    }
+
     @Test
     void mainHandAnimationsLeaveAnOccupiedOffhandArmAlone() throws Exception {
         String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";

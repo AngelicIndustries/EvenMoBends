@@ -8,6 +8,8 @@ public class ModelRendererBends_SeperatedChild
 extends ModelRendererBends {
     ModelRendererBends momModel;
     ModelRendererBends seperatedModel;
+    /** Runs at the end of {@link #postRender}, while set: something drawn from this limb goes where it says. */
+    public Runnable afterPostRender;
 
     public ModelRendererBends_SeperatedChild(ModelBase argModel) {
         super(argModel);
@@ -63,6 +65,7 @@ extends ModelRendererBends {
         }
         this.seperatedModel.postRender(p_78794_1_);
         GL11.glTranslatef((float)(-this.seperatedModel.rotationPointX * p_78794_1_), (float)(-this.seperatedModel.rotationPointY * p_78794_1_), (float)(-this.seperatedModel.rotationPointZ * p_78794_1_));
+        if (this.afterPostRender != null) this.afterPostRender.run();
     }
 }
 
