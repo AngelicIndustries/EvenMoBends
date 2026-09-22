@@ -1,6 +1,9 @@
 package net.gobbob.mobends.animation.player;
 
+import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -20,15 +23,31 @@ extends Animation {
     @Override
     public void animate(EntityLivingBase argEntity, ModelBase argModel, EntityData argData) {
         ModelBendsPlayer model = (ModelBendsPlayer)argModel;
-        Data_Player data = (Data_Player)argData;
         EntityPlayer player = (EntityPlayer)argEntity;
-        float aimedBowDuration = 0.0f;
-        if (player != null) {
-            aimedBowDuration = player.getItemInUseDuration();
-        }
-        if (aimedBowDuration > 15.0f) {
-            aimedBowDuration = 15.0f;
-        }
+        play(model, (Data_Player)argData, player != null ? player.getItemInUseDuration() + model.partialTicks() : 0);
+    }
+
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/bow");
+    /** Drawing takes this many ticks, then the aim settles. */
+    public static final float DRAW_TICKS = 10;
+    /** How long where the body was fades out as the draw starts. */
+    public static final double FADE = 0.15;
+
+    /**
+     * Plays {@code player/bow.animation.json}, timed from when the player started drawing: {@code bow_draw} for
+     * {@link #DRAW_TICKS}, then {@code bow_aim}, which holds its last frame. Falls back to the Java bow below.
+     */
+    public static void play(ModelBendsPlayer model, Data_Player data, float useTicks) {
+        boolean played = useTicks < DRAW_TICKS
+            ? PlayerAnimator.playOnce(model, data, FILE, "animation.mobends.player.bow_draw", useTicks / 20.0, "bow", FADE, null)
+            : PlayerAnimator.playOnce(model, data, FILE, "animation.mobends.player.bow_aim", (useTicks - DRAW_TICKS) / 20.0, "bow",
+                FADE, null);
+        if (!played) apply(model, useTicks);
+    }
+
+    /** The original Java bow, kept as the reference the Blockbench bow was baked from. */
+    public static void apply(ModelBendsPlayer model, float useTicks) {
+        float aimedBowDuration = Math.min(useTicks, 15.0f);
         if (aimedBowDuration < 10.0f) {
             ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothX(0.0f, 0.3f);
             ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothX(0.0f, 0.3f);
@@ -62,4 +81,3 @@ extends Animation {
         }
     }
 }
-

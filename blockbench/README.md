@@ -93,6 +93,11 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   swing keeps its shape without snapping to its first frame. After a swing, standing still settles into
   `sword_stance`, sprinting into `sword_stance_sprint` (walking has none). The sword trail follows the blade as it
   is drawn, so it traces whatever a swing does with the arm and the item.
+- `bow.animation.json`: timed from when the player started drawing. `bow_draw` for the first 0.5 s, then `bow_aim`,
+  which holds its last frame (the bow arm follows the look down, rising no higher than 120 degrees). Both fade in
+  from where the body was, like the swings.
+- `mine.animation.json` / `axe.animation.json`: the stance `mine` / `axe` while holding a pickaxe or a block / an
+  axe, and `mine_swing` / `axe_swing` over it while swinging, looping on the player's age (1.8 swings a second).
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
@@ -127,7 +132,7 @@ bends the legs forward but leaves their sideways turn to the walk underneath).
 `MovementAnimationTest` keeps stand, walk, sprint and sneak within 1.5 degrees of their Java originals (bake with
 `MOBENDS_BAKE_MOVEMENT=1`, which overwrites those four files); `AirAnimationTest` does the same for fall, climb,
 fly, ride and jump (`MOBENDS_BAKE_AIR=1`), and `CombatAnimationTest` for the sword swings, stances and blocking
-(`MOBENDS_BAKE_COMBAT=1`), which also checks a whole combo against the Java: within 45 degrees through the
+(`MOBENDS_BAKE_COMBAT=1`), `ToolAnimationTest` for the bow, mining and axe (`MOBENDS_BAKE_TOOLS=1`), which also checks a whole combo against the Java: within 45 degrees through the
 switches (where the fade eases differently from the Java's per-part rates), and within 1.5 once back in the
 stance. Bakes derive their tracks from what the Java animation sets: axes it leaves alone become `q.mobends_keep`,
 and axes that follow the look get it as Molang. A Java pre-rotation becomes the limb's aim bone (`neck`,

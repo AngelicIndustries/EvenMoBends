@@ -1,6 +1,9 @@
 package net.gobbob.mobends.animation.player;
 
+import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
+import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.data.Data_Player;
@@ -19,9 +22,23 @@ extends Animation {
 
     @Override
     public void animate(EntityLivingBase argEntity, ModelBase argModel, EntityData argData) {
-        ModelBendsPlayer model = (ModelBendsPlayer)argModel;
-        Data_Player data = (Data_Player)argData;
-        EntityPlayer player = (EntityPlayer)argEntity;
+        play((ModelBendsPlayer)argModel, (Data_Player)argData, ((EntityPlayer)argEntity).isSwingInProgress);
+    }
+
+    public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/axe");
+
+    /**
+     * Plays {@code player/axe.animation.json}: the two-handed hold {@code axe} while holding an axe, and
+     * {@code axe_swing} over it while swinging, looping on the player's age. Falls back to the Java axe below.
+     */
+    public static void play(ModelBendsPlayer model, Data_Player data, boolean swinging) {
+        boolean played = PlayerAnimator.playPose(model, data, FILE, "axe", "tool")
+            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing"));
+        if (!played) apply(model, data.ticks, swinging);
+    }
+
+    /** The original Java axe, kept as the reference the Blockbench axe was baked from. */
+    public static void apply(ModelBendsPlayer model, float ticks, boolean swinging) {
         ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothZero(0.3f);
         ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothZero(0.3f);
         ((ModelRendererBends)model.bipedRightForeArm).rotation.setSmoothZero(0.3f);
@@ -35,10 +52,10 @@ extends Animation {
         ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothY(90.0f, 0.3f);
         ((ModelRendererBends)model.bipedLeftArm).pre_rotation.setSmoothY(-40.0f, 0.3f);
         ((ModelRendererBends)model.bipedLeftArm).pre_rotation.setSmoothX(-70.0f, 0.3f);
-        if (player.isSwingInProgress) {
+        if (swinging) {
             float speed = 1.8f;
-            float progress = (float)player.ticksExisted * speed / 20.0f % 1.0f;
-            float progress2 = (float)(player.ticksExisted - 2) * speed / 20.0f % 1.0f;
+            float progress = ticks * speed / 20.0f % 1.0f;
+            float progress2 = (ticks - 2) * speed / 20.0f % 1.0f;
             float armSwing = (MathHelper.cos(progress * (float)Math.PI * 2.0f) + 1.0f) / 2.0f * 2.0f;
             if (armSwing > 1.0f) {
                 armSwing = 1.0f;
@@ -55,4 +72,3 @@ extends Animation {
         }
     }
 }
-

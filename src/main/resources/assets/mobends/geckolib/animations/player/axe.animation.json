@@ -1,0 +1,37 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mobends.player.axe": {
+			"loop": true,
+			"animation_length": 1.0000,
+			"bones": {
+				"root": {"position": {"0.0000": ["q.mobends_keep", -1.5, "q.mobends_keep"]}},
+				"rightArm": {"rotation": {"0.0000": [0, 90, 0]}},
+				"rightArmAim": {"rotation": {"0.0000": [-80, 0, 0]}},
+				"rightForeArm": {"rotation": {"0.0000": [0, 0, 0]}},
+				"leftArm": {"rotation": {"0.0000": [0, 90, 0]}},
+				"leftArmAim": {"rotation": {"0.0000": [-70, 40, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [0, 0, 0]}},
+				"rightLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", 10]}},
+				"leftLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", -10]}}
+			}
+		},
+		"animation.mobends.player.axe_swing": {
+			"loop": true,
+			"animation_length": 0.555556,
+			"bones": {
+				"root": {"position": {"0.0000": ["q.mobends_keep", -1.5, "q.mobends_keep"]}},
+				"body": {"rotation": {"0.0000": ["q.mobends_keep", 18.11, "q.mobends_keep"], "0.093633": ["q.mobends_keep", 19.39, "q.mobends_keep"], "0.156055": ["q.mobends_keep", 19.29, "q.mobends_keep"], "0.193508": ["q.mobends_keep", 16.5, "q.mobends_keep"], "0.280899": ["q.mobends_keep", 7.01, "q.mobends_keep"], "0.312110": ["q.mobends_keep", 5, "q.mobends_keep"], "0.337079": ["q.mobends_keep", 4.48, "q.mobends_keep"], "0.380774": ["q.mobends_keep", 6.14, "q.mobends_keep"], "0.436954": ["q.mobends_keep", 12.03, "q.mobends_keep"], "0.474407": ["q.mobends_keep", 14.94, "q.mobends_keep"], "0.555556": ["q.mobends_keep", 18.11, "q.mobends_keep"]}},
+				"head": {"rotation": {"0.0000": ["q.mobends_head_pitch + -15.61", "q.mobends_head_yaw + -15.61", "q.mobends_keep"], "0.099875": ["q.mobends_head_pitch + -17.6", "q.mobends_head_yaw + -17.6", "q.mobends_keep"], "0.162297": ["q.mobends_head_pitch + -17.96", "q.mobends_head_yaw + -17.96", "q.mobends_keep"], "0.205993": ["q.mobends_head_pitch + -16.1", "q.mobends_head_yaw + -16.1", "q.mobends_keep"], "0.305868": ["q.mobends_head_pitch + -9.41", "q.mobends_head_yaw + -9.41", "q.mobends_keep"], "0.355805": ["q.mobends_head_pitch + -8.01", "q.mobends_head_yaw + -8.01", "q.mobends_keep"], "0.393258": ["q.mobends_head_pitch + -8.66", "q.mobends_head_yaw + -8.66", "q.mobends_keep"], "0.474407": ["q.mobends_head_pitch + -12.83", "q.mobends_head_yaw + -12.83", "q.mobends_keep"], "0.555556": ["q.mobends_head_pitch + -15.61", "q.mobends_head_yaw + -15.61", "q.mobends_keep"]}},
+				"rightArm": {"rotation": {"0.0000": [0, 90, 0]}},
+				"rightArmAim": {"rotation": {"0.0000": [-80, 43.87, 0], "0.043695": [-80, 46.7, 0], "0.099875": [-80, 48.52, 0], "0.137328": [-80, 49.13, 0], "0.143571": [-80, 48.97, 0], "0.156055": [-80, 47.14, 0], "0.168539": [-80, 43.59, 0], "0.187266": [-80, 35.82, 0], "0.205993": [-80, 26.11, 0], "0.249688": [-80, 1.56, 0], "0.274657": [-80, -10.43, 0], "0.293383": [-80, -17.22, 0], "0.305868": [-80, -20.41, 0], "0.318352": [-80, -22.42, 0], "0.330836": [-80, -23.16, 0], "0.349563": [-80, -21.81, 0], "0.362047": [-80, -19.27, 0], "0.374532": [-80, -15.44, 0], "0.387016": [-80, -10.39, 0], "0.399501": [-80, -4.21, 0], "0.424469": [-80, 10.55, 0], "0.436954": [-80, 16.96, 0], "0.449438": [-80, 22.33, 0], "0.468165": [-80, 28.79, 0], "0.486891": [-80, 33.74, 0], "0.505618": [-80, 37.54, 0], "0.530587": [-80, 41.26, 0], "0.555556": [-80, 43.87, 0]}},
+				"rightForeArm": {"rotation": {"0.0000": [0, 0, 0]}},
+				"leftArm": {"rotation": {"0.0000": [0, 90, 0]}},
+				"leftArmAim": {"rotation": {"0.0000": [-70, 65.23, 0], "0.043695": [-70, 67.44, 0], "0.099875": [-70, 68.85, 0], "0.137328": [-70, 69.32, 0], "0.156055": [-70, 67.78, 0], "0.168539": [-70, 65.01, 0], "0.187266": [-70, 58.97, 0], "0.249688": [-70, 32.33, 0], "0.274657": [-70, 23, 0], "0.293383": [-70, 17.72, 0], "0.305868": [-70, 15.24, 0], "0.330836": [-70, 13.1, 0], "0.349563": [-70, 14.15, 0], "0.374532": [-70, 19.1, 0], "0.399501": [-70, 27.84, 0], "0.424469": [-70, 39.32, 0], "0.436954": [-70, 44.3, 0], "0.468165": [-70, 53.5, 0], "0.505618": [-70, 60.31, 0], "0.555556": [-70, 65.23, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [0, 0, 0]}},
+				"rightLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", 10]}},
+				"leftLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", -10]}}
+			}
+		}
+	}
+}

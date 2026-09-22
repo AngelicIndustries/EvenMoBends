@@ -65,6 +65,11 @@ extends ModelBiped {
     private final float modelYOffset;
     private float partialTicks;
 
+    /** The fraction of a tick this frame is past the last tick. */
+    public float partialTicks() {
+        return this.partialTicks;
+    }
+
     private boolean modern;
     private boolean slim;
     private UUID currentPlayerUuid;

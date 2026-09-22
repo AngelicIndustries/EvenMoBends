@@ -1,0 +1,27 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mobends.player.mine": {
+			"loop": true,
+			"animation_length": 1.0000,
+			"bones": {
+				"root": {"position": {"0.0000": ["q.mobends_keep", -1.5, "q.mobends_keep"]}},
+				"rightLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", 10]}},
+				"leftLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", -10]}}
+			}
+		},
+		"animation.mobends.player.mine_swing": {
+			"loop": true,
+			"animation_length": 0.555556,
+			"bones": {
+				"root": {"position": {"0.0000": ["q.mobends_keep", -1.5, "q.mobends_keep"]}},
+				"body": {"rotation": {"0.0000": ["q.mobends_keep", 13.99, "q.mobends_keep"], "0.037453": ["q.mobends_keep", 14.52, "q.mobends_keep"], "0.081149": ["q.mobends_keep", 11.92, "q.mobends_keep"], "0.118602": ["q.mobends_keep", 7.37, "q.mobends_keep"], "0.230961": ["q.mobends_keep", -9.9, "q.mobends_keep"], "0.268414": ["q.mobends_keep", -13.46, "q.mobends_keep"], "0.305868": ["q.mobends_keep", -14.63, "q.mobends_keep"], "0.337079": ["q.mobends_keep", -13.63, "q.mobends_keep"], "0.374532": ["q.mobends_keep", -10.24, "q.mobends_keep"], "0.499376": ["q.mobends_keep", 8.71, "q.mobends_keep"], "0.530587": ["q.mobends_keep", 12.24, "q.mobends_keep"], "0.555556": ["q.mobends_keep", 13.99, "q.mobends_keep"]}},
+				"head": {"rotation": {"0.0000": ["q.mobends_head_pitch", "q.mobends_head_yaw + -0.09", "q.mobends_keep"], "0.555556": ["q.mobends_head_pitch", "q.mobends_head_yaw + -0.09", "q.mobends_keep"]}},
+				"rightArm": {"rotation": {"0.0000": ["q.mobends_head_pitch * 0.5 + -108.53", -34.57, "q.mobends_keep"], "0.024969": ["q.mobends_head_pitch * 0.5 + -111.81", -34.5, "q.mobends_keep"], "0.049938": ["q.mobends_head_pitch * 0.5 + -113.36", -34.49, "q.mobends_keep"], "0.074906": ["q.mobends_head_pitch * 0.5 + -113.06", -34.53, "q.mobends_keep"], "0.099875": ["q.mobends_head_pitch * 0.5 + -110.94", -34.61, "q.mobends_keep"], "0.124844": ["q.mobends_head_pitch * 0.5 + -107.15", -34.71, "q.mobends_keep"], "0.149813": ["q.mobends_head_pitch * 0.5 + -102.01", -34.8, "q.mobends_keep"], "0.230961": ["q.mobends_head_pitch * 0.5 + -81.29", -34.74, "q.mobends_keep"], "0.268414": ["q.mobends_head_pitch * 0.5 + -73.1", -34.6, "q.mobends_keep"], "0.305868": ["q.mobends_head_pitch * 0.5 + -67.9", -34.49, "q.mobends_keep"], "0.337079": ["q.mobends_head_pitch * 0.5 + -66.53", -34.49, "q.mobends_keep"], "0.368290": ["q.mobends_head_pitch * 0.5 + -68.06", -34.57, "q.mobends_keep"], "0.405743": ["q.mobends_head_pitch * 0.5 + -73.42", -34.72, "q.mobends_keep"], "0.443196": ["q.mobends_head_pitch * 0.5 + -81.72", -34.83, "q.mobends_keep"], "0.518102": ["q.mobends_head_pitch * 0.5 + -100.97", -34.71, "q.mobends_keep"], "0.555556": ["q.mobends_head_pitch * 0.5 + -108.53", -34.57, "q.mobends_keep"]}},
+				"rightLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", 10]}},
+				"leftLeg": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", -10]}},
+				"rightItem": {"rotation": {"0.0000": ["q.mobends_keep", "q.mobends_keep", -30]}}
+			}
+		}
+	}
+}

@@ -405,7 +405,7 @@ final class AnimationBaking {
         }
         StringBuilder json = new StringBuilder();
         json.append(String.format(Locale.ROOT, "\t\t\"animation.mobends.player.%s\": {\n\t\t\t\"loop\": %s,\n"
-            + "\t\t\t\"animation_length\": %.4f,\n\t\t\t\"bones\": {\n", name, loop, seconds));
+            + "\t\t\t\"animation_length\": %s,\n\t\t\t\"bones\": {\n", name, loop, time(seconds)));
         int b = 0;
         for (Map.Entry<String, Map<String, String>> bone : bones.entrySet()) {
             json.append("\t\t\t\t\"").append(bone.getKey()).append("\": {");
@@ -416,6 +416,15 @@ final class AnimationBaking {
             json.append(++b < bones.size() ? "},\n" : "}\n");
         }
         return json.append("\t\t\t}\n\t\t}").toString();
+    }
+
+    /**
+     * Seconds to 4 decimals, or 6 where 4 would be off (e.g. a loop of 20 / 1.8 ticks, which would drift out of phase
+     * over many loops).
+     */
+    private static String time(double seconds) {
+        String rounded = String.format(Locale.ROOT, "%.4f", seconds);
+        return Math.abs(Double.parseDouble(rounded) - seconds) < 1e-7 ? rounded : String.format(Locale.ROOT, "%.6f", seconds);
     }
 
     static String file(String... animations) {
@@ -451,8 +460,8 @@ final class AnimationBaking {
         for (int k = 0; k < values.size(); ++k) {
             if (!keep[k]) continue;
             float[] v = values.get(k);
-            track.append(first ? "" : ", ").append(String.format(Locale.ROOT, "\"%.4f\": [%s, %s, %s]",
-                seconds * k / samples, axis(v[0], template, 0), axis(v[1], template, 1), axis(v[2], template, 2)));
+            track.append(first ? "" : ", ").append(String.format(Locale.ROOT, "\"%s\": [%s, %s, %s]",
+                time(seconds * k / samples), axis(v[0], template, 0), axis(v[1], template, 1), axis(v[2], template, 2)));
             first = false;
         }
         return track.append('}').toString();
@@ -481,6 +490,7 @@ final class AnimationBaking {
     private static String axis(float value, String[] template, int axis) {
         if (template == null || template[axis] == null) return number(value);
         String molang = template[axis];
+        if (molang.equals("%s")) return number(value);
         if (number(value).equals("0") && molang.endsWith(" + %s")) molang = molang.substring(0, molang.length() - 5);
         return "\"" + molang.replace("%s", number(value)) + "\"";
     }
