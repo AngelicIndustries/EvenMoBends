@@ -83,18 +83,20 @@ extends Animation {
     private static boolean playSword(ModelBendsPlayer model, Data_Player data, int attack, boolean moving, boolean riding) {
         String name = "animation.mobends.player.sword_" + attack + (attack < 3 && (moving || riding) ? "_moving" : "");
         return PlayerAnimator.playOnce(model, data, SWORD, name, data.ticksAfterPunch / 20.0, "attack", SWING_FADE,
-            riding ? RIDING_MASK : null);
+            PlayerAnimator.freeHandsOnly(data, riding ? RIDING_MASK : null));
     }
 
     public static final double SWING_FADE = 0.15;
 
     /**
      * The stance a swing settles into: {@code sword_stance} standing, {@code sword_stance_sprint} sprinting, none
-     * walking. False if the animation is missing.
+     * walking. Like the swings, it leaves the left arm alone while the off hand holds something. False if the
+     * animation is missing.
      */
     private static boolean playStance(ModelBendsPlayer model, Data_Player data, boolean moving, boolean sprinting) {
         if (moving && !sprinting) return true;
-        return PlayerAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "attack");
+        return PlayerAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "attack", 1,
+            PlayerAnimator.freeHandsOnly(data, null));
     }
 
     /** A sword leaves a trail through its swing (the first only in its first 4 ticks). */
@@ -113,7 +115,10 @@ extends Animation {
     private static boolean playPunch(ModelBendsPlayer model, Data_Player data, boolean stance) {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         if (stance && moving) return true;
-        String name = "animation.mobends.player.punch_" + (data.fistPunchArm ? "right" : "left") + (moving ? "_moving" : "");
-        return PlayerAnimator.play(model, data, PlayerAnimator.PUNCH, name, data.ticksAfterPunch / 20.0);
+        // With something in the off hand, only the empty main hand punches, and the off-hand arm keeps holding.
+        boolean offhand = PlayerAnimator.isOffhandHolding(data);
+        String name = "animation.mobends.player.punch_" + (data.fistPunchArm || offhand ? "right" : "left") + (moving ? "_moving" : "");
+        return PlayerAnimator.play(model, data, PlayerAnimator.PUNCH, name, data.ticksAfterPunch / 20.0, null, 0, 1,
+            PlayerAnimator.freeHandsOnly(data, null));
     }
 }

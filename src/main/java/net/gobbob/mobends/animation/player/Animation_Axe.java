@@ -29,11 +29,13 @@ extends Animation {
 
     /**
      * Plays {@code player/axe.animation.json}: the two-handed hold {@code axe} while holding an axe, and
-     * {@code axe_swing} over it while swinging, looping on the player's age. Falls back to the Java axe below.
+     * {@code axe_swing} over it while swinging, looping on the player's age. An occupied off hand
+     * keeps its arm. Falls back to the Java axe below.
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean swinging) {
-        boolean played = PlayerAnimator.playPose(model, data, FILE, "axe", "tool")
-            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing"));
+        java.util.Set<String> without = PlayerAnimator.freeHandsOnly(data, null);
+        boolean played = PlayerAnimator.playPose(model, data, FILE, "axe", "tool", 1, without)
+            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing", 1, without));
         if (!played) apply(model, data.ticks, swinging);
     }
 

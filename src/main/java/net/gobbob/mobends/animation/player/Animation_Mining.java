@@ -29,11 +29,13 @@ extends Animation {
 
     /**
      * Plays {@code player/mine.animation.json}: the stance {@code mine} while holding a pickaxe or a block, and
-     * {@code mine_swing} over it while swinging, looping on the player's age. Falls back to the Java mining below.
+     * {@code mine_swing} over it while swinging, looping on the player's age. An occupied off hand
+     * keeps its arm. Falls back to the Java mining below.
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean swinging) {
-        boolean played = PlayerAnimator.playPose(model, data, FILE, "mine", "tool")
-            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "mine_swing", "tool_swing"));
+        java.util.Set<String> without = PlayerAnimator.freeHandsOnly(data, null);
+        boolean played = PlayerAnimator.playPose(model, data, FILE, "mine", "tool", 1, without)
+            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "mine_swing", "tool_swing", 1, without));
         if (!played) apply(model, data.ticks, swinging);
     }
 

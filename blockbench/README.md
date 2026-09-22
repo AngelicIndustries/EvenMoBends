@@ -100,6 +100,9 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   axe, and `mine_swing` / `axe_swing` over it while swinging, looping on the player's age (1.8 swings a second).
   In both axe animations the left hand holds the handle a hand's width below the right, rolling the shoulder
   forward where the arm can't reach (baked by `AxeGrip`; `ToolAnimationTest` checks it stays on the handle).
+- With something in Backhand's off hand, punches only use the main hand, and punches, sword swings and stances,
+  mining and the axe play without the left arm's bones (`leftArmAim`, `leftArm`, `leftForeArm`, `leftItem`,
+  `leftItemFree`), so that arm keeps holding its item.
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
@@ -127,6 +130,7 @@ Positions an animation stops setting ease back to zero.
 
 Queries: `q.mobends_head_pitch`, `q.mobends_head_yaw` (degrees, relative to the body), `q.mobends_ticks`,
 `q.mobends_ticks_after_punch`, `q.mobends_holding` (1 with something in the main hand, else 0),
+`q.mobends_offhand_holding` (1 with something in Backhand's off hand, else 0),
 `q.mobends_travel_pitch` (degrees the dive leans below horizontal along the travel direction, within +-35, eased).
 An axis set to `q.mobends_keep` isn't applied: it keeps what the animations before this one set (e.g. a crouch that
 bends the legs forward but leaves their sideways turn to the walk underneath).

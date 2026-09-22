@@ -19,6 +19,7 @@ import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.BendsLogger;
 import net.gobbob.mobends.util.SmoothVector3f;
@@ -129,6 +130,30 @@ public final class PlayerAnimator {
             without, inertia);
     }
 
+    /**
+     * The left arm's bones (and its items): an animation plays without them while the off hand holds something, so
+     * a swing or a stance in the main hand doesn't pull the torch or shield arm along.
+     */
+    public static final Set<String> LEFT_ARM = java.util.Collections.unmodifiableSet(new HashSet<String>(java.util.Arrays.asList(
+        Bone.LEFT_ARM_AIM.id, Bone.LEFT_ARM.id, Bone.LEFT_FORE_ARM.id, Bone.LEFT_ITEM.id, Bone.LEFT_ITEM_FREE.id)));
+
+    /** {@link #LEFT_ARM} if the off hand holds something, else none; plus {@code others} (may be null). */
+    public static Set<String> freeHandsOnly(Data_Player data, Set<String> others) {
+        if (!isOffhandHolding(data)) return others;
+        if (others == null) return LEFT_ARM;
+        Set<String> both = new HashSet<String>(LEFT_ARM);
+        both.addAll(others);
+        return both;
+    }
+
+    /** Whether the player's off hand holds something (Backhand; false outside a running world). */
+    public static boolean isOffhandHolding(Data_Player data) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (data == null || minecraft == null || minecraft.theWorld == null) return false;
+        EntityLivingBase entity = data.getEntity();
+        return entity instanceof EntityPlayer && BackhandCompat.isOffhandHolding((EntityPlayer)entity);
+    }
+
     /** How long switching between looping locomotion animations blends, as their Java smoothing eased them. */
     static final double LOCOMOTION_BLEND = 0.25;
 
@@ -144,11 +169,17 @@ public final class PlayerAnimator {
     /** As above, applied at {@code weight}. */
     public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
         float weight) {
+        return playLoop(model, data, file, name, slot, weight, null);
+    }
+
+    /** As above, leaving out the bones in {@code without} (may be null). */
+    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+        float weight, Set<String> without) {
         String animation = "animation.mobends.player." + name;
         Animation loaded = find(file, animation);
         if (loaded == null) return false;
         double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
-        return play(model, data, file, animation, seconds, slot, LOCOMOTION_BLEND, weight);
+        return play(model, data, file, animation, seconds, slot, LOCOMOTION_BLEND, weight, without);
     }
 
     /** Plays a held pose (the animation at 0 s) from {@code file}, blending in when {@code slot} switches to it. */
@@ -159,7 +190,13 @@ public final class PlayerAnimator {
     /** As above, applied at {@code weight}. */
     public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
         float weight) {
-        return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight);
+        return playPose(model, data, file, name, slot, weight, null);
+    }
+
+    /** As above, leaving out the bones in {@code without} (may be null). */
+    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+        float weight, Set<String> without) {
+        return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight, without);
     }
 
     /**
@@ -217,6 +254,7 @@ public final class PlayerAnimator {
                 case "query.mobends_ticks": return data == null ? 0 : data.ticks;
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
                 case "query.mobends_holding": return isHolding(data) ? 1 : 0;
+                case "query.mobends_offhand_holding": return isOffhandHolding(data) ? 1 : 0;
                 case "query.mobends_travel_pitch": return data == null ? 0 : data.divingTravelPitch;
                 // An axis set to q.mobends_keep is left to the animations before this one (e.g. a sneak over a walk).
                 case "query.mobends_keep": return Double.NaN;

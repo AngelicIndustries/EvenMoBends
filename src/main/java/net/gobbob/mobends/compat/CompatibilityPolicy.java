@@ -12,6 +12,7 @@ public final class CompatibilityPolicy {
     private static final boolean JUST_A_SHIELD_LOADED = Loader.isModLoaded("targaseule");
     private static final boolean AQUA_ACROBATICS_LOADED = Loader.isModLoaded("aquaacrobatics");
     private static final boolean ET_FUTURUM_REQUIEM_LOADED = Loader.isModLoaded("etfuturum");
+    private static final boolean BACKHAND_LOADED = Loader.isModLoaded("backhand");
     private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED;
 
     private static boolean modeLogged;
@@ -44,6 +45,10 @@ public final class CompatibilityPolicy {
 
     public static boolean isEtFuturumRequiemLoaded() {
         return ET_FUTURUM_REQUIEM_LOADED;
+    }
+
+    public static boolean isBackhandLoaded() {
+        return BACKHAND_LOADED;
     }
 
     public static void logActiveMode() {
