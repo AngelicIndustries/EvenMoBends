@@ -44,9 +44,10 @@ class ToolAnimationTest {
         write("mine",
             pose("mine", (m, t) -> Animation_Mining.apply(m, 0, false)),
             loop("mine_swing", (m, t) -> Animation_Mining.apply(m, t, true), mineOverrides));
+        // Chopping, the left hand holds the handle below the right (AxeGrip) instead of the Java's loose arm.
         write("axe",
-            pose("axe", (m, t) -> Animation_Axe.apply(m, 0, false)),
-            loop("axe_swing", (m, t) -> Animation_Axe.apply(m, t, true), null));
+            axe("axe", 20, (m, t) -> Animation_Axe.apply(m, 0, false)),
+            axe("axe_swing", SWING_PERIOD, (m, t) -> Animation_Axe.apply(m, t, true)));
 
         // Aiming, the bow arm follows the look down but rises no higher than 120 degrees.
         Map<String, String[]> aimOverrides = Collections.singletonMap("leftArmAim rotation",
@@ -69,6 +70,24 @@ class ToolAnimationTest {
         AnimationBaking.Derived derived = AnimationBaking.derive(java, overrides, 0, 2, 4, 6, 8, 10);
         return AnimationBaking.bake(name, SWING_PERIOD, derived.channels, derived.templates, new LinkedHashMap<String, String>(), java);
     }
+
+    /** The Java axe for everything but the left arm, which holds the handle wherever the right hand takes the axe. */
+    private static String axe(String name, double period, BiConsumer<ModelBendsPlayer, Float> java) {
+        AnimationBaking.Derived derived = AnimationBaking.derive(java, null, 0, 2, 4, 6, 8, 10);
+        for (String channel : LEFT_ARM) {
+            derived.channels.remove(channel);
+            derived.templates.remove(channel);
+        }
+        AxeGrip grip = new AxeGrip();
+        AxeGrip.Solution[] now = new AxeGrip.Solution[1];
+        derived.channels.put(LEFT_ARM[0], m -> (now[0] = grip.solve(m)).aim);
+        derived.channels.put(LEFT_ARM[1], m -> AxeGrip.LEFT_ARM_ROTATION.clone());
+        derived.channels.put(LEFT_ARM[2], m -> new float[] {now[0].bend, 0, 0});
+        derived.channels.put("leftArmAim position", m -> now[0].shoulder);
+        return AnimationBaking.bake(name, period, derived.channels, derived.templates, new LinkedHashMap<String, String>(), java);
+    }
+
+    private static final String[] LEFT_ARM = {"leftArmAim rotation", "leftArm rotation", "leftForeArm rotation"};
 
     private static void draw(ModelBendsPlayer model, Float ticks) {
         Animation_Bow.apply(model, ticks);
@@ -98,7 +117,38 @@ class ToolAnimationTest {
     @Test
     void axeMatches() throws Exception {
         BakedAnimations file = load("axe");
-        assertTool(file, "axe", Animation_Axe::apply);
+        assertTool(file, "axe", Animation_Axe::apply, "leftArm", "leftForeArm");
+    }
+
+    /** Holding the axe and chopping, the left hand stays on the handle, a hand's width below the right. */
+    @Test
+    void handsJoinOnTheAxe() throws Exception {
+        BakedAnimations file = load("axe");
+        Animation stand = load("stand").getAnimation("animation.mobends.player.stand");
+        Animation hold = file.getAnimation("animation.mobends.player.axe");
+        Animation swing = file.getAnimation("animation.mobends.player.axe_swing");
+        for (boolean swinging : new boolean[] {false, true}) {
+            ModelBendsPlayer model = AnimationBaking.model(15, -20);
+            float worstOff = 0, worstAlong = 0;
+            for (float t = 0; t < 700; t += AnimationBaking.TICKS_PER_FRAME) {
+                final float now = t;
+                AnimationBaking.frame(model, m -> {
+                    apply(m, stand, (now / 20.0) % stand.length());
+                    apply(m, hold, 0);
+                    if (swinging) apply(m, swing, (now / 20.0) % swing.length());
+                });
+                if (t < 500) continue;
+                org.joml.Vector3f hand = AxeGrip.leftHand(model), target = AxeGrip.leftTarget(model);
+                org.joml.Vector3f[] line = AxeGrip.handle(model);
+                org.joml.Vector3f fromLine = new org.joml.Vector3f(hand).sub(line[0]);
+                fromLine.sub(new org.joml.Vector3f(line[1]).mul(fromLine.dot(line[1])));
+                worstOff = Math.max(worstOff, fromLine.length() * 16);
+                worstAlong = Math.max(worstAlong, Math.abs(new org.joml.Vector3f(hand).sub(target).dot(line[1])) * 16);
+            }
+            String what = swinging ? "chopping" : "holding the axe";
+            assertTrue(worstOff < 0.75f, what + ": the left hand is " + worstOff + " px off the handle");
+            assertTrue(worstAlong < 1, what + ": the left hand is " + worstAlong + " px from its place along the handle");
+        }
     }
 
     interface Tool {
@@ -106,7 +156,7 @@ class ToolAnimationTest {
     }
 
     /** Holding the tool while standing, and swinging it, over the Java stand and the ported one. */
-    private static void assertTool(BakedAnimations file, String name, Tool java) throws IOException {
+    private static void assertTool(BakedAnimations file, String name, Tool java, String... authoredParts) throws IOException {
         Animation stand = load("stand").getAnimation("animation.mobends.player.stand");
         Animation hold = file.getAnimation("animation.mobends.player." + name);
         Animation swing = file.getAnimation("animation.mobends.player." + name + "_swing");
@@ -121,7 +171,7 @@ class ToolAnimationTest {
                         apply(m, stand, (t / 20.0) % stand.length());
                         apply(m, hold, 0);
                         if (swinging) apply(m, swing, (t / 20.0) % swing.length());
-                    }, where);
+                    }, where, authoredParts);
                 assertTrue(worst < 1.5f, name + (swinging ? " swinging" : "") + ", look " + look[0] + "/" + look[1] + ": differs by "
                     + worst + " degrees (" + where[0] + ")");
             }

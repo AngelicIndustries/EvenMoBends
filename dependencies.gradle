@@ -32,9 +32,8 @@ dependencies {
     }
     devOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.6.59-GTNH:dev")
 
-    if (project.hasProperty("backhand") || project.hasProperty("justAShieldJar")) {
-        devOnlyNonPublishable("com.github.GTNewHorizons:Backhand:1.8.15:dev")
-    }
+    // Off-hand items and blocking, in the development client by default.
+    devOnlyNonPublishable("com.github.GTNewHorizons:Backhand:1.8.15:dev")
     if (project.hasProperty("justAShieldJar")) {
         def shieldJar = file(project.property("justAShieldJar"))
         if (!shieldJar.isFile()) {

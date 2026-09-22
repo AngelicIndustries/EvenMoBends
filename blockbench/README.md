@@ -98,6 +98,8 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   from where the body was, like the swings.
 - `mine.animation.json` / `axe.animation.json`: the stance `mine` / `axe` while holding a pickaxe or a block / an
   axe, and `mine_swing` / `axe_swing` over it while swinging, looping on the player's age (1.8 swings a second).
+  In both axe animations the left hand holds the handle a hand's width below the right, rolling the shoulder
+  forward where the arm can't reach (baked by `AxeGrip`; `ToolAnimationTest` checks it stays on the handle).
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.

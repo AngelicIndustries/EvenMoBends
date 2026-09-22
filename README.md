@@ -74,13 +74,13 @@ To test SimpleSkinBackport instead of Wawel Auth, supply an SSB development jar:
 
 Wawel Auth remains available for compilation and tests, but is excluded from this client's runtime.
 
-To test Backhand and Just A Shield, supply a Just A Shield development jar (Backhand is added automatically):
+Backhand is always in the development client. To test it with Just A Shield, supply a Just A Shield development jar:
 
 ```sh
 ./gradlew -PjustAShieldJar=/path/to/targaseule-dev.jar runClient25
 ```
 
-Use `-Pbackhand` to test Backhand alone. Either option can be combined with `-PsimpleSkinBackportJar=...`.
+This can be combined with `-PsimpleSkinBackportJar=...`.
 
 To test Aqua Acrobatics, supply its development jar. This can be combined with the options above:
 
