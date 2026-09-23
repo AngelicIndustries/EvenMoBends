@@ -41,6 +41,13 @@ extends EntityData {
     /** Counts empty-hand punches (main and off hand), so a punch thrown again restarts rather than continues. */
     public int punches = 0;
     public int offhandPunches = 0;
+    /**
+     * When each fist (right, left) last started a punch, the last punch of each hand seen by the animation, and
+     * whether it starts by pulling the fist back in.
+     */
+    public final float[] fistPunchedAt = {-1000.0f, -1000.0f};
+    public int seenPunches = -1, seenOffhandPunches = -1;
+    public boolean punchRetracts, offhandPunchRetracts;
     public int currentAttack = 0;
     /** Backhand's off hand: ticks since it last started swinging, and its place in its own sword combo (0 none). */
     public float ticksAfterOffhandPunch = 60.0f;

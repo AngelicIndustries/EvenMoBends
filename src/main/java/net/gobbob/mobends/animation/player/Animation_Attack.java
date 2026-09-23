@@ -91,8 +91,13 @@ extends Animation {
         double seconds = data.ticksAfterOffhandPunch / 20.0;
         if (item == null) {
             if (PlayerAnimationConfig.isEnabled("punch")) {
+                if (data.offhandPunches != data.seenOffhandPunches) {
+                    data.seenOffhandPunches = data.offhandPunches;
+                    data.offhandPunchRetracts = retracts(data, false, data.ticksAfterOffhandPunch);
+                }
                 PlayerAnimator.playOnce(model, data, PlayerAnimator.PUNCH, "animation.mobends.player.punch_left" + (moving ? "_moving" : ""),
-                    seconds, "offhand", SWING_FADE, without, false, data.offhandPunches);
+                    punchSeconds(data.ticksAfterOffhandPunch, data.offhandPunchRetracts), "offhand",
+                    punchFade(data.offhandPunchRetracts), without, false, data.offhandPunches);
             }
         } else if (item.getItem() instanceof ItemPickaxe || Block.getBlockFromItem(item.getItem()) != Blocks.air) {
             if (PlayerAnimationConfig.isEnabled("mining")) {
@@ -159,11 +164,42 @@ extends Animation {
     private static boolean playPunch(ModelBendsPlayer model, Data_Player data, boolean stance) {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         if (stance && moving) return true;
-        // With something in the off hand, only the empty main hand punches, and the off-hand arm keeps holding. Each
-        // punch fades in from where the arms were: one fist punching again doesn't snap back to its first frame.
+        // With something in the off hand, only the empty main hand punches, and the off-hand arm keeps holding.
         boolean offhand = PlayerAnimator.isOffhandHolding(data);
-        String name = "animation.mobends.player.punch_" + (data.fistPunchArm || offhand ? "right" : "left") + (moving ? "_moving" : "");
-        return PlayerAnimator.playOnce(model, data, PlayerAnimator.PUNCH, name, data.ticksAfterPunch / 20.0, "punch", SWING_FADE,
-            PlayerAnimator.freeHandsOnly(data, null), false, data.punches);
+        boolean right = data.fistPunchArm || offhand;
+        if (data.punches != data.seenPunches) {
+            data.seenPunches = data.punches;
+            data.punchRetracts = retracts(data, right, data.ticksAfterPunch);
+        }
+        String name = "animation.mobends.player.punch_" + (right ? "right" : "left") + (moving ? "_moving" : "");
+        return PlayerAnimator.playOnce(model, data, PlayerAnimator.PUNCH, name, punchSeconds(data.ticksAfterPunch, data.punchRetracts),
+            "punch", punchFade(data.punchRetracts), PlayerAnimator.freeHandsOnly(data, null), false, data.punches);
+    }
+
+    /** A fist punching again this soon is still out: it pulls back in first. */
+    public static final float FIST_OUT_TICKS = 15;
+    /** How long pulling a fist back in takes, before the punch plays from its start. */
+    public static final float RETRACT_TICKS = 2;
+
+    /** Whether a punch the {@code right} or left fist started {@code ticksAgo} begins by pulling that fist back in. */
+    private static boolean retracts(Data_Player data, boolean right, float ticksAgo) {
+        int fist = right ? 0 : 1;
+        float start = data.ticks - ticksAgo;
+        boolean out = start - data.fistPunchedAt[fist] < FIST_OUT_TICKS;
+        data.fistPunchedAt[fist] = start;
+        return out;
+    }
+
+    /**
+     * Where a punch is, {@code ticks} after the click: a fist that has to pull back in first holds the punch's
+     * starting pose for {@link #RETRACT_TICKS} (while it fades there from where it was), then punches.
+     */
+    public static double punchSeconds(float ticks, boolean retracts) {
+        return Math.max(0, ticks - (retracts ? RETRACT_TICKS : 0)) / 20.0;
+    }
+
+    /** A retracting fist fades back to the punch's start just as the punch begins; a fist already in fades quickly. */
+    public static double punchFade(boolean retracts) {
+        return retracts ? RETRACT_TICKS / 20.0 : SWING_FADE;
     }
 }

@@ -44,41 +44,66 @@ class OffhandTest {
     }
 
     /**
-     * With the off hand full, every punch is the right fist's: punching again mid-punch fades from where the arm is
-     * instead of snapping back to the punch's first frame, so the arm never jumps more than a punch moves it anyway.
+     * With the off hand full, every punch is the right fist's. Punching again while the fist is out pulls it back
+     * to the punch's start before punching, rather than snapping back to it in one frame.
      */
     @Test
-    void repeatedPunchesWithOneFistDontSnapBack() throws Exception {
+    void repeatedPunchesWithOneFistPullBackFirst() throws Exception {
         Animation punch = AnimationBaking.load(Paths.get("src/main/resources/assets/mobends/geckolib/animations/player/punch.animation.json"))
             .getAnimation("animation.mobends.player.punch_right");
-        float single = worstJump(punch, 1000, true), restarted = worstJump(punch, 4, false), faded = worstJump(punch, 4, true);
-        System.out.println("worst arm jump per frame: one punch " + single + ", every 4 ticks snapping " + restarted + ", fading " + faded);
-        org.junit.jupiter.api.Assertions.assertTrue(faded <= single + 1, "punching every 4 ticks jumps " + faded
+        float single = punching(punch, 1000, true, null), snapping = punching(punch, 4, false, null);
+        float[] back = {0};
+        float retracting = punching(punch, 4, true, back);
+        System.out.println("worst arm turn per frame: one punch " + single + ", every 4 ticks snapping back " + snapping
+            + ", pulling back " + retracting + "; farthest from the start pose as a punch begins " + back[0]);
+        // Pulling back is quick, a little quicker than the punch itself, but nothing like snapping back.
+        org.junit.jupiter.api.Assertions.assertTrue(retracting <= single * 1.5f, "punching every 4 ticks turns the arm " + retracting
             + " degrees in a frame, one punch at most " + single);
+        org.junit.jupiter.api.Assertions.assertTrue(back[0] < 3, "the fist is " + back[0] + " degrees from the punch's start as it punches");
     }
 
-    /** The most the right arm turns in one frame, punching every {@code every} ticks for 2 seconds. */
-    private static float worstJump(Animation punch, float every, boolean fade) throws Exception {
+    /**
+     * Punches every {@code every} ticks for 2 seconds, as Animation_Attack plays them ({@code pullBack}) or restarting
+     * each at its first frame: the most the arm turns in one frame. {@code back} gets how far the arm is from the
+     * punch's starting pose when a strike begins.
+     */
+    private static float punching(Animation punch, float every, boolean pullBack, float[] back) throws Exception {
         java.lang.reflect.Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
         field.setAccessible(true);
         net.gobbob.mobends.data.Data_Player data = (net.gobbob.mobends.data.Data_Player)((sun.misc.Unsafe)field.get(null))
             .allocateInstance(net.gobbob.mobends.data.Data_Player.class);
         data.ticksPerFrame = AnimationBaking.TICKS_PER_FRAME;
+        ModelBendsPlayer start = AnimationBaking.model(0, 0);
+        AnimationBaking.frame(start, m -> PlayerAnimator.apply(m, punch,
+            AnimationProcessor.evaluate(punch, 0, PlayerAnimator.context(m, null)), 1000, 1), 1000);
+        org.joml.Matrix4f startArm = arm(start);
         ModelBendsPlayer model = AnimationBaking.model(0, 0);
         float worst = 0;
         org.joml.Matrix4f last = null;
+        boolean[] retracts = new boolean[1];
         for (float t = 0; t < 40; t += AnimationBaking.TICKS_PER_FRAME) {
             final float now = t;
             int instance = (int)(t / every);
+            float since = t - instance * every;
+            retracts[0] = pullBack && instance > 0 && every < net.gobbob.mobends.animation.player.Animation_Attack.FIST_OUT_TICKS;
             data.ticks = t;
-            AnimationBaking.frame(model, m -> PlayerAnimator.playOnce(m, data, punch, "punch@" + (fade ? instance : 0),
-                (now - instance * every) / 20.0, "punch", fade ? 0.15 : 0, null));
-            org.joml.Matrix4f arm = AnimationBaking.orientation(Bone.RIGHT_ARM.part(model))
-                .mul(AnimationBaking.orientation(Bone.RIGHT_FORE_ARM.part(model)));
+            AnimationBaking.frame(model, m -> PlayerAnimator.playOnce(m, data, punch, "punch@" + (pullBack ? instance : 0),
+                pullBack ? net.gobbob.mobends.animation.player.Animation_Attack.punchSeconds(since, retracts[0]) : since / 20.0, "punch",
+                pullBack ? net.gobbob.mobends.animation.player.Animation_Attack.punchFade(retracts[0]) : 0, null));
+            org.joml.Matrix4f arm = arm(model);
             if (last != null && t > 1) worst = Math.max(worst, AnimationBaking.angleBetween(last, arm));
             last = arm;
+            float strike = retracts[0] ? net.gobbob.mobends.animation.player.Animation_Attack.RETRACT_TICKS : 0;
+            if (back != null && instance > 0 && Math.abs(since - strike) < AnimationBaking.TICKS_PER_FRAME / 2) {
+                back[0] = Math.max(back[0], AnimationBaking.angleBetween(startArm, arm));
+            }
         }
         return worst;
+    }
+
+    /** The whole arm's orientation: upper arm, then forearm. */
+    private static org.joml.Matrix4f arm(ModelBendsPlayer model) {
+        return AnimationBaking.orientation(Bone.RIGHT_ARM.part(model)).mul(AnimationBaking.orientation(Bone.RIGHT_FORE_ARM.part(model)));
     }
 
     @Test
