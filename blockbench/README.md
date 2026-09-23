@@ -106,8 +106,10 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
 - Backhand's off hand plays the same files mirrored (right and left bones swapped and reflected across the body's
   middle) for 10 ticks after it starts a swing: an empty hand plays `punch_left`, a pickaxe or block `mine_swing`,
   an axe `axe_swing`, and anything else the sword combo, counted separately from the main hand's. While the main
-  hand holds something, its arm is left alone. The off-hand item is drawn at `leftItem`, placed like the right
-  hand's item, mirrored.
+  hand holds something, its arm is left alone; while the main hand acts too, whichever hand started last leads the
+  body and the other moves only its arm. After a swing, the off-hand arm settles into the mirrored `sword_stance`
+  (`sword_stance_sprint` sprinting), left arm only. The off-hand item is drawn at `leftItem`, placed like the right
+  hand's item, mirrored, and an off-hand sword leaves its own trail.
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.

@@ -168,6 +168,16 @@ public final class PlayerAnimator {
     public static final Set<String> RIGHT_ARM = java.util.Collections.unmodifiableSet(new HashSet<String>(java.util.Arrays.asList(
         Bone.RIGHT_ARM_AIM.id, Bone.RIGHT_ARM.id, Bone.RIGHT_FORE_ARM.id, Bone.RIGHT_ITEM.id, Bone.RIGHT_ITEM_FREE.id)));
 
+    /** Every bone but {@link #LEFT_ARM}'s: an animation played without them only moves the left arm. */
+    public static final Set<String> ALL_BUT_LEFT_ARM;
+
+    static {
+        Set<String> others = new HashSet<String>();
+        others.add(PlayerRig.ROOT);
+        for (Bone bone : Bone.values()) if (!LEFT_ARM.contains(bone.id)) others.add(bone.id);
+        ALL_BUT_LEFT_ARM = java.util.Collections.unmodifiableSet(others);
+    }
+
     /** {@code arm} plus {@code others} (may be null). */
     public static Set<String> union(Set<String> arm, Set<String> others) {
         if (others == null) return arm;
@@ -237,7 +247,13 @@ public final class PlayerAnimator {
     /** As above, leaving out the bones in {@code without} (may be null). */
     public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without) {
-        return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight, without);
+        return playPose(model, data, file, name, slot, weight, without, false);
+    }
+
+    /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
+    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+        float weight, Set<String> without, boolean mirror) {
+        return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight, without, mirror);
     }
 
     /**

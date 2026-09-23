@@ -36,6 +36,7 @@ extends EntityData {
     public final ItemBone leftItem = new ItemBone(false);
     public final ItemBone leftItemFree = new ItemBone(true);
     public SwordTrail swordTrail = new SwordTrail();
+    public SwordTrail offhandTrail = new SwordTrail();
     public boolean sprintJumpLeg = false;
     public boolean fistPunchArm = false;
     /** Counts empty-hand punches (main and off hand), so a punch thrown again restarts rather than continues. */
@@ -143,6 +144,7 @@ extends EntityData {
         this.leftItem.set(argModel.leftItem);
         this.leftItemFree.set(argModel.leftItemFree);
         this.swordTrail = argModel.swordTrail;
+        this.offhandTrail = argModel.offhandTrail;
     }
 
     public static void add(Data_Player argData) {

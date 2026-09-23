@@ -58,6 +58,8 @@ extends ModelBiped {
     public final ItemBone leftItem = new ItemBone(false);
     public final ItemBone leftItemFree = new ItemBone(true);
     public SwordTrail swordTrail = new SwordTrail();
+    /** Backhand's off-hand sword's trail. */
+    public SwordTrail offhandTrail = new SwordTrail();
     public float headRotationX;
     public float headRotationY;
     public float armSwing;
@@ -308,6 +310,7 @@ extends ModelBiped {
         this.renderItemRotation.set(data.renderItemRotation);
         this.setItemBones(data);
         this.swordTrail = data.swordTrail;
+        this.offhandTrail = data.offhandTrail;
         if (Data_Player.get(argEntity.getEntityId()).canBeUpdated()) {
             this.renderOffset.setSmooth(new Vector3f(0.0f, -1.0f, 0.0f), 0.5f);
             this.renderRotation.setSmooth(new Vector3f(0.0f, 0.0f, 0.0f), 0.5f);
@@ -417,6 +420,7 @@ extends ModelBiped {
             this.leftItem.update(data.ticksPerFrame);
             this.leftItemFree.update(data.ticksPerFrame);
             this.swordTrail.update(data.ticksPerFrame);
+            this.offhandTrail.update(data.ticksPerFrame);
             data.updatedThisFrame = true;
         }
         Data_Player.get(argEntity.getEntityId()).syncModelInfo(this);

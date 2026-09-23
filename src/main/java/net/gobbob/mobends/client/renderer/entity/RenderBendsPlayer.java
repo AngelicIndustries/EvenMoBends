@@ -381,12 +381,14 @@ extends RenderPlayer {
         // Backhand draws the off-hand item from the left arm here; put it at the leftItem bone.
         ModelRendererBends_SeperatedChild leftArm = trailModel != null && trailModel.bipedLeftArm instanceof ModelRendererBends_SeperatedChild
             && BackhandCompat.getOffhandItem(argPlayer) != null ? (ModelRendererBends_SeperatedChild)trailModel.bipedLeftArm : null;
-        if (leftArm != null) leftArm.afterPostRender = () -> placeOffhandItem(trailModel);
+        SwordTrail offhandTrail = trail != null && trailModel.offhandTrail.takeSample() ? trailModel.offhandTrail : null;
+        if (leftArm != null) leftArm.afterPostRender = () -> this.placeOffhandItem(trailModel, offhandTrail);
         try {
             MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
         } finally {
             if (leftArm != null) leftArm.afterPostRender = null;
         }
+        if (trail != null) trailModel.offhandTrail.render();
     }
 
     /**
@@ -395,14 +397,17 @@ extends RenderPlayer {
      * moves by minus the arm's pivot, mirrors, moves by (-x, y, -z) of it, then 7 px down), so the item lands as the
      * right hand's would, mirrored.
      */
-    private static void placeOffhandItem(ModelBendsPlayer model) {
+    private void placeOffhandItem(ModelBendsPlayer model, SwordTrail trail) {
         float s = 0.0625f;
         ModelRenderer arm = model.bipedLeftArm;
         GL11.glTranslatef(0.0f, PlayerRig.GRIP_DROP * s, 0.0f);
         model.leftItem.apply(s);
         GL11.glScalef(-1.0f, 1.0f, 1.0f);
-        // The right hand's (-1, -2, 1) px from the grip, then Backhand's (-1, 7, 1) undone.
-        GL11.glTranslatef(0.0f, -9.0f * s, 0.0f);
+        // The right hand's (-1, -2, 1) px from the grip: here the item's placement starts, as in the right hand.
+        GL11.glTranslatef(-s, -2.0f * s, s);
+        if (trail != null && this.trailFrame != null) trail.sampleFromHand(this.trailFrame, trail.modelview());
+        // Backhand's (-1, 7, 1) px undone.
+        GL11.glTranslatef(s, -7.0f * s, -s);
         GL11.glTranslatef(arm.rotationPointX * s, -arm.rotationPointY * s, arm.rotationPointZ * s);
         GL11.glScalef(-1.0f, 1.0f, 1.0f);
         GL11.glTranslatef(arm.rotationPointX * s, arm.rotationPointY * s, arm.rotationPointZ * s);

@@ -106,6 +106,36 @@ class OffhandTest {
         return AnimationBaking.orientation(Bone.RIGHT_ARM.part(model)).mul(AnimationBaking.orientation(Bone.RIGHT_FORE_ARM.part(model)));
     }
 
+    /**
+     * The off hand's stance and its swings while the main hand leads the body: the mirrored animation, left arm only.
+     * Everything else stays as it was; the left arm takes the right arm's pose, reflected.
+     */
+    @Test
+    void offhandArmOnlyAnimationsMoveOnlyTheLeftArm() throws Exception {
+        String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";
+        for (String name : new String[] {"sword_stance", "sword_2"}) {
+            Animation animation = AnimationBaking.load(Paths.get(dir + "sword.animation.json")).getAnimation("animation.mobends.player." + name);
+            ModelBendsPlayer plain = AnimationBaking.model(0, 0), armOnly = AnimationBaking.model(0, 0), untouched = AnimationBaking.model(0, 0);
+            AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, animation,
+                AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
+            AnimationBaking.frame(armOnly, m -> PlayerAnimator.apply(m, animation,
+                AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(m, null)), 1000, 1, PlayerAnimator.ALL_BUT_LEFT_ARM,
+                null, true), 1000);
+            AnimationBaking.frame(untouched, m -> {}, 1000);
+            org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
+            for (Bone bone : Bone.values()) {
+                if (bone.part(plain) == null) continue;
+                org.joml.Matrix4f actual = AnimationBaking.orientation(bone.part(armOnly));
+                org.joml.Matrix4f expected = bone == Bone.LEFT_ARM || bone == Bone.LEFT_FORE_ARM
+                    ? new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(Bone.byId(PlayerAnimator.mirrorName(bone.id)).part(plain))).mul(reflect)
+                    : AnimationBaking.orientation(bone.part(untouched));
+                float off = AnimationBaking.angleBetween(expected, actual);
+                org.junit.jupiter.api.Assertions.assertTrue(off < 0.1f, name + ": " + bone.id + " off by " + off);
+            }
+            assertEquals(untouched.renderRotation.vSmooth, armOnly.renderRotation.vSmooth, name + ": root turned");
+        }
+    }
+
     @Test
     void mainHandAnimationsLeaveAnOccupiedOffhandArmAlone() throws Exception {
         String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";

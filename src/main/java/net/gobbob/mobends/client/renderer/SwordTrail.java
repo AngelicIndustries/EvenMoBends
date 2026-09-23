@@ -66,6 +66,18 @@ public class SwordTrail {
         this.trailPartList.add(part);
     }
 
+    /**
+     * As {@link #sample}, from the modelview in the hand, before a sword's placement there (RenderPlayer's full-3D
+     * item placement, as RenderBendsPlayer and Backhand both apply it next).
+     */
+    public void sampleFromHand(float[] modelFrame, float[] hand) {
+        float[] placed = Affine.multiply(hand, Affine.translation(0, 0.1875f, 0));
+        placed = Affine.multiply(placed, Affine.scale(0.625f, -0.625f, 0.625f));
+        placed = Affine.multiply(placed, Affine.rotation(-100, 1, 0, 0));
+        placed = Affine.multiply(placed, Affine.rotation(45, 0, 1, 0));
+        this.sample(modelFrame, placed);
+    }
+
     /** Draws the trail; the current modelview must be the frame the player model draws in. */
     public void render() {
         if (this.trailPartList.size() < 2) return;
@@ -127,8 +139,14 @@ public class SwordTrail {
         }
 
         static float[] scale(float s) {
+            return scale(s, s, s);
+        }
+
+        static float[] scale(float x, float y, float z) {
             float[] m = identity();
-            m[0] = m[5] = m[10] = s;
+            m[0] = x;
+            m[5] = y;
+            m[10] = z;
             return m;
         }
 
