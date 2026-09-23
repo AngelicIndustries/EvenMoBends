@@ -20,8 +20,11 @@ import net.gobbob.mobends.animation.player.Animation_Attack_Combo1;
 import net.gobbob.mobends.animation.player.Animation_Attack_Combo2;
 import net.gobbob.mobends.animation.player.Animation_Attack_Stance;
 import net.gobbob.mobends.animation.player.Animation_Blocking;
+import net.gobbob.mobends.animation.player.Reference_Blocking;
 import net.gobbob.mobends.animation.player.Animation_Sprint;
+import net.gobbob.mobends.animation.player.Reference_Sprint;
 import net.gobbob.mobends.animation.player.Animation_Stand;
+import net.gobbob.mobends.animation.player.Reference_Stand;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.PlayerBlockingCompat;
 import org.junit.jupiter.api.Test;
@@ -51,8 +54,8 @@ class CombatAnimationTest {
             pose("sword_stance_sprint", (m, t) -> Animation_Attack_Stance.apply(m, true, true),
                 Collections.singletonMap("neck rotation", AnimationBaking.hold("0", "0", "0"))));
         write("block",
-            pose("block_right", (m, t) -> Animation_Blocking.apply(m, PlayerBlockingCompat.MAIN_HAND)),
-            pose("block_left", (m, t) -> Animation_Blocking.apply(m, PlayerBlockingCompat.OFF_HAND)));
+            pose("block_right", (m, t) -> Reference_Blocking.apply(m, PlayerBlockingCompat.MAIN_HAND)),
+            pose("block_left", (m, t) -> Reference_Blocking.apply(m, PlayerBlockingCompat.OFF_HAND)));
     }
 
     /**
@@ -172,7 +175,7 @@ class CombatAnimationTest {
         net.gobbob.mobends.data.Data_Player data = data();
         data.ticksPerFrame = AnimationBaking.TICKS_PER_FRAME;
         BiConsumer<ModelBendsPlayer, Float> java = (m, t) -> {
-            Animation_Stand.apply(m, 400 + t);
+            Reference_Stand.apply(m, 400 + t);
             int k = (int)(t / click);
             if (k >= order.length) Animation_Attack_Stance.apply(m, false, false);
             else combo(order[k], false, false).accept(m, t - k * click);
@@ -192,7 +195,7 @@ class CombatAnimationTest {
             }
         };
         BiConsumer<ModelBendsPlayer, Float> before = (m, t) -> {
-            Animation_Stand.apply(m, t);
+            Reference_Stand.apply(m, t);
             if (fromStance) Animation_Attack_Stance.apply(m, false, false);
         };
         BiConsumer<ModelBendsPlayer, Float> bakedBefore = (m, t) -> {
@@ -219,7 +222,7 @@ class CombatAnimationTest {
         Animation stand = load("stand").getAnimation("animation.mobends.player.stand");
         for (float[] look : LOOKS) {
             assertLoop("sword_stance", look, (m, t) -> {
-                Animation_Stand.apply(m, t);
+                Reference_Stand.apply(m, t);
                 Animation_Attack_Stance.apply(m, false, false);
             }, (m, t) -> {
                 loop(m, stand, t);
@@ -243,7 +246,7 @@ class CombatAnimationTest {
         for (float[] look : LOOKS) {
             assertLoop("blocking, both hands", look, (m, t) -> {
                 sprinting(m, t);
-                Animation_Blocking.apply(m, PlayerBlockingCompat.MAIN_HAND | PlayerBlockingCompat.OFF_HAND);
+                Reference_Blocking.apply(m, PlayerBlockingCompat.MAIN_HAND | PlayerBlockingCompat.OFF_HAND);
             }, (m, t) -> {
                 sprintFile(m, t);
                 pose(m, right);
@@ -256,7 +259,7 @@ class CombatAnimationTest {
     private static void sprinting(ModelBendsPlayer model, float ticks) {
         model.armSwing = ticks;
         model.armSwingAmount = 1;
-        Animation_Sprint.apply(model);
+        Reference_Sprint.apply(model);
     }
 
     private static BakedAnimations sprintFile;

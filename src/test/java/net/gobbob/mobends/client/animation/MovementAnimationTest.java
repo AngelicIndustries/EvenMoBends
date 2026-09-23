@@ -16,9 +16,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import net.gobbob.mobends.animation.player.Animation_Sneak;
+import net.gobbob.mobends.animation.player.Reference_Sneak;
 import net.gobbob.mobends.animation.player.Animation_Sprint;
+import net.gobbob.mobends.animation.player.Reference_Sprint;
 import net.gobbob.mobends.animation.player.Animation_Stand;
+import net.gobbob.mobends.animation.player.Reference_Stand;
 import net.gobbob.mobends.animation.player.Animation_Walk;
+import net.gobbob.mobends.animation.player.Reference_Walk;
 import net.gobbob.mobends.client.animation.AnimationBaking.Channel;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -47,13 +51,13 @@ class MovementAnimationTest {
         for (Bone bone : FORE_LIMBS) stand.put(bone.id + " rotation", m -> xyz(bone.part(m).rotation.vSmooth));
         Map<String, String> standFixed = new LinkedHashMap<String, String>();
         standFixed.put("head rotation", LOOK);
-        write("stand", AnimationBaking.bake("stand", 20 * Math.PI, stand, standFixed, (m, t) -> Animation_Stand.apply(m, t)));
+        write("stand", AnimationBaking.bake("stand", 20 * Math.PI, stand, standFixed, (m, t) -> Reference_Stand.apply(m, t)));
 
-        write("walk", strideAnimations("walk", WALK, 0.1f, 10, (m, t) -> Animation_Walk.apply(m), false));
-        write("sprint", strideAnimations("sprint", SPRINT, 0.3f, 20, (m, t) -> Animation_Sprint.apply(m), true));
+        write("walk", strideAnimations("walk", WALK, 0.1f, 10, (m, t) -> Reference_Walk.apply(m), false));
+        write("sprint", strideAnimations("sprint", SPRINT, 0.3f, 20, (m, t) -> Reference_Sprint.apply(m), true));
         String[] sneakWalk = strideAnimations("sneak_walk", SNEAK, 0.1f, 10, (m, t) -> {
-            Animation_Walk.apply(m);
-            Animation_Sneak.apply(m);
+            Reference_Walk.apply(m);
+            Reference_Sneak.apply(m);
         }, false);
         write("sneak", sneak(), sneakWalk[0], sneakWalk[1]);
     }
@@ -107,7 +111,7 @@ class MovementAnimationTest {
             templates.put(bone.id + " rotation", new String[] {null, KEEP, KEEP});
         }
         return AnimationBaking.bakePose("sneak", stridePeriod(SNEAK), main, templates,
-            stride((m, t) -> Animation_Sneak.apply(m), SNEAK, 0));
+            stride((m, t) -> Reference_Sneak.apply(m), SNEAK, 0));
     }
 
     /** Ticks per stride at a limb swing amount: vanilla adds the amount to the limb swing every tick. */
@@ -134,7 +138,7 @@ class MovementAnimationTest {
     void standMatchesTheJavaStand() throws Exception {
         Animation stand = load("stand").getAnimation("animation.mobends.player.stand");
         for (float[] look : new float[][] {{0, 0}, {30, -40}}) {
-            assertMatches("stand", look, (m, t) -> Animation_Stand.apply(m, t), (m, t) -> loop(m, stand, t));
+            assertMatches("stand", look, (m, t) -> Reference_Stand.apply(m, t), (m, t) -> loop(m, stand, t));
         }
     }
 
@@ -142,9 +146,9 @@ class MovementAnimationTest {
     void walkAndSprintMatchTheJavaOnes() throws Exception {
         BakedAnimations walk = load("walk"), sprint = load("sprint");
         for (float[] look : new float[][] {{0, 0}, {20, 30}, {-30, -60}}) {
-            assertMatches("walk", look, walking((m, t) -> Animation_Walk.apply(m), WALK),
+            assertMatches("walk", look, walking((m, t) -> Reference_Walk.apply(m), WALK),
                 walking((m, t) -> stride(m, walk, "walk"), WALK));
-            assertMatches("sprint", look, walking((m, t) -> Animation_Sprint.apply(m), SPRINT),
+            assertMatches("sprint", look, walking((m, t) -> Reference_Sprint.apply(m), SPRINT),
                 walking((m, t) -> stride(m, sprint, "sprint"), SPRINT));
         }
     }
@@ -156,8 +160,8 @@ class MovementAnimationTest {
         for (float[] look : new float[][] {{0, 0}, {25, 20}}) {
             assertMatches("sneak walking", look,
                 walking((m, t) -> {
-                    Animation_Walk.apply(m);
-                    Animation_Sneak.apply(m);
+                    Reference_Walk.apply(m);
+                    Reference_Sneak.apply(m);
                 }, SNEAK),
                 walking((m, t) -> {
                     stride(m, walk, "walk");
@@ -169,8 +173,8 @@ class MovementAnimationTest {
                     (m, t) -> {
                         m.armSwing = stoppedAt;
                         m.armSwingAmount = 0;
-                        Animation_Stand.apply(m, t);
-                        Animation_Sneak.apply(m);
+                        Reference_Stand.apply(m, t);
+                        Reference_Sneak.apply(m);
                     },
                     (m, t) -> {
                         m.armSwing = stoppedAt;

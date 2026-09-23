@@ -4,12 +4,6 @@ import java.util.Collections;
 import java.util.Set;
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.animation.player.Animation_Attack_Combo0;
-import net.gobbob.mobends.animation.player.Animation_Attack_Combo1;
-import net.gobbob.mobends.animation.player.Animation_Attack_Combo2;
-import net.gobbob.mobends.animation.player.Animation_Attack_Punch;
-import net.gobbob.mobends.animation.player.Animation_Attack_PunchStance;
-import net.gobbob.mobends.animation.player.Animation_Attack_Stance;
 import net.gobbob.mobends.client.animation.HandAction;
 import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.client.animation.PlayerRig;
@@ -49,26 +43,20 @@ extends Animation {
                 int attack = data.currentAttack;
                 if (attack >= 1 && attack <= 3 && PlayerAnimationConfig.isEnabled("swordCombo" + attack)) {
                     trail(player, model, data, attack);
-                    if (!playSword(model, data, attack, moving, player.isRiding())) {
-                        if (attack == 1) Animation_Attack_Combo0.apply(model, data.ticksAfterPunch, moving, player.isRiding());
-                        else if (attack == 2) Animation_Attack_Combo1.apply(model, data.ticksAfterPunch, moving, player.isRiding());
-                        else Animation_Attack_Combo2.apply(model, data.ticksAfterPunch);
-                    }
+                    playSword(model, data, attack, moving, player.isRiding());
                 }
             } else if (data.ticksAfterPunch < 60.0f) {
                 if (PlayerAnimationConfig.isEnabled("swordStance")) {
-                    if (data.isOnGround() && !playStance(model, data, moving, player.isSprinting())) {
-                        Animation_Attack_Stance.apply(model, moving, player.isSprinting());
-                    }
+                    if (data.isOnGround()) playStance(model, data, moving, player.isSprinting());
                 }
             }
         } else if (data.ticksAfterPunch < 10.0f) {
             if (PlayerAnimationConfig.isEnabled("punch")) {
-                if (!playPunch(model, data, false)) Animation_Attack_Punch.animate((EntityPlayer)argEntity, model, data);
+                playPunch(model, data, false);
             }
         } else if (data.ticksAfterPunch < 60.0f) {
             if (PlayerAnimationConfig.isEnabled("punchStance")) {
-                if (!playPunch(model, data, true)) Animation_Attack_PunchStance.animate((EntityPlayer)argEntity, model, data);
+                playPunch(model, data, true);
             }
         }
     }

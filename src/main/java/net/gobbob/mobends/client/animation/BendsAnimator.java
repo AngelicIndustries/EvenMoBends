@@ -55,7 +55,7 @@ public final class BendsAnimator {
     /**
      * Applies an animation from the given file at {@code seconds}.
      *
-     * @return false if the file or animation is missing, so the caller can fall back to its Java pose.
+     * @return false if the file or animation is missing (logged once, as an error).
      */
     public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds) {

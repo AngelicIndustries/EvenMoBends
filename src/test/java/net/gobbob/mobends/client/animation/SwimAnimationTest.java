@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.gobbob.mobends.animation.player.Animation_Swimming;
+import net.gobbob.mobends.animation.player.Reference_Swimming;
 import net.gobbob.mobends.client.animation.AnimationBaking.Channel;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
@@ -50,7 +51,7 @@ class SwimAnimationTest {
             for (float[] look : new float[][] {{0, 0}, {35, -20}, {-50, 40}}) {
                 String[] where = {""};
                 float worst = AnimationBaking.compare(AnimationBaking.model(look[0], look[1]), AnimationBaking.model(look[0], look[1]),
-                    (model, ticks) -> Animation_Swimming.apply(model, ticks, moving),
+                    (model, ticks) -> Reference_Swimming.apply(model, ticks, moving),
                     (model, ticks) -> {
                         for (Animation animation : new Animation[] {upperAnimation, legsAnimation}) {
                             double seconds = (ticks / 20.0) % animation.length();
@@ -68,7 +69,7 @@ class SwimAnimationTest {
         Map<String, String> fixed = channels.containsKey("neck rotation")
             ? Collections.singletonMap("head rotation", LOOK) : Collections.<String, String>emptyMap();
         return AnimationBaking.bake(name, 2 * Math.PI / speed, channels, fixed,
-            (model, ticks) -> Animation_Swimming.apply(model, ticks, moving));
+            (model, ticks) -> Reference_Swimming.apply(model, ticks, moving));
     }
 
     private static Map<String, Channel> upper(boolean moving) {

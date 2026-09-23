@@ -10,7 +10,6 @@ import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
 import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
-import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.data.Data_Player;
@@ -45,54 +44,11 @@ public class Animation_Flying extends Animation {
     /**
      * Plays {@code player/fly.animation.json}: the hover ({@code fly}, or {@code fly_elytra} gliding with Et Futurum
      * elytra; looping on the player's age) and {@code fly_forward} / {@code fly_elytra_forward} over it as fast as the
-     * player flies. Falls back to the Java flight below.
+     * player flies. A missing animation is skipped (the animator logs it).
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean elytraFlying) {
         String hover = elytraFlying ? "fly_elytra" : "fly";
-        if (!BendsAnimator.playLoop(model, data, FILE, hover, "fly")
-            || !BendsAnimator.playPose(model, data, FILE, hover + "_forward", "fly_forward",
-                moving(data.motion.x, data.motion.y, data.motion.z))) {
-            apply(model, data.ticks, data.motion.x, data.motion.y, data.motion.z, elytraFlying);
-        }
-    }
-
-    /** The original Java flight, kept as the reference the Blockbench flight was baked from. */
-    public static void apply(ModelBendsPlayer model, float ticks, float motionX, float motionY, float motionZ,
-        boolean elytraFlying) {
-        float moving = moving(motionX, motionY, motionZ);
-        float hovering = 1.0f - moving;
-        float phase = ticks * 0.15f;
-
-        // EFR rotates the entire RenderPlayer while gliding. Creative flight needs
-        // its own forward tilt, but applying it to EFR would double the rotation.
-        float bodyTilt = elytraFlying ? 0.0f : 70.0f * moving;
-        model.renderRotation.setSmoothX(bodyTilt, 0.25f);
-        model.renderOffset.setSmoothZ(elytraFlying ? 0.0f : 8.0f * moving, 0.25f);
-
-        float armSpread = elytraFlying ? 0.0f : 45.0f + 33.75f * moving;
-        float hoverTurn = MathHelper.cos(phase) * 22.5f * hovering;
-        ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothX(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothX(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothY(hoverTurn, 0.3f);
-        ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothY(hoverTurn, 0.3f);
-        ((ModelRendererBends)model.bipedRightArm).rotation.setSmoothZ(armSpread, 0.3f);
-        ((ModelRendererBends)model.bipedLeftArm).rotation.setSmoothZ(-armSpread, 0.3f);
-        ((ModelRendererBends)model.bipedRightForeArm).rotation.setSmoothX(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedLeftForeArm).rotation.setSmoothX(0.0f, 0.3f);
-
-        float legWave = MathHelper.cos(phase) * 11.25f * hovering;
-        ((ModelRendererBends)model.bipedRightLeg).rotation.setSmoothX(legWave, 0.3f);
-        ((ModelRendererBends)model.bipedLeftLeg).rotation.setSmoothX(-legWave, 0.3f);
-        ((ModelRendererBends)model.bipedRightLeg).rotation.setSmoothZ(2.8f, 0.3f);
-        ((ModelRendererBends)model.bipedLeftLeg).rotation.setSmoothZ(-2.8f, 0.3f);
-        ((ModelRendererBends)model.bipedRightForeLeg).rotation.setSmoothX(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedLeftForeLeg).rotation.setSmoothX(0.0f, 0.3f);
-
-        ((ModelRendererBends)model.bipedBody).rotation.setSmoothX(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedBody).rotation.setSmoothY(0.0f, 0.3f);
-        ((ModelRendererBends)model.bipedBody).rotation.setSmoothZ(0.0f, 0.3f);
-        float headPitch = elytraFlying ? -45.0f : model.headRotationX - bodyTilt * 0.5f;
-        ((ModelRendererBends)model.bipedHead).rotation.setSmoothX(headPitch, 0.3f);
-        ((ModelRendererBends)model.bipedHead).rotation.setSmoothY(model.headRotationY, 0.3f);
+        BendsAnimator.playLoop(model, data, FILE, hover, "fly");
+        BendsAnimator.playPose(model, data, FILE, hover + "_forward", "fly_forward", moving(data.motion.x, data.motion.y, data.motion.z));
     }
 }

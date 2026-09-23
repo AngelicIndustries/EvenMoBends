@@ -19,7 +19,7 @@ class AnimationBlockingTest {
         part(model.bipedLeftArm).pre_rotation.setZ(-80);
         part(model.bipedLeftForeArm).pre_rotation.setY(90);
 
-        Animation_Blocking.apply(model, PlayerBlockingCompat.OFF_HAND);
+        Reference_Blocking.apply(model, PlayerBlockingCompat.OFF_HAND);
 
         assertPose(model.bipedLeftArm, model.bipedLeftForeArm, 0);
         assertEquals(-120, part(model.bipedRightArm).rotation.vFinal.x);
@@ -33,7 +33,7 @@ class AnimationBlockingTest {
         ModelBendsPlayer model = new ModelBendsPlayer();
         model.renderItemRotation.setX(65);
         part(model.bipedLeftArm).rotation.setX(42);
-        Animation_Blocking.apply(model, PlayerBlockingCompat.MAIN_HAND);
+        Reference_Blocking.apply(model, PlayerBlockingCompat.MAIN_HAND);
         assertPose(model.bipedRightArm, model.bipedRightForeArm, -30);
         assertEquals(0, model.renderItemRotation.vFinal.lengthSquared());
         assertEquals(42, part(model.bipedLeftArm).rotation.vFinal.x);
@@ -47,7 +47,7 @@ class AnimationBlockingTest {
             model.setSlim(true);
             float shoulderY = model.bipedRightArm.rotationPointY;
             float elbowX = model.bipedRightForeArm.rotationPointX;
-            Animation_Blocking.apply(model, PlayerBlockingCompat.MAIN_HAND | PlayerBlockingCompat.OFF_HAND);
+            Reference_Blocking.apply(model, PlayerBlockingCompat.MAIN_HAND | PlayerBlockingCompat.OFF_HAND);
             assertPose(model.bipedRightArm, model.bipedRightForeArm, -30);
             assertPose(model.bipedLeftArm, model.bipedLeftForeArm, 0);
             assertEquals(shoulderY, model.bipedRightArm.rotationPointY);
@@ -60,7 +60,7 @@ class AnimationBlockingTest {
         ModelBendsPlayer model = new ModelBendsPlayer();
         part(model.bipedLeftArm).rotation.setX(23);
         part(model.bipedRightArm).rotation.setX(32);
-        Animation_Blocking.apply(model, 0);
+        Reference_Blocking.apply(model, 0);
         assertEquals(23, part(model.bipedLeftArm).rotation.vFinal.x);
         assertEquals(32, part(model.bipedRightArm).rotation.vFinal.x);
     }

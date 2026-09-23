@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.gobbob.mobends.animation.player.Animation_Diving;
+import net.gobbob.mobends.animation.player.Reference_Diving;
 import net.gobbob.mobends.client.animation.AnimationBaking.Channel;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.data.Data_Player;
@@ -74,7 +75,7 @@ class DiveAnimationTest {
             for (float[] look : new float[][] {{0, 0}, {30, -25}}) {
                 String[] where = {""};
                 float worst = AnimationBaking.compare(AnimationBaking.model(look[0], look[1]), AnimationBaking.model(look[0], look[1]),
-                    (model, ticks) -> Animation_Diving.apply(model, ticks, motion[0], motion[1], motion[2]),
+                    (model, ticks) -> Reference_Diving.apply(model, ticks, motion[0], motion[1], motion[2]),
                     (model, ticks) -> {
                         play(model, data, upper, ticks, 1);
                         play(model, data, still, ticks, 1);
@@ -94,7 +95,7 @@ class DiveAnimationTest {
     }
 
     private static void java(net.gobbob.mobends.client.model.entity.ModelBendsPlayer model, Float ticks) {
-        Animation_Diving.apply(model, ticks, BAKE_MOTION[0], BAKE_MOTION[1], BAKE_MOTION[2]);
+        Reference_Diving.apply(model, ticks, BAKE_MOTION[0], BAKE_MOTION[1], BAKE_MOTION[2]);
     }
 
     private static Data_Player data() throws Exception {

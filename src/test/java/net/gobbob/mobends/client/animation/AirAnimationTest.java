@@ -16,13 +16,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import net.gobbob.mobends.animation.player.Animation_Climbing;
+import net.gobbob.mobends.animation.player.Reference_Climbing;
 import net.gobbob.mobends.animation.player.Animation_Falling;
+import net.gobbob.mobends.animation.player.Reference_Falling;
 import net.gobbob.mobends.animation.player.Animation_Flying;
+import net.gobbob.mobends.animation.player.Reference_Flying;
 import net.gobbob.mobends.animation.player.Animation_Jump;
+import net.gobbob.mobends.animation.player.Reference_Jump;
 import net.gobbob.mobends.animation.player.Animation_Riding;
+import net.gobbob.mobends.animation.player.Reference_Riding;
 import net.gobbob.mobends.animation.player.Animation_Sprint;
+import net.gobbob.mobends.animation.player.Reference_Sprint;
 import net.gobbob.mobends.animation.player.Animation_Stand;
+import net.gobbob.mobends.animation.player.Reference_Stand;
 import net.gobbob.mobends.animation.player.Animation_Walk;
+import net.gobbob.mobends.animation.player.Reference_Walk;
 import net.gobbob.mobends.client.animation.AnimationBaking.Channel;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -46,13 +54,13 @@ class AirAnimationTest {
     void bakeWhenAsked() throws IOException {
         if (!"1".equals(System.getenv("MOBENDS_BAKE_AIR"))) return;
         write("fall", AnimationBaking.bake("fall", 2 * Math.PI / 0.1, parts(PARTS), look("q.mobends_head_pitch"),
-            (m, t) -> Animation_Falling.apply(m, t)));
+            (m, t) -> Reference_Falling.apply(m, t)));
 
         write("climb",
             AnimationBaking.bake("climb", 2 * Math.PI / 0.32, parts(PARTS), look("q.mobends_head_pitch - 5"),
-                (m, t) -> Animation_Climbing.apply(m, t, 0)),
+                (m, t) -> Reference_Climbing.apply(m, t, 0)),
             AnimationBaking.bake("climb_move", 2 * Math.PI / 0.32, parts(LIMBS), new LinkedHashMap<String, String>(),
-                (m, t) -> Animation_Climbing.apply(m, t, 0.12f)));
+                (m, t) -> Reference_Climbing.apply(m, t, 0.12f)));
 
         write("fly",
             flight("fly", false, 0), flight("fly_forward", false, 0.4f),
@@ -88,7 +96,7 @@ class AirAnimationTest {
         Map<String, Channel> channels = rootAndParts(PARTS);
         String head = elytra ? "-45" : speed > 0 ? "q.mobends_head_pitch - 35" : "q.mobends_head_pitch";
         return AnimationBaking.bake(name, 2 * Math.PI / 0.15, channels, look(head),
-            (m, t) -> Animation_Flying.apply(m, t, speed, 0, 0, elytra));
+            (m, t) -> Reference_Flying.apply(m, t, speed, 0, 0, elytra));
     }
 
     /** Riding: the offset, every part (or {@code only} these), and the head countering the body's lean. */
@@ -100,7 +108,7 @@ class AirAnimationTest {
         return AnimationBaking.bake(name, 2 * Math.PI / 0.6, channels, headTemplates("q.mobends_head_yaw"),
             new LinkedHashMap<String, String>(), (m, t) -> {
                 m.armSwingAmount = swing;
-                Animation_Riding.apply(m, t, moving);
+                Reference_Riding.apply(m, t, moving);
             });
     }
 
@@ -150,25 +158,25 @@ class AirAnimationTest {
     }
 
     private static void standing(ModelBendsPlayer model, Float ticks) {
-        Animation_Stand.apply(model, ticks);
+        Reference_Stand.apply(model, ticks);
     }
 
     private static void javaJump(ModelBendsPlayer model, Float ticks) {
-        Animation_Jump.apply(model, ticks, false, false, false, jumpSpeed(ticks));
+        Reference_Jump.apply(model, ticks, false, false, false, jumpSpeed(ticks));
     }
 
     /** Sprinting up to the jump: the limbs swing fully, a stride per 2 pi / 0.6662 ticks. */
     private static void sprinting(ModelBendsPlayer model, Float ticks) {
         model.armSwing = ticks;
         model.armSwingAmount = 1;
-        Animation_Sprint.apply(model);
+        Reference_Sprint.apply(model);
     }
 
     private static BiConsumer<ModelBendsPlayer, Float> sprintJump(boolean rightLeg) {
         return (model, ticks) -> {
             model.armSwing = 400 + ticks;
             model.armSwingAmount = 1;
-            Animation_Jump.apply(model, ticks, true, true, rightLeg, jumpSpeed(ticks));
+            Reference_Jump.apply(model, ticks, true, true, rightLeg, jumpSpeed(ticks));
         };
     }
 
@@ -177,7 +185,7 @@ class AirAnimationTest {
         return (model, ticks) -> {
             model.armSwing = ticks * WALK;
             model.armSwingAmount = amount;
-            Animation_Jump.apply(model, 1000, true, false, false, 0);
+            Reference_Jump.apply(model, 1000, true, false, false, 0);
         };
     }
 
@@ -187,7 +195,7 @@ class AirAnimationTest {
     void fallMatches() throws Exception {
         Animation fall = load("fall").getAnimation("animation.mobends.player.fall");
         for (float[] look : new float[][] {{0, 0}, {30, -40}}) {
-            assertLoop("fall", look, (m, t) -> Animation_Falling.apply(m, t), (m, t) -> loop(m, fall, t, 1));
+            assertLoop("fall", look, (m, t) -> Reference_Falling.apply(m, t), (m, t) -> loop(m, fall, t, 1));
         }
     }
 
@@ -196,7 +204,7 @@ class AirAnimationTest {
         BakedAnimations file = load("climb");
         for (float speed : new float[] {0, 0.06f, 0.12f, -0.2f}) {
             float stride = Animation_Climbing.stride(speed);
-            assertLoop("climb at " + speed, new float[] {20, 15}, (m, t) -> Animation_Climbing.apply(m, t, speed), (m, t) -> {
+            assertLoop("climb at " + speed, new float[] {20, 15}, (m, t) -> Reference_Climbing.apply(m, t, speed), (m, t) -> {
                 pose(m, file.getAnimation("animation.mobends.player.climb"), 1);
                 loop(m, file.getAnimation("animation.mobends.player.climb_move"), t, stride);
             });
@@ -210,7 +218,7 @@ class AirAnimationTest {
             String hover = elytra ? "fly_elytra" : "fly";
             for (float speed : new float[] {0, 0.175f, 0.5f}) {
                 float moving = Animation_Flying.moving(speed, 0, 0);
-                assertLoop(hover + " at " + speed, new float[] {-20, 30}, (m, t) -> Animation_Flying.apply(m, t, speed, 0, 0, elytra),
+                assertLoop(hover + " at " + speed, new float[] {-20, 30}, (m, t) -> Reference_Flying.apply(m, t, speed, 0, 0, elytra),
                     (m, t) -> {
                         loop(m, file.getAnimation("animation.mobends.player." + hover), t, 1);
                         pose(m, file.getAnimation("animation.mobends.player." + hover + "_forward"), moving);
@@ -222,12 +230,12 @@ class AirAnimationTest {
     @Test
     void rideMatches() throws Exception {
         BakedAnimations file = load("ride");
-        assertLoop("ride", new float[] {10, 20}, (m, t) -> Animation_Riding.apply(m, t, false),
+        assertLoop("ride", new float[] {10, 20}, (m, t) -> Reference_Riding.apply(m, t, false),
             (m, t) -> pose(m, file.getAnimation("animation.mobends.player.ride"), 1));
         for (float swing : new float[] {0, 0.05f, 0.3f}) {
             assertLoop("ride moving, swing " + swing, new float[] {10, 20}, (m, t) -> {
                 m.armSwingAmount = swing;
-                Animation_Riding.apply(m, t, true);
+                Reference_Riding.apply(m, t, true);
             }, (m, t) -> {
                 m.armSwingAmount = swing;
                 pose(m, file.getAnimation("animation.mobends.player.ride_move"), 1);
@@ -257,12 +265,12 @@ class AirAnimationTest {
             BiConsumer<ModelBendsPlayer, Float> walking = (m, t) -> {
                 m.armSwing = t * WALK;
                 m.armSwingAmount = WALK;
-                Animation_Walk.apply(m);
+                Reference_Walk.apply(m);
             };
             assertOnce("walking jump", look, 15, walking, (m, t) -> {
                 m.armSwing = (400 + t) * WALK;
                 m.armSwingAmount = WALK;
-                Animation_Jump.apply(m, t, true, false, false, jumpSpeed(t));
+                Reference_Jump.apply(m, t, true, false, false, jumpSpeed(t));
             }, (m, t) -> {
                 m.armSwing = (400 + t) * WALK;
                 m.armSwingAmount = WALK;

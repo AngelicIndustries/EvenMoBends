@@ -90,9 +90,9 @@ class AnimationAquaAcrobaticsTest {
     @Test
     void treadingWaterDoesNotAddHorizontalTiltButLegacySwimmingStillDoes() {
         ModelBendsPlayer model = new ModelBendsPlayer();
-        Animation_Swimming.apply(model, 20, false);
+        Reference_Swimming.apply(model, 20, false);
         assertEquals(0, model.renderRotation.vFinal.x);
-        Animation_Swimming.apply(model, 20, true);
+        Reference_Swimming.apply(model, 20, true);
         assertEquals(70, model.renderRotation.vFinal.x);
     }
 

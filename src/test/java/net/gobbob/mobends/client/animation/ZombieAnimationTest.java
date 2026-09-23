@@ -17,7 +17,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import net.gobbob.mobends.animation.zombie.Animation_Stand;
+import net.gobbob.mobends.animation.zombie.Reference_Stand;
 import net.gobbob.mobends.animation.zombie.Animation_Walk;
+import net.gobbob.mobends.animation.zombie.Reference_Walk;
 import net.gobbob.mobends.client.animation.AnimationBaking.Channel;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
@@ -51,9 +53,9 @@ class ZombieAnimationTest {
     @Test
     void bakeWhenAsked() throws IOException {
         if (!"1".equals(System.getenv("MOBENDS_BAKE_ZOMBIE"))) return;
-        AnimationBaking.Derived stand = AnimationBaking.derive((m, t) -> Animation_Stand.apply(m), null, 0);
+        AnimationBaking.Derived stand = AnimationBaking.derive((m, t) -> Reference_Stand.apply(m), null, 0);
         write("stand", AnimationBaking.bake("stand", 20, stand.channels, stand.templates, new LinkedHashMap<String, String>(),
-            (m, t) -> Animation_Stand.apply(m)));
+            (m, t) -> Reference_Stand.apply(m)));
 
         // The walk with the limbs still (the body's bob and sway, the knees' and elbows' steps, the head), and the arms
         // and legs at full swing over it, both a stride long.
@@ -81,7 +83,7 @@ class ZombieAnimationTest {
         return (model, ticks) -> {
             model.armSwing = ticks * CADENCE;
             model.armSwingAmount = amount;
-            Animation_Walk.apply(model, false);
+            Reference_Walk.apply(model, false);
         };
     }
 
@@ -97,7 +99,7 @@ class ZombieAnimationTest {
     void standMatches() throws Exception {
         Animation stand = load("stand").getAnimation("animation.mobends.zombie.stand");
         for (float[] look : new float[][] {{0, 0}, {25, -40}}) {
-            assertMatches("stand", look, (m, t) -> Animation_Stand.apply(m), (m, t) -> apply(m, stand, 0, 1));
+            assertMatches("stand", look, (m, t) -> Reference_Stand.apply(m), (m, t) -> apply(m, stand, 0, 1));
         }
     }
 
@@ -110,7 +112,7 @@ class ZombieAnimationTest {
                     assertMatches("walk" + (armsUp ? " reaching" : "") + " swinging " + amount, look, (m, t) -> {
                         m.armSwing = t * CADENCE;
                         m.armSwingAmount = amount;
-                        Animation_Walk.apply(m, armsUp);
+                        Reference_Walk.apply(m, armsUp);
                     }, (m, t) -> {
                         m.armSwing = t * CADENCE;
                         m.armSwingAmount = amount;

@@ -15,9 +15,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import net.gobbob.mobends.animation.player.Animation_Axe;
+import net.gobbob.mobends.animation.player.Reference_Axe;
 import net.gobbob.mobends.animation.player.Animation_Bow;
+import net.gobbob.mobends.animation.player.Reference_Bow;
 import net.gobbob.mobends.animation.player.Animation_Mining;
+import net.gobbob.mobends.animation.player.Reference_Mining;
 import net.gobbob.mobends.animation.player.Animation_Stand;
+import net.gobbob.mobends.animation.player.Reference_Stand;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import org.junit.jupiter.api.Test;
 
@@ -42,12 +46,12 @@ class ToolAnimationTest {
         // ahead (within a degree for most looks).
         Map<String, String[]> mineOverrides = Collections.singletonMap("rightArm rotation", new String[] {null, "%s", null});
         write("mine",
-            pose("mine", (m, t) -> Animation_Mining.apply(m, 0, false)),
-            loop("mine_swing", (m, t) -> Animation_Mining.apply(m, t, true), mineOverrides));
+            pose("mine", (m, t) -> Reference_Mining.apply(m, 0, false)),
+            loop("mine_swing", (m, t) -> Reference_Mining.apply(m, t, true), mineOverrides));
         // Chopping, the left hand holds the handle below the right (AxeGrip) instead of the Java's loose arm.
         write("axe",
-            axe("axe", 20, (m, t) -> Animation_Axe.apply(m, 0, false)),
-            axe("axe_swing", SWING_PERIOD, (m, t) -> Animation_Axe.apply(m, t, true)));
+            axe("axe", 20, (m, t) -> Reference_Axe.apply(m, 0, false)),
+            axe("axe_swing", SWING_PERIOD, (m, t) -> Reference_Axe.apply(m, t, true)));
 
         // Aiming, the bow arm follows the look down but rises no higher than 120 degrees.
         Map<String, String[]> aimOverrides = Collections.singletonMap("leftArmAim rotation",
@@ -90,16 +94,16 @@ class ToolAnimationTest {
     private static final String[] LEFT_ARM = {"leftArmAim rotation", "leftArm rotation", "leftForeArm rotation"};
 
     private static void draw(ModelBendsPlayer model, Float ticks) {
-        Animation_Bow.apply(model, ticks);
+        Reference_Bow.apply(model, ticks);
     }
 
     private static void aim(ModelBendsPlayer model, Float ticks) {
-        Animation_Bow.apply(model, Animation_Bow.DRAW_TICKS + ticks);
+        Reference_Bow.apply(model, Animation_Bow.DRAW_TICKS + ticks);
     }
 
     /** Holding the draw's first frame, then drawing: the 400 ticks before the aim. */
     private static void drawLeadIn(ModelBendsPlayer model, Float ticks) {
-        Animation_Bow.apply(model, Math.max(0, ticks - (400 - Animation_Bow.DRAW_TICKS)));
+        Reference_Bow.apply(model, Math.max(0, ticks - (400 - Animation_Bow.DRAW_TICKS)));
     }
 
     private static void write(String file, String... animations) throws IOException {
@@ -111,13 +115,13 @@ class ToolAnimationTest {
     @Test
     void miningMatches() throws Exception {
         BakedAnimations file = load("mine");
-        assertTool(file, "mine", Animation_Mining::apply);
+        assertTool(file, "mine", Reference_Mining::apply);
     }
 
     @Test
     void axeMatches() throws Exception {
         BakedAnimations file = load("axe");
-        assertTool(file, "axe", Animation_Axe::apply, "leftArm", "leftForeArm");
+        assertTool(file, "axe", Reference_Axe::apply, "leftArm", "leftForeArm");
     }
 
     /** Holding the axe and chopping, the left hand stays on the handle, a hand's width below the right. */
@@ -165,7 +169,7 @@ class ToolAnimationTest {
                 String[] where = {""};
                 float worst = AnimationBaking.compare(AnimationBaking.model(look[0], look[1]), AnimationBaking.model(look[0], look[1]),
                     (m, t) -> {
-                        Animation_Stand.apply(m, t);
+                        Reference_Stand.apply(m, t);
                         java.apply(m, t, swinging);
                     }, (m, t) -> {
                         apply(m, stand, (t / 20.0) % stand.length());
