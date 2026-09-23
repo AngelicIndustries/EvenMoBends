@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.data.Data_Player;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
@@ -33,8 +33,8 @@ extends Animation {
     public static void play(ModelBendsPlayer model, Data_Player data) {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         boolean played = moving
-            ? PlayerAnimator.playStride(model, data, FILE, "sneak_walk", "sneak")
-            : PlayerAnimator.playStridePose(model, data, FILE, "sneak", "sneak");
+            ? BendsAnimator.playStride(model, data, FILE, "sneak_walk", "sneak")
+            : BendsAnimator.playStridePose(model, data, FILE, "sneak", "sneak");
         if (!played) apply(model);
     }
 

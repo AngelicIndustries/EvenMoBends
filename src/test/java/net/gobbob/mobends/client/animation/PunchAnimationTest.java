@@ -90,7 +90,7 @@ class PunchAnimationTest {
             + " \"bones\": {\"rightForeArm\": {\"position\": {\"0.0\": [0, 0, 0], \"0.4\": [1, 2, 11], \"0.5\": [0, 0, 0]}}}}}}";
         Animation animation = new GeckoLibGsonLoader().loadAnimations(new java.io.StringReader(json)).getAnimation("animation.test");
         ModelBendsPlayer model = model(0, 0);
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, 0.4, PlayerAnimator.context(model, null)));
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, 0.4, BendsAnimator.context(model, null)));
         org.lwjgl.util.vector.Vector3f position = ((ModelRendererBends)model.bipedRightForeArm).position.vFinal;
         assertEquals(1, position.x, 1e-4f);
         assertEquals(-2, position.y, 1e-4f, "Bedrock up is model -Y");
@@ -101,10 +101,10 @@ class PunchAnimationTest {
     @Test
     void movingBonesFollowAndHeldBonesEase() throws Exception {
         ModelBendsPlayer model = played("animation.mobends.player.punch_right", true, false, 0, 0, 0.05);
-        assertEquals(PlayerAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedBody).rotation.smoothness.y, 1e-6f);
-        assertEquals(PlayerAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedRightArm).rotation.smoothness.z, 1e-6f);
-        assertEquals(PlayerAnimator.EASE_RATE, ((ModelRendererBends)model.bipedRightLeg).rotation.smoothness.x, 1e-6f);
-        assertEquals(PlayerAnimator.EASE_RATE, ((ModelRendererBends)model.bipedLeftArm).rotation.smoothness.x, 1e-6f);
+        assertEquals(BendsAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedBody).rotation.smoothness.y, 1e-6f);
+        assertEquals(BendsAnimator.FOLLOW_RATE, ((ModelRendererBends)model.bipedRightArm).rotation.smoothness.z, 1e-6f);
+        assertEquals(BendsAnimator.EASE_RATE, ((ModelRendererBends)model.bipedRightLeg).rotation.smoothness.x, 1e-6f);
+        assertEquals(BendsAnimator.EASE_RATE, ((ModelRendererBends)model.bipedLeftArm).rotation.smoothness.x, 1e-6f);
     }
 
     private static float rightForeArmX(double seconds) throws Exception {
@@ -161,8 +161,8 @@ class PunchAnimationTest {
     private static void play(ModelBendsPlayer model, Data_Player data, String name, double seconds) throws Exception {
         Animation animation = animations().getAnimation(name);
         assertNotNull(animation, name);
-        PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)));
+        BendsAnimator.apply(model, animation,
+            AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, data)));
     }
 
     private static BakedAnimations animations() throws Exception {

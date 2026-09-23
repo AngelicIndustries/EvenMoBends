@@ -23,14 +23,14 @@ class OffhandTest {
                 .getAnimation("animation.mobends.player." + which[1]);
             for (double seconds : new double[] {0, 0.1, 0.2, 0.4}) {
                 ModelBendsPlayer plain = AnimationBaking.model(0, 0), mirrored = AnimationBaking.model(0, 0);
-                AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, animation,
-                    AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
-                AnimationBaking.frame(mirrored, m -> PlayerAnimator.apply(m, animation,
-                    AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(m, null)), 1000, 1, null, null, true), 1000);
+                AnimationBaking.frame(plain, m -> BendsAnimator.apply(m, animation,
+                    AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
+                AnimationBaking.frame(mirrored, m -> BendsAnimator.apply(m, animation,
+                    AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(m, null)), 1000, 1, null, null, true), 1000);
                 org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
                 for (Bone bone : Bone.values()) {
                     if (bone.part(plain) == null) continue;
-                    Bone other = Bone.byId(PlayerAnimator.mirrorName(bone.id));
+                    Bone other = Bone.byId(BendsAnimator.mirrorName(bone.id));
                     org.joml.Matrix4f expected = new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(bone.part(plain))).mul(reflect);
                     float off = AnimationBaking.angleBetween(expected, AnimationBaking.orientation(other.part(mirrored)));
                     org.junit.jupiter.api.Assertions.assertTrue(off < 0.1f, which[1] + " at " + seconds + ": " + other.id + " off by " + off);
@@ -74,8 +74,8 @@ class OffhandTest {
             .allocateInstance(net.gobbob.mobends.data.Data_Player.class);
         data.ticksPerFrame = AnimationBaking.TICKS_PER_FRAME;
         ModelBendsPlayer start = AnimationBaking.model(0, 0);
-        AnimationBaking.frame(start, m -> PlayerAnimator.apply(m, punch,
-            AnimationProcessor.evaluate(punch, 0, PlayerAnimator.context(m, null)), 1000, 1), 1000);
+        AnimationBaking.frame(start, m -> BendsAnimator.apply(m, punch,
+            AnimationProcessor.evaluate(punch, 0, BendsAnimator.context(m, null)), 1000, 1), 1000);
         org.joml.Matrix4f startArm = arm(start);
         ModelBendsPlayer model = AnimationBaking.model(0, 0);
         float worst = 0;
@@ -87,7 +87,7 @@ class OffhandTest {
             float since = t - instance * every;
             retracts[0] = pullBack && instance > 0 && every < net.gobbob.mobends.animation.player.Animation_Attack.FIST_OUT_TICKS;
             data.ticks = t;
-            AnimationBaking.frame(model, m -> PlayerAnimator.playOnce(m, data, punch, "punch@" + (pullBack ? instance : 0),
+            AnimationBaking.frame(model, m -> BendsAnimator.playOnce(m, data, punch, "punch@" + (pullBack ? instance : 0),
                 pullBack ? net.gobbob.mobends.animation.player.Animation_Attack.punchSeconds(since, retracts[0]) : since / 20.0, "punch",
                 pullBack ? net.gobbob.mobends.animation.player.Animation_Attack.punchFade(retracts[0]) : 0, null));
             org.joml.Matrix4f arm = arm(model);
@@ -116,10 +116,10 @@ class OffhandTest {
         for (String name : new String[] {"sword_stance", "sword_2"}) {
             Animation animation = AnimationBaking.load(Paths.get(dir + "sword.animation.json")).getAnimation("animation.mobends.player." + name);
             ModelBendsPlayer plain = AnimationBaking.model(0, 0), armOnly = AnimationBaking.model(0, 0), untouched = AnimationBaking.model(0, 0);
-            AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, animation,
-                AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
-            AnimationBaking.frame(armOnly, m -> PlayerAnimator.apply(m, animation,
-                AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(m, null)), 1000, 1, PlayerAnimator.ALL_BUT_LEFT_ARM,
+            AnimationBaking.frame(plain, m -> BendsAnimator.apply(m, animation,
+                AnimationProcessor.evaluate(animation, 0.1, BendsAnimator.context(m, null)), 1000, 1, null, null, false), 1000);
+            AnimationBaking.frame(armOnly, m -> BendsAnimator.apply(m, animation,
+                AnimationProcessor.evaluate(animation, 0.1, BendsAnimator.context(m, null)), 1000, 1, BendsAnimator.ALL_BUT_LEFT_ARM,
                 null, true), 1000);
             AnimationBaking.frame(untouched, m -> {}, 1000);
             org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
@@ -127,7 +127,7 @@ class OffhandTest {
                 if (bone.part(plain) == null) continue;
                 org.joml.Matrix4f actual = AnimationBaking.orientation(bone.part(armOnly));
                 org.joml.Matrix4f expected = bone == Bone.LEFT_ARM || bone == Bone.LEFT_FORE_ARM
-                    ? new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(Bone.byId(PlayerAnimator.mirrorName(bone.id)).part(plain))).mul(reflect)
+                    ? new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(Bone.byId(BendsAnimator.mirrorName(bone.id)).part(plain))).mul(reflect)
                     : AnimationBaking.orientation(bone.part(untouched));
                 float off = AnimationBaking.angleBetween(expected, actual);
                 org.junit.jupiter.api.Assertions.assertTrue(off < 0.1f, name + ": " + bone.id + " off by " + off);
@@ -144,10 +144,10 @@ class OffhandTest {
         for (float yaw : new float[] {-40, 25}) {
             ModelBendsPlayer plain = AnimationBaking.model(10, yaw), mirrored = AnimationBaking.model(10, -yaw);
             // The same swing, played for the other hand by a player looking the other way: exact reflections.
-            AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
-                PlayerAnimator.context(m, null, false)), 1000, 1, null, null, false), 1000);
-            AnimationBaking.frame(mirrored, m -> PlayerAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
-                PlayerAnimator.context(m, null, true)), 1000, 1, null, null, true), 1000);
+            AnimationBaking.frame(plain, m -> BendsAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
+                BendsAnimator.context(m, null, false)), 1000, 1, null, null, false), 1000);
+            AnimationBaking.frame(mirrored, m -> BendsAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
+                BendsAnimator.context(m, null, true)), 1000, 1, null, null, true), 1000);
             org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
             org.joml.Matrix4f expected = new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(Bone.HEAD.part(plain))).mul(reflect);
             float off = AnimationBaking.angleBetween(expected, AnimationBaking.orientation(Bone.HEAD.part(mirrored)));
@@ -170,10 +170,10 @@ class OffhandTest {
                 Bone.LEFT_ARM.part(model).rotation.setSmooth(new Vector3f(-40, 10, 0), 1000);
                 Bone.LEFT_FORE_ARM.part(model).rotation.setSmooth(new Vector3f(-30, 0, 0), 1000);
             }
-            PlayerAnimator.apply(held, animation, AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(held, null)),
-                PlayerAnimator.FOLLOW_RATE, 1, PlayerAnimator.LEFT_ARM);
-            PlayerAnimator.apply(free, animation, AnimationProcessor.evaluate(animation, 0.1, PlayerAnimator.context(free, null)),
-                PlayerAnimator.FOLLOW_RATE, 1, null);
+            BendsAnimator.apply(held, animation, AnimationProcessor.evaluate(animation, 0.1, BendsAnimator.context(held, null)),
+                BendsAnimator.FOLLOW_RATE, 1, BendsAnimator.LEFT_ARM);
+            BendsAnimator.apply(free, animation, AnimationProcessor.evaluate(animation, 0.1, BendsAnimator.context(free, null)),
+                BendsAnimator.FOLLOW_RATE, 1, null);
             String name = animation.name();
             for (Bone bone : new Bone[] {Bone.LEFT_ARM, Bone.LEFT_FORE_ARM}) {
                 ModelRendererBends part = bone.part(held);

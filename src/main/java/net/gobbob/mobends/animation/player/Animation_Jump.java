@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -38,11 +38,11 @@ extends Animation {
         double seconds = data.ticksAfterLiftoff / 20.0;
         boolean played;
         if (moving && sprinting) {
-            played = PlayerAnimator.play(model, data, FILE,
+            played = BendsAnimator.play(model, data, FILE,
                 "animation.mobends.player.jump_sprint_" + (data.sprintJumpLeg ? "right" : "left"), seconds, "jump", BLEND);
         } else {
-            played = PlayerAnimator.play(model, data, FILE, "animation.mobends.player.jump", seconds, "jump", BLEND)
-                && (!moving || PlayerAnimator.playStride(model, data, FILE, "jump_walk", "jump_walk"));
+            played = BendsAnimator.play(model, data, FILE, "animation.mobends.player.jump", seconds, "jump", BLEND)
+                && (!moving || BendsAnimator.playStride(model, data, FILE, "jump_walk", "jump_walk"));
         }
         if (!played) apply(model, data.ticksAfterLiftoff, moving, sprinting, data.sprintJumpLeg, data.motion.y);
     }

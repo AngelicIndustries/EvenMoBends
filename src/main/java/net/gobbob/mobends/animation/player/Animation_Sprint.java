@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.data.Data_Player;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
@@ -31,7 +31,7 @@ extends Animation {
      * Java sprint below if the file is missing.
      */
     public static void play(ModelBendsPlayer model, Data_Player data) {
-        if (!PlayerAnimator.playStride(model, data, FILE, "sprint", "locomotion")) apply(model);
+        if (!BendsAnimator.playStride(model, data, FILE, "sprint", "locomotion")) apply(model);
     }
 
     public static final ResourceLocation FILE = new ResourceLocation(MoBends.MODID, "player/sprint");

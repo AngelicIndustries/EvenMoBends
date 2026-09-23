@@ -8,7 +8,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -49,8 +49,8 @@ public class Animation_Flying extends Animation {
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean elytraFlying) {
         String hover = elytraFlying ? "fly_elytra" : "fly";
-        if (!PlayerAnimator.playLoop(model, data, FILE, hover, "fly")
-            || !PlayerAnimator.playPose(model, data, FILE, hover + "_forward", "fly_forward",
+        if (!BendsAnimator.playLoop(model, data, FILE, hover, "fly")
+            || !BendsAnimator.playPose(model, data, FILE, hover + "_forward", "fly_forward",
                 moving(data.motion.x, data.motion.y, data.motion.z))) {
             apply(model, data.ticks, data.motion.x, data.motion.y, data.motion.z, elytraFlying);
         }

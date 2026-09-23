@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -31,7 +31,7 @@ extends Animation {
      * stand below if the file is missing.
      */
     public static void play(ModelBendsPlayer model, Data_Player data) {
-        if (!PlayerAnimator.playLoop(model, data, FILE, "stand", "locomotion")) apply(model, data.ticks);
+        if (!BendsAnimator.playLoop(model, data, FILE, "stand", "locomotion")) apply(model, data.ticks);
     }
 
     /** The original Java stand, kept as the reference the Blockbench stand was baked from. */

@@ -8,7 +8,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -43,8 +43,8 @@ public class Animation_Climbing extends Animation {
      * player's age) over it as fast as the player climbs. Falls back to the Java climb below.
      */
     public static void play(ModelBendsPlayer model, Data_Player data) {
-        if (!PlayerAnimator.playPose(model, data, FILE, "climb", "climb")
-            || !PlayerAnimator.playLoop(model, data, FILE, "climb_move", "climb_move", stride(data.motion.y))) {
+        if (!BendsAnimator.playPose(model, data, FILE, "climb", "climb")
+            || !BendsAnimator.playLoop(model, data, FILE, "climb_move", "climb_move", stride(data.motion.y))) {
             apply(model, data.ticks, data.motion.y);
         }
     }

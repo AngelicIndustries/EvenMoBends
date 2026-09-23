@@ -54,8 +54,8 @@ class SwimAnimationTest {
                     (model, ticks) -> {
                         for (Animation animation : new Animation[] {upperAnimation, legsAnimation}) {
                             double seconds = (ticks / 20.0) % animation.length();
-                            PlayerAnimator.apply(model, animation,
-                                AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, null)));
+                            BendsAnimator.apply(model, animation,
+                                AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, null)));
                         }
                     }, where, moving ? new String[] {"rightArm", "rightForeArm", "leftArm", "leftForeArm"} : new String[0]);
                 assertTrue(worst < 1.5f, upper + ", look " + look[0] + "/" + look[1] + ": differs by " + worst

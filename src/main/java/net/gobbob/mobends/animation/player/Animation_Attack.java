@@ -11,7 +11,7 @@ import net.gobbob.mobends.animation.player.Animation_Attack_Punch;
 import net.gobbob.mobends.animation.player.Animation_Attack_PunchStance;
 import net.gobbob.mobends.animation.player.Animation_Attack_Stance;
 import net.gobbob.mobends.client.animation.HandAction;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.BackhandCompat;
@@ -102,16 +102,16 @@ extends Animation {
         if (since >= OFFHAND_TICKS) {
             if (item != null && !tool && data.ticksAfterOffhandPunch < 60.0f && data.isOnGround() && (!moving || player.isSprinting())
                 && PlayerAnimationConfig.isEnabled("swordStance")) {
-                PlayerAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "offhand_stance", 1,
-                    PlayerAnimator.ALL_BUT_LEFT_ARM, true);
+                BendsAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "offhand_stance", 1,
+                    BendsAnimator.ALL_BUT_LEFT_ARM, true);
             }
             return;
         }
         boolean mainLeads = data.ticksAfterPunch < since && data.ticksAfterPunch < OFFHAND_TICKS;
-        Set<String> without = PlayerAnimator.ALL_BUT_LEFT_ARM;
+        Set<String> without = BendsAnimator.ALL_BUT_LEFT_ARM;
         if (!mainLeads) {
-            Set<String> keepMain = player.getHeldItem() != null ? PlayerAnimator.RIGHT_ARM : null;
-            without = player.isRiding() ? PlayerAnimator.union(RIDING_MASK, keepMain) : keepMain;
+            Set<String> keepMain = player.getHeldItem() != null ? BendsAnimator.RIGHT_ARM : null;
+            without = player.isRiding() ? BendsAnimator.union(RIDING_MASK, keepMain) : keepMain;
         }
         double seconds = data.ticksAfterOffhandPunch / 20.0;
         if (item == null) {
@@ -120,25 +120,25 @@ extends Animation {
                     data.seenOffhandPunches = data.offhandPunches;
                     data.offhandPunchRetracts = retracts(data, false, data.ticksAfterOffhandPunch);
                 }
-                PlayerAnimator.playOnce(model, data, PlayerAnimator.PUNCH, "animation.mobends.player.punch_left" + (moving ? "_moving" : ""),
+                BendsAnimator.playOnce(model, data, BendsAnimator.PUNCH, "animation.mobends.player.punch_left" + (moving ? "_moving" : ""),
                     punchSeconds(data.ticksAfterOffhandPunch, data.offhandPunchRetracts), "offhand",
                     punchFade(data.offhandPunchRetracts), without, false, data.offhandPunches);
             }
         } else if (tool && item.getItem() instanceof ItemAxe) {
             if (PlayerAnimationConfig.isEnabled("axe")) {
                 model.offhandTrail.add(SwordTrail.AXE);
-                PlayerAnimator.playLoop(model, data, Animation_Axe.FILE, "axe_swing", "offhand", 1, without, true);
+                BendsAnimator.playLoop(model, data, Animation_Axe.FILE, "axe_swing", "offhand", 1, without, true);
             }
         } else if (tool) {
             if (PlayerAnimationConfig.isEnabled("mining")) {
-                PlayerAnimator.playLoop(model, data, Animation_Mining.FILE, "mine_swing", "offhand", 1, without, true);
+                BendsAnimator.playLoop(model, data, Animation_Mining.FILE, "mine_swing", "offhand", 1, without, true);
             }
         } else {
             int attack = data.currentOffhandAttack;
             if (attack >= 1 && attack <= 3 && PlayerAnimationConfig.isEnabled("swordCombo" + attack)) {
                 trail(model.offhandTrail, item, data.ticksAfterOffhandPunch, attack);
                 String name = "animation.mobends.player.sword_" + attack + (attack < 3 && (moving || player.isRiding()) ? "_moving" : "");
-                PlayerAnimator.playOnce(model, data, SWORD, name, seconds, "offhand", SWING_FADE, without, true);
+                BendsAnimator.playOnce(model, data, SWORD, name, seconds, "offhand", SWING_FADE, without, true);
             }
         }
     }
@@ -158,8 +158,8 @@ extends Animation {
      */
     private static boolean playSword(ModelBendsPlayer model, Data_Player data, int attack, boolean moving, boolean riding) {
         String name = "animation.mobends.player.sword_" + attack + (attack < 3 && (moving || riding) ? "_moving" : "");
-        return PlayerAnimator.playOnce(model, data, SWORD, name, data.ticksAfterPunch / 20.0, "attack", SWING_FADE,
-            PlayerAnimator.freeHandsOnly(data, riding ? RIDING_MASK : null));
+        return BendsAnimator.playOnce(model, data, SWORD, name, data.ticksAfterPunch / 20.0, "attack", SWING_FADE,
+            BendsAnimator.freeHandsOnly(data, riding ? RIDING_MASK : null));
     }
 
     public static final double SWING_FADE = 0.15;
@@ -171,8 +171,8 @@ extends Animation {
      */
     private static boolean playStance(ModelBendsPlayer model, Data_Player data, boolean moving, boolean sprinting) {
         if (moving && !sprinting) return true;
-        return PlayerAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "attack", 1,
-            PlayerAnimator.freeHandsOnly(data, null));
+        return BendsAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "attack", 1,
+            BendsAnimator.freeHandsOnly(data, null));
     }
 
     /** A sword or axe leaves a trail through its swing (the first only in its first 4 ticks). */
@@ -194,15 +194,15 @@ extends Animation {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         if (stance && moving) return true;
         // With something in the off hand, only the empty main hand punches, and the off-hand arm keeps holding.
-        boolean offhand = PlayerAnimator.isOffhandHolding(data);
+        boolean offhand = BendsAnimator.isOffhandHolding(data);
         boolean right = data.fistPunchArm || offhand;
         if (data.punches != data.seenPunches) {
             data.seenPunches = data.punches;
             data.punchRetracts = retracts(data, right, data.ticksAfterPunch);
         }
         String name = "animation.mobends.player.punch_" + (right ? "right" : "left") + (moving ? "_moving" : "");
-        return PlayerAnimator.playOnce(model, data, PlayerAnimator.PUNCH, name, punchSeconds(data.ticksAfterPunch, data.punchRetracts),
-            "punch", punchFade(data.punchRetracts), PlayerAnimator.freeHandsOnly(data, null), false, data.punches);
+        return BendsAnimator.playOnce(model, data, BendsAnimator.PUNCH, name, punchSeconds(data.ticksAfterPunch, data.punchRetracts),
+            "punch", punchFade(data.punchRetracts), BendsAnimator.freeHandsOnly(data, null), false, data.punches);
     }
 
     /** A fist punching again this soon is still out: it pulls back in first. */

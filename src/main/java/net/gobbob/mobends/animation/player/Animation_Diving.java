@@ -9,7 +9,7 @@ package net.gobbob.mobends.animation.player;
 import com.geckolib.cache.GeckoLibResources;
 import com.geckolib.cache.animation.Animation;
 import net.gobbob.mobends.MoBends;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -55,8 +55,8 @@ public class Animation_Diving extends net.gobbob.mobends.animation.Animation {
         // The lean eases like the Java dive's body tilt did, before Molang reads it.
         data.divingTravelPitch += (travelPitch(data.motion.x, data.motion.y, data.motion.z) - data.divingTravelPitch)
             * Math.min(1.0f, data.ticksPerFrame * 0.25f);
-        String upper = PlayerAnimator.variant(GeckoLibResources.getBakedAnimations().getAnimations(FILE, null),
-            "animation.mobends.player.dive", PlayerAnimator.isHolding(data));
+        String upper = BendsAnimator.variant(GeckoLibResources.getBakedAnimations().getAnimations(FILE, null),
+            "animation.mobends.player.dive", BendsAnimator.isHolding(data));
         if (!loop(model, data, upper, "dive_upper", 1)
             || !loop(model, data, "animation.mobends.player.dive_legs_still", "dive_legs_still", 1)
             || !loop(model, data, "animation.mobends.player.dive_legs", "dive_legs",
@@ -66,10 +66,10 @@ public class Animation_Diving extends net.gobbob.mobends.animation.Animation {
     }
 
     private static boolean loop(ModelBendsPlayer model, Data_Player data, String animation, String slot, float weight) {
-        Animation loaded = PlayerAnimator.find(FILE, animation);
+        Animation loaded = BendsAnimator.find(FILE, animation);
         if (loaded == null) return false;
         double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
-        return PlayerAnimator.play(model, data, FILE, animation, seconds, slot, 0.5, weight);
+        return BendsAnimator.play(model, data, FILE, animation, seconds, slot, 0.5, weight);
     }
 
     /** The original Java dive, kept as the reference the Blockbench dive was baked from. */

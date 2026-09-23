@@ -105,8 +105,8 @@ class HoldingSwimAnimationTest {
             Animation holding = file.getAnimation(original.name() + "_holding");
             assertNotNull(holding);
             assertEquals(original.length(), holding.length());
-            assertEquals(holding.name(), PlayerAnimator.variant(file, original.name(), true));
-            assertEquals(original.name(), PlayerAnimator.variant(file, original.name(), false));
+            assertEquals(holding.name(), BendsAnimator.variant(file, original.name(), true));
+            assertEquals(original.name(), BendsAnimator.variant(file, original.name(), false));
             ModelBendsPlayer model = new ModelBendsPlayer();
             BakedGeoModel rig = rig(model);
             GeoRenderTransforms first = frames(rig, holding, 0, 0, 0);

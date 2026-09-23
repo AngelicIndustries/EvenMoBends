@@ -199,28 +199,28 @@ class MovementAnimationTest {
         };
     }
 
-    /** As PlayerAnimator.playStride. */
+    /** As BendsAnimator.playStride. */
     private static void stride(ModelBendsPlayer model, BakedAnimations file, String name) {
         Animation main = file.getAnimation("animation.mobends.player." + name);
         Animation swing = file.getAnimation("animation.mobends.player." + name + "_swing");
         double stride = model.armSwing * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
-        PlayerAnimator.apply(model, main, AnimationProcessor.evaluate(main, stride * main.length(), PlayerAnimator.context(model, null)));
-        PlayerAnimator.apply(model, swing, AnimationProcessor.evaluate(swing, stride * swing.length(), PlayerAnimator.context(model, null)),
-            PlayerAnimator.FOLLOW_RATE, model.armSwingAmount);
+        BendsAnimator.apply(model, main, AnimationProcessor.evaluate(main, stride * main.length(), BendsAnimator.context(model, null)));
+        BendsAnimator.apply(model, swing, AnimationProcessor.evaluate(swing, stride * swing.length(), BendsAnimator.context(model, null)),
+            BendsAnimator.FOLLOW_RATE, model.armSwingAmount);
     }
 
-    /** As PlayerAnimator.playStridePose. */
+    /** As BendsAnimator.playStridePose. */
     private static void pose(ModelBendsPlayer model, Animation animation) {
         double stride = model.armSwing * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
-        PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, stride * animation.length(), PlayerAnimator.context(model, null)));
+        BendsAnimator.apply(model, animation,
+            AnimationProcessor.evaluate(animation, stride * animation.length(), BendsAnimator.context(model, null)));
     }
 
     private static void loop(ModelBendsPlayer model, Animation animation, float ticks) {
-        PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, (ticks / 20.0) % animation.length(), PlayerAnimator.context(model, null)));
+        BendsAnimator.apply(model, animation,
+            AnimationProcessor.evaluate(animation, (ticks / 20.0) % animation.length(), BendsAnimator.context(model, null)));
     }
 
     private static BakedAnimations load(String file) throws IOException {

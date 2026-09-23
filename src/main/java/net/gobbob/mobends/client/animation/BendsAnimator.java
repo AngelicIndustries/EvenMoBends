@@ -21,6 +21,7 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.data.Data_Player;
+import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.BendsLogger;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
@@ -36,7 +37,7 @@ import net.minecraft.util.ResourceLocation;
  * whatever the player was doing. Only channels an animation keyframes are applied: bones and axes it leaves out
  * keep whatever the animations before it set.
  */
-public final class PlayerAnimator {
+public final class BendsAnimator {
     public static final ResourceLocation PUNCH = new ResourceLocation(MoBends.MODID, "player/punch");
 
     /** Smoothing rate for keyframed motion: none, the parts are exactly where the keyframes say. */
@@ -49,14 +50,14 @@ public final class PlayerAnimator {
     private static final float RAD_TO_DEG = (float)(180.0 / Math.PI);
     private static final Set<String> reportedMissing = new HashSet<String>();
 
-    private PlayerAnimator() {}
+    private BendsAnimator() {}
 
     /**
      * Applies an animation from the given file at {@code seconds}.
      *
      * @return false if the file or animation is missing, so the caller can fall back to its Java pose.
      */
-    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds) {
         return play(model, data, file, name, seconds, null, 0);
     }
@@ -66,7 +67,7 @@ public final class PlayerAnimator {
      * {@code blendSeconds} whenever {@code slot} starts playing this animation, e.g. when swimming switches from
      * moving to idle: bones ease toward it at first, then follow its keyframes.
      */
-    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds) {
         return play(model, data, file, name, seconds, slot, blendSeconds, 1);
     }
@@ -75,19 +76,19 @@ public final class PlayerAnimator {
      * As above, applied at {@code weight}: each channel the animation sets moves that far from what earlier
      * animations set this frame toward the animation's value (e.g. a kick over a still pose, by speed).
      */
-    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds, float weight) {
         return play(model, data, file, name, seconds, slot, blendSeconds, weight, null);
     }
 
     /** As above, leaving out the bones in {@code without} (e.g. the root while riding, where the mount places the body). */
-    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds, float weight, Set<String> without) {
         return play(model, data, file, name, seconds, slot, blendSeconds, weight, without, false);
     }
 
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
-    public static boolean play(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean play(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double blendSeconds, float weight, Set<String> without, boolean mirror) {
         Animation animation = find(file, name);
         if (animation == null) return false;
@@ -109,13 +110,13 @@ public final class PlayerAnimator {
      *
      * @return false if the file or animation is missing.
      */
-    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean playOnce(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double fadeSeconds, Set<String> without) {
         return playOnce(model, data, file, name, seconds, slot, fadeSeconds, without, false);
     }
 
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}), e.g. for the off hand. */
-    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean playOnce(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double fadeSeconds, Set<String> without, boolean mirror) {
         return playOnce(model, data, file, name, seconds, slot, fadeSeconds, without, mirror, 0);
     }
@@ -124,7 +125,7 @@ public final class PlayerAnimator {
      * As above, for the {@code instance}th time it is thrown: a new instance starts over (and fades in) even when it
      * is the same animation as before, e.g. one punch after another with the same fist.
      */
-    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+    public static boolean playOnce(AnimatedModel model, EntityData data, ResourceLocation file, String name,
         double seconds, String slot, double fadeSeconds, Set<String> without, boolean mirror, int instance) {
         Animation animation = find(file, name);
         if (animation == null) return false;
@@ -132,12 +133,12 @@ public final class PlayerAnimator {
         return true;
     }
 
-    static void playOnce(ModelBendsPlayer model, Data_Player data, Animation animation, String key, double seconds,
+    static void playOnce(AnimatedModel model, EntityData data, Animation animation, String key, double seconds,
         String slot, double fadeSeconds, Set<String> without) {
         playOnce(model, data, animation, key, seconds, slot, fadeSeconds, without, false);
     }
 
-    static void playOnce(ModelBendsPlayer model, Data_Player data, Animation animation, String key, double seconds,
+    static void playOnce(AnimatedModel model, EntityData data, Animation animation, String key, double seconds,
         String slot, double fadeSeconds, Set<String> without, boolean mirror) {
         Inertia inertia = null;
         if (data != null && fadeSeconds > 0) {
@@ -187,12 +188,12 @@ public final class PlayerAnimator {
     }
 
     /** {@link #LEFT_ARM} if the off hand holds something, else none; plus {@code others} (may be null). */
-    public static Set<String> freeHandsOnly(Data_Player data, Set<String> others) {
+    public static Set<String> freeHandsOnly(EntityData data, Set<String> others) {
         return isOffhandHolding(data) ? union(LEFT_ARM, others) : others;
     }
 
     /** Whether the player's off hand holds something (Backhand; false outside a running world). */
-    public static boolean isOffhandHolding(Data_Player data) {
+    public static boolean isOffhandHolding(EntityData data) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (data == null || minecraft == null || minecraft.theWorld == null) return false;
         EntityLivingBase entity = data.getEntity();
@@ -207,24 +208,24 @@ public final class PlayerAnimator {
      *
      * @return false if the file or animation is missing.
      */
-    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+    public static boolean playLoop(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
         return playLoop(model, data, file, name, slot, 1);
     }
 
     /** As above, applied at {@code weight}. */
-    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playLoop(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight) {
         return playLoop(model, data, file, name, slot, weight, null);
     }
 
     /** As above, leaving out the bones in {@code without} (may be null). */
-    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playLoop(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without) {
         return playLoop(model, data, file, name, slot, weight, without, false);
     }
 
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
-    public static boolean playLoop(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playLoop(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without, boolean mirror) {
         String animation = "animation.mobends.player." + name;
         Animation loaded = find(file, animation);
@@ -234,24 +235,24 @@ public final class PlayerAnimator {
     }
 
     /** Plays a held pose (the animation at 0 s) from {@code file}, blending in when {@code slot} switches to it. */
-    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+    public static boolean playPose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
         return playPose(model, data, file, name, slot, 1);
     }
 
     /** As above, applied at {@code weight}. */
-    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playPose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight) {
         return playPose(model, data, file, name, slot, weight, null);
     }
 
     /** As above, leaving out the bones in {@code without} (may be null). */
-    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playPose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without) {
         return playPose(model, data, file, name, slot, weight, without, false);
     }
 
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
-    public static boolean playPose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot,
+    public static boolean playPose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without, boolean mirror) {
         return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight, without, mirror);
     }
@@ -263,15 +264,15 @@ public final class PlayerAnimator {
      *
      * @return false if the file or either animation is missing.
      */
-    public static boolean playStride(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+    public static boolean playStride(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
         String main = "animation.mobends.player." + name, swing = main + "_swing";
         Animation mainAnimation = find(file, main), swingAnimation = find(file, swing);
         if (mainAnimation == null || swingAnimation == null) return false;
-        double stride = model.armSwing * 0.6662 / (2 * Math.PI);
+        double stride = model.limbSwing() * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
         play(model, data, file, main, stride * mainAnimation.length(), slot, LOCOMOTION_BLEND);
         play(model, data, file, swing, stride * swingAnimation.length(), slot + "_swing", LOCOMOTION_BLEND,
-            Math.max(0, Math.min(1, model.armSwingAmount)));
+            Math.max(0, Math.min(1, model.limbSwingAmount())));
         return true;
     }
 
@@ -280,11 +281,11 @@ public final class PlayerAnimator {
      *
      * @return false if the file or animation is missing.
      */
-    public static boolean playStridePose(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name, String slot) {
+    public static boolean playStridePose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
         String animation = "animation.mobends.player." + name;
         Animation loaded = find(file, animation);
         if (loaded == null) return false;
-        double stride = model.armSwing * 0.6662 / (2 * Math.PI);
+        double stride = model.limbSwing() * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
         return play(model, data, file, animation, stride * loaded.length(), slot, LOCOMOTION_BLEND);
     }
@@ -302,8 +303,8 @@ public final class PlayerAnimator {
         return animation;
     }
 
-    /** Molang queries available to player animations. */
-    public static MolangContext context(ModelBendsPlayer model, Data_Player data) {
+    /** Molang queries available to animations. */
+    public static MolangContext context(AnimatedModel model, EntityData data) {
         return context(model, data, false);
     }
 
@@ -311,16 +312,16 @@ public final class PlayerAnimator {
      * As above, for an animation played {@code mirror}ed: the look's yaw is given reflected, so that mirroring the
      * pose turns the head back to where the player actually looks.
      */
-    static MolangContext context(ModelBendsPlayer model, Data_Player data, boolean mirror) {
+    static MolangContext context(AnimatedModel model, EntityData data, boolean mirror) {
         return variable -> {
             switch (variable) {
-                case "query.mobends_head_pitch": return model.headRotationX;
-                case "query.mobends_head_yaw": return mirror ? -model.headRotationY : model.headRotationY;
+                case "query.mobends_head_pitch": return model.headPitch();
+                case "query.mobends_head_yaw": return mirror ? -model.headYaw() : model.headYaw();
                 case "query.mobends_ticks": return data == null ? 0 : data.ticks;
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
                 case "query.mobends_holding": return isHolding(data) ? 1 : 0;
                 case "query.mobends_offhand_holding": return isOffhandHolding(data) ? 1 : 0;
-                case "query.mobends_travel_pitch": return data == null ? 0 : data.divingTravelPitch;
+                case "query.mobends_travel_pitch": return data instanceof Data_Player ? ((Data_Player)data).divingTravelPitch : 0;
                 // An axis set to q.mobends_keep is left to the animations before this one (e.g. a sneak over a walk).
                 case "query.mobends_keep": return Double.NaN;
                 default: return 0;
@@ -329,7 +330,7 @@ public final class PlayerAnimator {
     }
 
     /** Whether the player's main hand holds something (false outside a running world). */
-    public static boolean isHolding(Data_Player data) {
+    public static boolean isHolding(EntityData data) {
         Minecraft minecraft = Minecraft.getMinecraft();
         if (data == null || minecraft == null || minecraft.theWorld == null) return false;
         EntityLivingBase entity = data.getEntity();
@@ -344,21 +345,21 @@ public final class PlayerAnimator {
         return holding && animations.getAnimation(name + "_holding") != null ? name + "_holding" : name;
     }
 
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose) {
+    static void apply(AnimatedModel model, Animation animation, Map<String, BoneSnapshot> pose) {
         apply(model, animation, pose, FOLLOW_RATE, 1);
     }
 
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+    static void apply(AnimatedModel model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight) {
         apply(model, animation, pose, maxRate, weight, null);
     }
 
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+    static void apply(AnimatedModel model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight, Set<String> without) {
         apply(model, animation, pose, maxRate, weight, without, null);
     }
 
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+    static void apply(AnimatedModel model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight, Set<String> without, Inertia inertia) {
         apply(model, animation, pose, maxRate, weight, without, inertia, false);
     }
@@ -367,7 +368,7 @@ public final class PlayerAnimator {
      * As above; {@code mirror} plays the animation on the other side (right and left bones swapped, mirrored across
      * the body's middle), e.g. a right-hand swing for the off hand. {@code without} names bones as they end up.
      */
-    static void apply(ModelBendsPlayer model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
+    static void apply(AnimatedModel model, Animation animation, Map<String, BoneSnapshot> pose, float maxRate,
         float weight, Set<String> without, Inertia inertia, boolean mirror) {
         if (weight <= 0) return;
         if (mirror) pose = mirror(pose);
@@ -386,30 +387,31 @@ public final class PlayerAnimator {
                 applyRoot(model, track, snapshot, maxRate, weight, inertia);
                 continue;
             }
-            Bone bone = Bone.byId(name);
-            if (bone == null || bone.aimed() != null) continue; // Aim bones drive their part's aim below.
-            if (bone.holdingArm() != null) {
-                applyItem(itemBone(model, bone), bone.id, bone.parent.equals(PlayerRig.ROOT), track, snapshot, maxRate, weight, inertia);
+            if (model.rigAimed(name) != null) continue; // Aim bones drive their part's aim below.
+            ItemBone item = model.rigItem(name);
+            if (item != null) {
+                applyItem(item, name, PlayerRig.ROOT.equals(model.rigParent(name)), track, snapshot, maxRate, weight, inertia);
                 continue;
             }
-            ModelRendererBends part = bone.part(model);
+            ModelRendererBends part = model.rigPart(name);
+            if (part == null) continue;
             KeyframeStack rotation = track.rotationKeyFrames();
             if (animates(rotation)) clearPreRotation(part, rate);
-            setRotation(part.rotation, rotation, snapshot, maxRate, weight, inertia, bone.id + " rotation");
-            if (bone.aim() == null || !tracks.containsKey(bone.aim().id)) setPosition(part, bone.id, track, snapshot, maxRate, weight, inertia);
+            setRotation(part.rotation, rotation, snapshot, maxRate, weight, inertia, name + " rotation");
+            String aim = model.rigAim(name);
+            if (aim == null || !tracks.containsKey(aim)) setPosition(part, name, track, snapshot, maxRate, weight, inertia);
             KeyframeStack scale = track.scaleKeyFrames();
             if (has(scale.xKeyframes())) part.scaleX = mix(part.scaleX, snapshot.getScaleX(), weight);
             // (A kept scale axis stays at what earlier animations set, like rotations and positions.)
             if (has(scale.yKeyframes())) part.scaleY = mix(part.scaleY, snapshot.getScaleY(), weight);
             if (has(scale.zKeyframes())) part.scaleZ = mix(part.scaleZ, snapshot.getScaleZ(), weight);
         }
-        for (Bone aim : new Bone[] {Bone.NECK, Bone.RIGHT_ARM_AIM, Bone.LEFT_ARM_AIM}) {
-            BoneAnimation aimTrack = tracks.get(aim.id);
-            if (aimTrack == null) continue;
-            Bone limb = aim.aimed();
-            BoneAnimation limbTrack = tracks.get(limb.id);
+        for (Map.Entry<String, BoneAnimation> entry : tracks.entrySet()) {
+            String aim = entry.getKey(), limb = model.rigAimed(aim);
+            if (limb == null) continue;
+            BoneAnimation aimTrack = entry.getValue(), limbTrack = tracks.get(limb);
             float rate = Math.max(rate(aimTrack, maxRate), limbTrack == null ? 0 : rate(limbTrack, maxRate));
-            applyAim(limb.part(model), aim.id, aimTrack, pose.get(aim.id), limbTrack, pose.get(limb.id), rate, maxRate, weight, inertia);
+            applyAim(model.rigPart(limb), aim, aimTrack, pose.get(aim), limbTrack, pose.get(limb), rate, maxRate, weight, inertia);
         }
     }
 
@@ -499,16 +501,6 @@ public final class PlayerAnimator {
         if (has(scale.zKeyframes())) item.scaleZ = mix(item.scaleZ, snapshot.getScaleZ(), 1);
     }
 
-    private static ItemBone itemBone(ModelBendsPlayer model, Bone bone) {
-        switch (bone) {
-            case RIGHT_ITEM: return model.rightItem;
-            case RIGHT_ITEM_FREE: return model.rightItemFree;
-            case LEFT_ITEM: return model.leftItem;
-            case LEFT_ITEM_FREE: return model.leftItemFree;
-            default: throw new IllegalArgumentException(bone.id);
-        }
-    }
-
     /** Authored rotations replace procedural pre-rotations, which Blockbench bones don't have. */
     private static void clearPreRotation(ModelRendererBends part, float rate) {
         part.pre_rotation.setSmoothX(0, rate);
@@ -517,10 +509,10 @@ public final class PlayerAnimator {
     }
 
     /** {@code root} drives the whole-body transform: rotation to renderRotation, position to renderOffset. */
-    private static void applyRoot(ModelBendsPlayer model, BoneAnimation track, BoneSnapshot snapshot, float maxRate,
+    private static void applyRoot(AnimatedModel model, BoneAnimation track, BoneSnapshot snapshot, float maxRate,
         float weight, Inertia inertia) {
-        setRotation(model.renderRotation, track.rotationKeyFrames(), snapshot, maxRate, weight, inertia, "root rotation");
-        setTranslation(model.renderOffset, track.positionKeyFrames(), -snapshot.getTranslateX(), snapshot.getTranslateY(),
+        setRotation(model.rootRotation(), track.rotationKeyFrames(), snapshot, maxRate, weight, inertia, "root rotation");
+        setTranslation(model.rootOffset(), track.positionKeyFrames(), -snapshot.getTranslateX(), snapshot.getTranslateY(),
             snapshot.getTranslateZ(), maxRate, weight, inertia, "root position");
     }
 
@@ -617,20 +609,18 @@ public final class PlayerAnimator {
      * How fast what earlier animations set on a bone this frame is followed: a partial layer mixed over it shouldn't
      * slow it down (e.g. a held forward-flight pose blended over a hover that follows its keyframes).
      */
-    private static float currentRate(ModelBendsPlayer model, String boneId) {
+    private static float currentRate(AnimatedModel model, String boneId) {
         SmoothVector3f rotation;
         if (PlayerRig.ROOT.equals(boneId)) {
-            rotation = model.renderRotation;
+            rotation = model.rootRotation();
+        } else if (model.rigAimed(boneId) != null) {
+            rotation = model.rigPart(model.rigAimed(boneId)).aim;
+        } else if (model.rigItem(boneId) != null) {
+            rotation = model.rigItem(boneId).rotation;
+        } else if (model.rigPart(boneId) != null) {
+            rotation = model.rigPart(boneId).rotation;
         } else {
-            Bone bone = Bone.byId(boneId);
-            if (bone == null) return 0;
-            if (bone.aimed() != null) {
-                rotation = bone.aimed().part(model).aim;
-            } else if (bone.holdingArm() != null) {
-                rotation = itemBone(model, bone).rotation;
-            } else {
-                rotation = bone.part(model).rotation;
-            }
+            return 0;
         }
         return Math.min(rotation.smoothness.x, Math.min(rotation.smoothness.y, rotation.smoothness.z));
     }

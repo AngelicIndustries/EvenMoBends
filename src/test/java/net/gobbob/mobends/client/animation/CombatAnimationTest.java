@@ -182,12 +182,12 @@ class CombatAnimationTest {
             loop(m, stand, 400 + t);
             int k = (int)(t / click);
             if (k >= order.length) {
-                float progress = data.ticksPlaying("attack", "stance") / (float)(PlayerAnimator.LOCOMOTION_BLEND * 20);
-                PlayerAnimator.apply(m, stance, AnimationProcessor.evaluate(stance, 0, PlayerAnimator.context(m, data)),
-                    PlayerAnimator.blendRate(progress), 1);
+                float progress = data.ticksPlaying("attack", "stance") / (float)(BendsAnimator.LOCOMOTION_BLEND * 20);
+                BendsAnimator.apply(m, stance, AnimationProcessor.evaluate(stance, 0, BendsAnimator.context(m, data)),
+                    BendsAnimator.blendRate(progress), 1);
             } else {
                 Animation swing = file.getAnimation("animation.mobends.player.sword_" + order[k]);
-                PlayerAnimator.playOnce(m, data, swing, "sword_" + order[k], (t - k * click) / 20.0, "attack",
+                BendsAnimator.playOnce(m, data, swing, "sword_" + order[k], (t - k * click) / 20.0, "attack",
                     net.gobbob.mobends.animation.player.Animation_Attack.SWING_FADE, null);
             }
         };
@@ -269,19 +269,19 @@ class CombatAnimationTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        // As PlayerAnimator.playStride.
+        // As BendsAnimator.playStride.
         double stride = ticks * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
         for (String name : new String[] {"sprint", "sprint_swing"}) {
             Animation animation = sprintFile.getAnimation("animation.mobends.player." + name);
-            PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, stride * animation.length(),
-                PlayerAnimator.context(model, null)), PlayerAnimator.FOLLOW_RATE, 1);
+            BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, stride * animation.length(),
+                BendsAnimator.context(model, null)), BendsAnimator.FOLLOW_RATE, 1);
         }
     }
 
     private static void loop(ModelBendsPlayer model, Animation animation, float ticks) {
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, (ticks / 20.0) % animation.length(),
-            PlayerAnimator.context(model, null)), PlayerAnimator.FOLLOW_RATE, 1);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, (ticks / 20.0) % animation.length(),
+            BendsAnimator.context(model, null)), BendsAnimator.FOLLOW_RATE, 1);
     }
 
     private static void assertLoop(String what, float[] look, BiConsumer<ModelBendsPlayer, Float> java,
@@ -304,13 +304,13 @@ class CombatAnimationTest {
 
     /** As Animation_Attack plays a swing: timed from the click, no blend in. */
     private static void once(ModelBendsPlayer model, Animation animation, float ticks, Set<String> without) {
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, ticks / 20.0, PlayerAnimator.context(model, null)),
-            PlayerAnimator.FOLLOW_RATE, 1, without);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, ticks / 20.0, BendsAnimator.context(model, null)),
+            BendsAnimator.FOLLOW_RATE, 1, without);
     }
 
     private static void pose(ModelBendsPlayer model, Animation animation) {
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, 0, PlayerAnimator.context(model, null)),
-            PlayerAnimator.FOLLOW_RATE, 1);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, 0, BendsAnimator.context(model, null)),
+            BendsAnimator.FOLLOW_RATE, 1);
     }
 
     private static BakedAnimations load(String file) throws IOException {

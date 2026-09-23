@@ -6,6 +6,7 @@ import com.google.gson.JsonPrimitive;
 import net.gobbob.mobends.client.model.ModelBoxBends;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.model.PositionTextureVertex;
 import net.minecraft.client.model.TexturedQuad;
@@ -59,8 +60,9 @@ public final class PlayerRig {
             this.parent = parent;
         }
 
-        /** The model part this bone drives, or null for an aim bone. */
-        public ModelRendererBends part(ModelBendsPlayer model) {
+        /** The model part this bone drives, or null for an aim or item bone. */
+        public ModelRendererBends part(BipedRigModel rig) {
+            ModelBiped model = rig.biped();
             switch (this) {
                 case NECK:
                 case RIGHT_ARM_AIM:
@@ -72,13 +74,13 @@ public final class PlayerRig {
                 case BODY: return (ModelRendererBends)model.bipedBody;
                 case HEAD: return (ModelRendererBends)model.bipedHead;
                 case RIGHT_ARM: return (ModelRendererBends)model.bipedRightArm;
-                case RIGHT_FORE_ARM: return (ModelRendererBends)model.bipedRightForeArm;
+                case RIGHT_FORE_ARM: return (ModelRendererBends)rig.foreArm(true);
                 case LEFT_ARM: return (ModelRendererBends)model.bipedLeftArm;
-                case LEFT_FORE_ARM: return (ModelRendererBends)model.bipedLeftForeArm;
+                case LEFT_FORE_ARM: return (ModelRendererBends)rig.foreArm(false);
                 case RIGHT_LEG: return (ModelRendererBends)model.bipedRightLeg;
-                case RIGHT_FORE_LEG: return (ModelRendererBends)model.bipedRightForeLeg;
+                case RIGHT_FORE_LEG: return (ModelRendererBends)rig.foreLeg(true);
                 case LEFT_LEG: return (ModelRendererBends)model.bipedLeftLeg;
-                case LEFT_FORE_LEG: return (ModelRendererBends)model.bipedLeftForeLeg;
+                case LEFT_FORE_LEG: return (ModelRendererBends)rig.foreLeg(false);
                 default: throw new AssertionError(this);
             }
         }

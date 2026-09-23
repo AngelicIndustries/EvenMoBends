@@ -44,11 +44,11 @@ public final class AnimationPreview {
 
     public static void apply(ModelBendsPlayer model, Data_Player data, Entity entity) {
         if (file == null || entity != Minecraft.getMinecraft().thePlayer) return;
-        Animation animation = PlayerAnimator.find(file, name);
+        Animation animation = BendsAnimator.find(file, name);
         if (animation == null) return; // Removed by a resource reload; keep the command state until stopped.
         double seconds = (Minecraft.getSystemTime() - startMillis) / 1000.0;
         if (animation.length() > 0) seconds %= animation.length();
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)));
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, data)));
     }
 
     static String resolve(BakedAnimations animations, String name) {

@@ -1,7 +1,7 @@
 package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.PlayerBlockingCompat;
@@ -23,11 +23,11 @@ public final class Animation_Blocking {
     public static void play(ModelBendsPlayer model, Data_Player data, int hands) {
         int java = 0;
         if ((hands & PlayerBlockingCompat.MAIN_HAND) != 0
-            && !PlayerAnimator.playPose(model, data, FILE, "block_right", "block_right")) {
+            && !BendsAnimator.playPose(model, data, FILE, "block_right", "block_right")) {
             java |= PlayerBlockingCompat.MAIN_HAND;
         }
         if ((hands & PlayerBlockingCompat.OFF_HAND) != 0
-            && !PlayerAnimator.playPose(model, data, FILE, "block_left", "block_left")) {
+            && !BendsAnimator.playPose(model, data, FILE, "block_left", "block_left")) {
             java |= PlayerBlockingCompat.OFF_HAND;
         }
         apply(model, java);

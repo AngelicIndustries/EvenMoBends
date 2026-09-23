@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -34,9 +34,9 @@ extends Animation {
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean swinging) {
         if (swinging) model.swordTrail.add(net.gobbob.mobends.client.renderer.SwordTrail.AXE);
-        java.util.Set<String> without = PlayerAnimator.freeHandsOnly(data, null);
-        boolean played = PlayerAnimator.playPose(model, data, FILE, "axe", "tool", 1, without)
-            && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing", 1, without));
+        java.util.Set<String> without = BendsAnimator.freeHandsOnly(data, null);
+        boolean played = BendsAnimator.playPose(model, data, FILE, "axe", "tool", 1, without)
+            && (!swinging || BendsAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing", 1, without));
         if (!played) apply(model, data.ticks, swinging);
     }
 

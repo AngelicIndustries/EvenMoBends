@@ -8,7 +8,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -34,7 +34,7 @@ public class Animation_Falling extends Animation {
 
     /** Plays {@code player/fall.animation.json}'s {@code fall}, looping on the player's age; else the Java fall. */
     public static void play(ModelBendsPlayer model, Data_Player data) {
-        if (!PlayerAnimator.playLoop(model, data, FILE, "fall", "fall")) apply(model, data.ticks);
+        if (!BendsAnimator.playLoop(model, data, FILE, "fall", "fall")) apply(model, data.ticks);
     }
 
     /** The original Java fall, kept as the reference the Blockbench fall was baked from. */

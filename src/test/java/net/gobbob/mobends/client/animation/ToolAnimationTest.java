@@ -190,7 +190,7 @@ class ToolAnimationTest {
                 Animation_Bow.DRAW_TICKS, 0, where);
             assertTrue(drawing < 1.5f, "bow_draw, look " + look[0] + "/" + look[1] + ": differs by " + drawing + " degrees (" + where[0] + ")");
             // Aiming, the body turns to the look and the bow arm follows it down to its limit: the file follows the
-            // look from the first frame (in game the switch fades, see PlayerAnimator.playOnce), and limits the arm as
+            // look from the first frame (in game the switch fades, see BendsAnimator.playOnce), and limits the arm as
             // it eases rather than where it eases to. The Java eases into both, so looking away from straight ahead,
             // compare once that has settled.
             float aiming = AnimationBaking.compareOnce(AnimationBaking.model(look[0], look[1]), AnimationBaking.model(look[0], look[1]),
@@ -202,8 +202,8 @@ class ToolAnimationTest {
     }
 
     private static void apply(ModelBendsPlayer model, Animation animation, double seconds) {
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, null)),
-            PlayerAnimator.FOLLOW_RATE, 1);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, null)),
+            BendsAnimator.FOLLOW_RATE, 1);
     }
 
     private static BakedAnimations load(String file) throws IOException {

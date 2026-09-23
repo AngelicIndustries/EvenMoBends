@@ -161,7 +161,7 @@ class ItemAnimationTest {
     private static void apply(ModelBendsPlayer model, Animation animation, double seconds) {
         model.rightItem.resetScale();
         model.rightItemFree.resetScale();
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, null)));
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, null)));
     }
 
     private static BakedAnimations itemTest() throws Exception {

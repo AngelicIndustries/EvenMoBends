@@ -304,11 +304,11 @@ class AirAnimationTest {
     /** As Animation_Jump plays it: blending in over its first {@link Animation_Jump#BLEND} seconds. */
     private static void once(ModelBendsPlayer model, Animation animation, float ticks) {
         float progress = (float)(ticks / (Animation_Jump.BLEND * 20));
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, ticks / 20.0, PlayerAnimator.context(model, null)),
-            progress < 1 ? PlayerAnimator.blendRate(progress) : PlayerAnimator.FOLLOW_RATE, 1);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, ticks / 20.0, BendsAnimator.context(model, null)),
+            progress < 1 ? BendsAnimator.blendRate(progress) : BendsAnimator.FOLLOW_RATE, 1);
     }
 
-    /** As PlayerAnimator.playStride. */
+    /** As BendsAnimator.playStride. */
     private static void stride(ModelBendsPlayer model, BakedAnimations file, String name) {
         Animation main = file.getAnimation("animation.mobends.player." + name);
         Animation swing = file.getAnimation("animation.mobends.player." + name + "_swing");
@@ -319,8 +319,8 @@ class AirAnimationTest {
     }
 
     private static void apply(ModelBendsPlayer model, Animation animation, double seconds, float weight) {
-        PlayerAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, null)),
-            PlayerAnimator.FOLLOW_RATE, weight);
+        BendsAnimator.apply(model, animation, AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, null)),
+            BendsAnimator.FOLLOW_RATE, weight);
     }
 
     private static BakedAnimations load(String file) throws IOException {

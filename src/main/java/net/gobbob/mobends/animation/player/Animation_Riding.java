@@ -2,7 +2,7 @@ package net.gobbob.mobends.animation.player;
 
 import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.Animation;
-import net.gobbob.mobends.client.animation.PlayerAnimator;
+import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.minecraft.util.ResourceLocation;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -35,10 +35,10 @@ extends Animation {
     public static void play(ModelBendsPlayer model, Data_Player data) {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         boolean played = moving
-            ? PlayerAnimator.playPose(model, data, FILE, "ride_move", "ride")
-                && PlayerAnimator.playLoop(model, data, FILE, "ride_move_jiggle", "ride_jiggle",
+            ? BendsAnimator.playPose(model, data, FILE, "ride_move", "ride")
+                && BendsAnimator.playLoop(model, data, FILE, "ride_move_jiggle", "ride_jiggle",
                     Math.max(0, Math.min(1, model.armSwingAmount)))
-            : PlayerAnimator.playPose(model, data, FILE, "ride", "ride");
+            : BendsAnimator.playPose(model, data, FILE, "ride", "ride");
         if (!played) apply(model, data.ticks, moving);
     }
 

@@ -24,6 +24,35 @@ public class EntityData {
     public boolean alreadyPunched = false;
     public boolean onGround;
 
+    private java.util.Map<String, String> slotAnimations;
+    private java.util.Map<String, float[]> slotTicks;
+    /**
+     * Ticks since {@code animation} started playing in {@code slot}. It restarts when the slot switches animation,
+     * or when the slot wasn't played for a moment.
+     */
+    public float ticksPlaying(String slot, String animation) {
+        if (this.slotAnimations == null) {
+            this.slotAnimations = new java.util.HashMap<String, String>();
+            this.slotTicks = new java.util.HashMap<String, float[]>();
+        }
+        float[] startAndLast = this.slotTicks.get(slot);
+        if (startAndLast == null || !animation.equals(this.slotAnimations.get(slot)) || this.ticks - startAndLast[1] > 2.0f) {
+            startAndLast = new float[] {this.ticks, this.ticks};
+            this.slotTicks.put(slot, startAndLast);
+            this.slotAnimations.put(slot, animation);
+        }
+        startAndLast[1] = this.ticks;
+        return this.ticks - startAndLast[0];
+    }
+
+    private java.util.Map<String, net.gobbob.mobends.client.animation.Inertia> slotInertia;
+
+    /** The inertialization state of {@code slot}. */
+    public net.gobbob.mobends.client.animation.Inertia inertia(String slot) {
+        if (this.slotInertia == null) this.slotInertia = new java.util.HashMap<String, net.gobbob.mobends.client.animation.Inertia>();
+        return this.slotInertia.computeIfAbsent(slot, s -> new net.gobbob.mobends.client.animation.Inertia());
+    }
+
     public EntityData(int argEntityID) {
         this.entityID = argEntityID;
         this.entityType = Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID) != null ? Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID).getCommandSenderName() : "NULL";

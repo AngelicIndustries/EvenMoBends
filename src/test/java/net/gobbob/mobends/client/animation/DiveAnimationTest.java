@@ -89,8 +89,8 @@ class DiveAnimationTest {
     private static void play(net.gobbob.mobends.client.model.entity.ModelBendsPlayer model, Data_Player data,
         Animation animation, float ticks, float weight) {
         double seconds = (ticks / 20.0) % animation.length();
-        PlayerAnimator.apply(model, animation,
-            AnimationProcessor.evaluate(animation, seconds, PlayerAnimator.context(model, data)), PlayerAnimator.FOLLOW_RATE, weight);
+        BendsAnimator.apply(model, animation,
+            AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(model, data)), BendsAnimator.FOLLOW_RATE, weight);
     }
 
     private static void java(net.gobbob.mobends.client.model.entity.ModelBendsPlayer model, Float ticks) {
