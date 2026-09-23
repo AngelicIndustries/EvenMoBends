@@ -38,6 +38,9 @@ extends EntityData {
     public SwordTrail swordTrail = new SwordTrail();
     public boolean sprintJumpLeg = false;
     public boolean fistPunchArm = false;
+    /** Counts empty-hand punches (main and off hand), so a punch thrown again restarts rather than continues. */
+    public int punches = 0;
+    public int offhandPunches = 0;
     public int currentAttack = 0;
     /** Backhand's off hand: ticks since it last started swinging, and its place in its own sword combo (0 none). */
     public float ticksAfterOffhandPunch = 60.0f;
@@ -178,6 +181,7 @@ extends EntityData {
     private void onOffhandPunch(boolean holding) {
         if (!holding) {
             this.ticksAfterOffhandPunch = 0.0f;
+            ++this.offhandPunches;
         } else if (this.currentOffhandAttack == 0) {
             this.currentOffhandAttack = 1;
             this.ticksAfterOffhandPunch = 0.0f;
@@ -215,6 +219,7 @@ extends EntityData {
         } else {
             this.fistPunchArm = !this.fistPunchArm;
             this.ticksAfterPunch = 0.0f;
+            ++this.punches;
         }
     }
 }

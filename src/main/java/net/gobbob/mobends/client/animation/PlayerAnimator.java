@@ -117,9 +117,18 @@ public final class PlayerAnimator {
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}), e.g. for the off hand. */
     public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
         double seconds, String slot, double fadeSeconds, Set<String> without, boolean mirror) {
+        return playOnce(model, data, file, name, seconds, slot, fadeSeconds, without, mirror, 0);
+    }
+
+    /**
+     * As above, for the {@code instance}th time it is thrown: a new instance starts over (and fades in) even when it
+     * is the same animation as before, e.g. one punch after another with the same fist.
+     */
+    public static boolean playOnce(ModelBendsPlayer model, Data_Player data, ResourceLocation file, String name,
+        double seconds, String slot, double fadeSeconds, Set<String> without, boolean mirror, int instance) {
         Animation animation = find(file, name);
         if (animation == null) return false;
-        playOnce(model, data, animation, file + "#" + name, seconds, slot, fadeSeconds, without, mirror);
+        playOnce(model, data, animation, file + "#" + name + "@" + instance, seconds, slot, fadeSeconds, without, mirror);
         return true;
     }
 

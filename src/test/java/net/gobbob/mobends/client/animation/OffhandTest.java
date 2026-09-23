@@ -43,6 +43,44 @@ class OffhandTest {
         }
     }
 
+    /**
+     * With the off hand full, every punch is the right fist's: punching again mid-punch fades from where the arm is
+     * instead of snapping back to the punch's first frame, so the arm never jumps more than a punch moves it anyway.
+     */
+    @Test
+    void repeatedPunchesWithOneFistDontSnapBack() throws Exception {
+        Animation punch = AnimationBaking.load(Paths.get("src/main/resources/assets/mobends/geckolib/animations/player/punch.animation.json"))
+            .getAnimation("animation.mobends.player.punch_right");
+        float single = worstJump(punch, 1000, true), restarted = worstJump(punch, 4, false), faded = worstJump(punch, 4, true);
+        System.out.println("worst arm jump per frame: one punch " + single + ", every 4 ticks snapping " + restarted + ", fading " + faded);
+        org.junit.jupiter.api.Assertions.assertTrue(faded <= single + 1, "punching every 4 ticks jumps " + faded
+            + " degrees in a frame, one punch at most " + single);
+    }
+
+    /** The most the right arm turns in one frame, punching every {@code every} ticks for 2 seconds. */
+    private static float worstJump(Animation punch, float every, boolean fade) throws Exception {
+        java.lang.reflect.Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
+        field.setAccessible(true);
+        net.gobbob.mobends.data.Data_Player data = (net.gobbob.mobends.data.Data_Player)((sun.misc.Unsafe)field.get(null))
+            .allocateInstance(net.gobbob.mobends.data.Data_Player.class);
+        data.ticksPerFrame = AnimationBaking.TICKS_PER_FRAME;
+        ModelBendsPlayer model = AnimationBaking.model(0, 0);
+        float worst = 0;
+        org.joml.Matrix4f last = null;
+        for (float t = 0; t < 40; t += AnimationBaking.TICKS_PER_FRAME) {
+            final float now = t;
+            int instance = (int)(t / every);
+            data.ticks = t;
+            AnimationBaking.frame(model, m -> PlayerAnimator.playOnce(m, data, punch, "punch@" + (fade ? instance : 0),
+                (now - instance * every) / 20.0, "punch", fade ? 0.15 : 0, null));
+            org.joml.Matrix4f arm = AnimationBaking.orientation(Bone.RIGHT_ARM.part(model))
+                .mul(AnimationBaking.orientation(Bone.RIGHT_FORE_ARM.part(model)));
+            if (last != null && t > 1) worst = Math.max(worst, AnimationBaking.angleBetween(last, arm));
+            last = arm;
+        }
+        return worst;
+    }
+
     @Test
     void mainHandAnimationsLeaveAnOccupiedOffhandArmAlone() throws Exception {
         String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";
