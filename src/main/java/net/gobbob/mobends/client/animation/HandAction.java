@@ -1,5 +1,6 @@
 package net.gobbob.mobends.client.animation;
 
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -8,11 +9,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
 /**
  * What a player's swing is for: breaking a block, using the item (e.g. placing a block) or attacking. Breaking is
  * known for everyone, from the block damage the world shows; using versus attacking only for the local player, from
- * the key that started it (other players' swings don't say).
+ * the right clicks Forge reports (other players' swings don't say).
  */
 public final class HandAction {
     private static Field damagedBlocks;
@@ -38,11 +40,28 @@ public final class HandAction {
         return minecraft != null && player != null && player == minecraft.thePlayer;
     }
 
-    /** Whether the local player's swing is a use (e.g. placing a block) rather than an attack. */
+    /** The local player's age when a right click last used an item or placed a block. */
+    private static int lastUseTick = Integer.MIN_VALUE / 2;
+
+    /**
+     * Whether the local player's swing is a use (e.g. placing a block) rather than an attack: a right click acted
+     * within the last couple of ticks. (The use key alone can be pressed and released within one tick.)
+     */
     public static boolean isUse(EntityPlayer player) {
-        Minecraft minecraft = Minecraft.getMinecraft();
-        return isKnown(player) && minecraft.gameSettings.keyBindUseItem.getIsKeyPressed()
-            && !minecraft.gameSettings.keyBindAttack.getIsKeyPressed();
+        if (!isKnown(player)) return false;
+        int since = player.ticksExisted - lastUseTick;
+        return since >= 0 && since <= 2;
+    }
+
+    /** Notes the local player's right clicks, which Forge reports on the client as they act. */
+    public static final class Listener {
+        @SubscribeEvent
+        public void onInteract(PlayerInteractEvent event) {
+            if (event.entityPlayer != null && event.entityPlayer.worldObj.isRemote
+                && event.action != PlayerInteractEvent.Action.LEFT_CLICK_BLOCK) {
+                lastUseTick = event.entityPlayer.ticksExisted;
+            }
+        }
     }
 
     private static Map<?, ?> damagedBlocks(RenderGlobal renderGlobal) {

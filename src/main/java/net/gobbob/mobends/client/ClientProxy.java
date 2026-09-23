@@ -42,6 +42,7 @@ extends CommonProxy {
         AnimatedEntity.registerRendering();
         ClientRegistry.registerKeyBinding(EventHandler_Keyboard.key_Menu);
         MinecraftForge.EVENT_BUS.register(new EventHandler_DataUpdate());
+        MinecraftForge.EVENT_BUS.register(new net.gobbob.mobends.client.animation.HandAction.Listener());
         FMLCommonHandler.instance().bus().register(new EventHandler_DataUpdate());
         FMLCommonHandler.instance().bus().register(new EventHandler_Keyboard());
         ((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data = config.get("General", "Sword Trail", true).getBoolean();
