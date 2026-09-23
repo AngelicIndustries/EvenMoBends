@@ -220,6 +220,7 @@ extends ModelBiped implements BipedRigModel {
                 AnimatedEntity.getByEntity(argEntity).get("walk").animate((EntityLivingBase)argEntity, this, Data_Zombie.get(argEntity.getEntityId()));
                 BendsPack.animate(this, "zombie", "walk");
             }
+            net.gobbob.mobends.animation.zombie.Animation_Swing.play(this, data, (EntityLivingBase)argEntity);
             ((ModelRendererBends)this.bipedHead).update(data.ticksPerFrame);
             ((ModelRendererBends)this.bipedHeadwear).update(data.ticksPerFrame);
             ((ModelRendererBends)this.bipedBody).update(data.ticksPerFrame);

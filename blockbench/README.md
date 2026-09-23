@@ -129,7 +129,10 @@ texture).
 - `zombie/stand.animation.json`: `stand`, a held pose.
 - `zombie/walk.animation.json`: `walk` and `walk_swing`, timed by the stride like the player's walk, and
   `walk_arms_up` over them while the zombie reaches forward (it takes turns at that every few seconds).
-  `ZombieAnimationTest` keeps them within 1.5 degrees of the Java zombie (`MOBENDS_BAKE_ZOMBIE=1` to bake again). Salamander loads them through the resource manager, so a resource pack can replace any of
+  `ZombieAnimationTest` keeps them within 1.5 degrees of the Java zombie (`MOBENDS_BAKE_ZOMBIE=1` to bake again).
+- A zombie hitting with something in its hand (a zombie pigman's sword) plays the player's sword swings from
+  `player/sword.animation.json`, one per hit through the combo. The server makes such zombies swing on every hit,
+  which vanilla pigmen don't, so this needs Mo' Bends on the server (singleplayer always has it). Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
 To edit one:

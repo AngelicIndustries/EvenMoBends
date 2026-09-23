@@ -28,6 +28,9 @@ extends EntityData {
     public SmoothVector3f renderOffset = new SmoothVector3f();
     public SmoothVector3f renderRotation = new SmoothVector3f();
     public int currentWalkingState = 0;
+    /** Which of the sword swings (1 to 3) the last swing was, and how many swings there have been. */
+    public int currentAttack = 0;
+    public int swings = 0;
     public float ticksBeforeStateChange = 0.0f;
 
     public Data_Zombie(int argEntityID) {
@@ -97,6 +100,14 @@ extends EntityData {
             dataList.add(newData);
         }
         return newData;
+    }
+
+    /** A held item swings through the player's sword combo, from the first swing after a pause. */
+    @Override
+    public void onPunch() {
+        this.currentAttack = this.ticksAfterPunch > 40.0f || this.currentAttack >= 3 ? 1 : this.currentAttack + 1;
+        ++this.swings;
+        super.onPunch();
     }
 
     @Override

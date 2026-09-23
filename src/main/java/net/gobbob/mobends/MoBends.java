@@ -50,6 +50,8 @@ public class MoBends {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        // On both sides: the integrated server runs beside the client proxy.
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new net.gobbob.mobends.event.EventHandler_MobSwing());
         proxy.init();
     }
 
