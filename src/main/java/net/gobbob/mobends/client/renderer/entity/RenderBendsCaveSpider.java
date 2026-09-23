@@ -1,5 +1,7 @@
 package net.gobbob.mobends.client.renderer.entity;
 
+import net.minecraft.client.renderer.entity.RenderCaveSpider;
+import net.minecraft.client.renderer.entity.RenderSpider;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.util.ResourceLocation;
@@ -11,6 +13,11 @@ public class RenderBendsCaveSpider extends RenderBendsSpider {
 
     public RenderBendsCaveSpider() {
         this.shadowSize *= 0.7f;
+    }
+
+    @Override
+    protected RenderSpider createVanillaRenderer() {
+        return new RenderCaveSpider();
     }
 
     @Override

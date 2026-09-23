@@ -26,6 +26,7 @@ Maintainable Minecraft 1.7.10 fork of Mo' Bends 0.20.1 with Wawel Auth and Smart
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled |
 | Smart Moving (with or without WawelAuth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
+| Salamander CEM + a CEM resource pack (e.g. Fresh Animations Spiders) | Mo' Bends | The pack's model supersedes Mo' Bends for the mobs it covers (spiders so far) |
 
 EFR boat drivers follow each paddle independently, including turns and coasting. Boats, chest boats,
 and rafts use their own handle and seat positions; rear passengers sit without rowing.

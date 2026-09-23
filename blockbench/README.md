@@ -139,6 +139,9 @@ texture).
   full swing) over it by how strongly the legs swing, timed by the stride. `SpiderAnimationTest` keeps it within 1.5
   degrees of the original Java walk (`MOBENDS_BAKE_SPIDER=1` to bake again). Export the spider with
   `/evenmobends blockbench spider`. The root moves and turns the whole spider.
+- When a resource pack's CEM model covers a mob (Salamander's CEM support, e.g. Fresh Animations Spiders), it
+  supersedes Mo' Bends for that mob: Mo' Bends hands the mob to the vanilla renderer, which Salamander draws with the
+  pack's model. Checked every frame, so reloading packs or switching Salamander's CEM off brings Mo' Bends back.
 - A zombie hitting with something in its hand (a zombie pigman's sword) plays the player's sword swings from
   `player/sword.animation.json`, one per hit through the combo. The server makes such zombies swing on every hit,
   which vanilla pigmen don't, so this needs Mo' Bends on the server (singleplayer always has it). Salamander loads them through the resource manager, so a resource pack can replace any of
