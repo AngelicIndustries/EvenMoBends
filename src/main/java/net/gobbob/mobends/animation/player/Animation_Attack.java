@@ -20,7 +20,6 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.data.EntityData;
-import net.gobbob.mobends.pack.BendsPack;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,25 +54,21 @@ extends Animation {
                         else if (attack == 2) Animation_Attack_Combo1.apply(model, data.ticksAfterPunch, moving, player.isRiding());
                         else Animation_Attack_Combo2.apply(model, data.ticksAfterPunch);
                     }
-                    BendsPack.animate(model, "player", "attack_" + (attack - 1));
                 }
             } else if (data.ticksAfterPunch < 60.0f) {
                 if (PlayerAnimationConfig.isEnabled("swordStance")) {
                     if (data.isOnGround() && !playStance(model, data, moving, player.isSprinting())) {
                         Animation_Attack_Stance.apply(model, moving, player.isSprinting());
                     }
-                    BendsPack.animate(model, "player", "attack_stance");
                 }
             }
         } else if (data.ticksAfterPunch < 10.0f) {
             if (PlayerAnimationConfig.isEnabled("punch")) {
                 if (!playPunch(model, data, false)) Animation_Attack_Punch.animate((EntityPlayer)argEntity, model, data);
-                BendsPack.animate(model, "player", "punch");
             }
         } else if (data.ticksAfterPunch < 60.0f) {
             if (PlayerAnimationConfig.isEnabled("punchStance")) {
                 if (!playPunch(model, data, true)) Animation_Attack_PunchStance.animate((EntityPlayer)argEntity, model, data);
-                BendsPack.animate(model, "player", "punch_stance");
             }
         }
     }

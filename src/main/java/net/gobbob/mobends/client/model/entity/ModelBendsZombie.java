@@ -7,8 +7,6 @@ import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.data.Data_Zombie;
-import net.gobbob.mobends.pack.BendsPack;
-import net.gobbob.mobends.pack.BendsVar;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -212,13 +210,10 @@ extends ModelBiped implements BipedRigModel {
             ((ModelRendererBends)this.bipedLeftForeArm).resetScale();
             ((ModelRendererBends)this.bipedRightForeLeg).resetScale();
             ((ModelRendererBends)this.bipedLeftForeLeg).resetScale();
-            BendsVar.tempData = Data_Zombie.get(argEntity.getEntityId());
             if (Data_Zombie.get((int)argEntity.getEntityId()).motion.x == 0.0f & Data_Zombie.get((int)argEntity.getEntityId()).motion.z == 0.0f) {
                 AnimatedEntity.getByEntity(argEntity).get("stand").animate((EntityLivingBase)argEntity, this, Data_Zombie.get(argEntity.getEntityId()));
-                BendsPack.animate(this, "zombie", "stand");
             } else {
                 AnimatedEntity.getByEntity(argEntity).get("walk").animate((EntityLivingBase)argEntity, this, Data_Zombie.get(argEntity.getEntityId()));
-                BendsPack.animate(this, "zombie", "walk");
             }
             net.gobbob.mobends.animation.zombie.Animation_Swing.play(this, data, (EntityLivingBase)argEntity);
             ((ModelRendererBends)this.bipedHead).update(data.ticksPerFrame);

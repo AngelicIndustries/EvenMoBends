@@ -15,7 +15,6 @@ import net.gobbob.mobends.config.BlinkConfig;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.event.EventHandler_DataUpdate;
 import net.gobbob.mobends.event.EventHandler_Keyboard;
-import net.gobbob.mobends.pack.BendsPack;
 import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraft.util.ResourceLocation;
@@ -46,7 +45,6 @@ extends CommonProxy {
         FMLCommonHandler.instance().bus().register(new EventHandler_DataUpdate());
         FMLCommonHandler.instance().bus().register(new EventHandler_Keyboard());
         ((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data = config.get("General", "Sword Trail", true).getBoolean();
-        BendsPack.preInit(config);
         BlinkingTextures.registerReloadListener();
     }
 

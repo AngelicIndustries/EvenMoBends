@@ -28,8 +28,6 @@ import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
 import net.gobbob.mobends.compat.PlayerBlockingCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
-import net.gobbob.mobends.pack.BendsPack;
-import net.gobbob.mobends.pack.BendsVar;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -396,7 +394,6 @@ extends ModelBiped implements BipedRigModel {
             ((ModelRendererBends)this.bipedLeftForeArm).resetScale();
             ((ModelRendererBends)this.bipedRightForeLeg).resetScale();
             ((ModelRendererBends)this.bipedLeftForeLeg).resetScale();
-            BendsVar.tempData = Data_Player.get(argEntity.getEntityId());
             EntityPlayer player = (EntityPlayer)argEntity;
             AquaAcrobaticsCompat.State aqua = AquaAcrobaticsCompat.getState(player, this.partialTicks);
             BoatState boat = Animation_Rowing.getBoatState(player, this.partialTicks);
@@ -500,7 +497,6 @@ extends ModelBiped implements BipedRigModel {
             return false;
         }
         animation.animate((EntityLivingBase)entity, this, data);
-        BendsPack.animate(this, "player", animationName);
         return true;
     }
 
