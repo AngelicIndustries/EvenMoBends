@@ -79,8 +79,9 @@ extends Animation {
 
     /**
      * Backhand's off hand, over whatever the main hand does, for {@link #OFFHAND_TICKS} after it starts a swing: an
-     * empty hand punches ({@code punch_left}); a pickaxe or a block mines, an axe chops, and anything else swings
-     * through the sword combo (leaving a trail with a sword), each the main hand's animation mirrored, then settles
+     * empty hand punches ({@code punch_left}); a pickaxe mines, a block mines while breaking or placing, an axe chops
+     * while breaking, and anything else swings through the sword combo (leaving a trail with a sword), each the main
+     * hand's animation mirrored, then settles
      * into the mirrored stance with the left arm only. While the main hand holds something its arm is left alone;
      * while the main hand acts too, whichever hand started last leads the body and the other moves only its arm.
      * Riding leaves the root to the mount.
@@ -89,8 +90,13 @@ extends Animation {
         if (!CompatibilityPolicy.isBackhandLoaded()) return;
         ItemStack item = BackhandCompat.getOffhandItem(player);
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
-        boolean tool = item != null && (item.getItem() instanceof ItemPickaxe || item.getItem() instanceof ItemAxe
-            || Block.getBlockFromItem(item.getItem()) != Blocks.air);
+        // As in the main hand: a pickaxe mines, a block mines while breaking or placing (attacking otherwise; other
+        // players' swings count as placing), an axe chops only while breaking; anything else swings like a sword.
+        boolean breaking = data.offhandSwingBreaks && data.ticksAfterOffhandPunch < 60.0f;
+        boolean attacking = data.offhandSwingKnown && !data.offhandSwingIsUse && !breaking;
+        boolean tool = item != null && (item.getItem() instanceof ItemPickaxe
+            || item.getItem() instanceof ItemAxe && breaking
+            || Block.getBlockFromItem(item.getItem()) != Blocks.air && !attacking);
         if (data.ticksAfterOffhandPunch >= OFFHAND_TICKS) {
             if (item != null && !tool && data.ticksAfterOffhandPunch < 60.0f && data.isOnGround() && (!moving || player.isSprinting())
                 && PlayerAnimationConfig.isEnabled("swordStance")) {
@@ -116,7 +122,7 @@ extends Animation {
                     punchSeconds(data.ticksAfterOffhandPunch, data.offhandPunchRetracts), "offhand",
                     punchFade(data.offhandPunchRetracts), without, false, data.offhandPunches);
             }
-        } else if (item.getItem() instanceof ItemAxe) {
+        } else if (tool && item.getItem() instanceof ItemAxe) {
             if (PlayerAnimationConfig.isEnabled("axe")) {
                 PlayerAnimator.playLoop(model, data, Animation_Axe.FILE, "axe_swing", "offhand", 1, without, true);
             }

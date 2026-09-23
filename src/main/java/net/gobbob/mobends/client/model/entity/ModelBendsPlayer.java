@@ -5,6 +5,10 @@ import java.util.UUID;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.animation.Animation;
 import net.gobbob.mobends.animation.player.Animation_AquaAcrobatics;
+import net.minecraft.item.ItemStack;
+import net.gobbob.mobends.compat.BackhandCompat;
+import net.gobbob.mobends.client.animation.HandAction;
+import net.gobbob.mobends.animation.player.Animation_Bow;
 import net.gobbob.mobends.animation.player.Animation_Attack;
 import net.gobbob.mobends.animation.player.Animation_Blocking;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
@@ -384,14 +388,13 @@ extends ModelBiped {
                 // Do not let a recent sword swing/stance compete with main-hand blocking.
             } else if (aqua.isActive() && !player.isSwingInProgress && player.getItemInUseCount() == 0) {
                 // Keep weapon recovery stances from replacing the swimming/crawling arm cycle.
+            } else if (BackhandCompat.isDrawingOffhandBow(player)) {
+                // Backhand draws a bow in the off hand: the bow arm is the left one.
+                if (PlayerAnimationConfig.isEnabled("bow")) Animation_Bow.play(this, data, player.getItemInUseDuration() + this.partialTicks, true);
             } else if (this.aimedBow) {
                 this.animatePlayer("bow", argEntity, data);
-            } else if (((EntityPlayer)argEntity).getCurrentEquippedItem() != null && ((EntityPlayer)argEntity).getCurrentEquippedItem().getItem() instanceof ItemPickaxe || ((EntityPlayer)argEntity).getCurrentEquippedItem() != null && Block.getBlockFromItem(((EntityPlayer)argEntity).getCurrentEquippedItem().getItem()) != Blocks.air) {
-                this.animatePlayer("mining", argEntity, data);
-            } else if (((EntityPlayer)argEntity).getCurrentEquippedItem() != null && ((EntityPlayer)argEntity).getCurrentEquippedItem().getItem() instanceof ItemAxe) {
-                this.animatePlayer("axe", argEntity, data);
             } else {
-                this.animatePlayer("attack", argEntity, data);
+                this.animatePlayer(mainHandAnimation(player, data), argEntity, data);
             }
             if (!(rowing && boat.driver) && (blockingHands & PlayerBlockingCompat.OFF_HAND) == 0) {
                 Animation_Attack.playOffhand(player, this, data);
@@ -437,6 +440,26 @@ extends ModelBiped {
         animation.animate((EntityLivingBase)entity, this, data);
         BendsPack.animate(this, "player", animationName);
         return true;
+    }
+
+    /**
+     * What the main hand's item does: a pickaxe mines; a block mines while breaking or placing (other players' swings
+     * with a block count as placing, as we can't tell) and otherwise attacks; an axe chops while breaking and in the
+     * stance after (the last swing broke a block), and otherwise swings like a sword; anything else attacks.
+     */
+    private static String mainHandAnimation(EntityPlayer player, Data_Player data) {
+        ItemStack held = player.getCurrentEquippedItem();
+        if (held == null) return "attack";
+        boolean breaking = HandAction.isBreakingBlock(player);
+        if (held.getItem() instanceof ItemPickaxe) return "mining";
+        if (Block.getBlockFromItem(held.getItem()) != Blocks.air) {
+            boolean attacking = data.swingKnown && !data.swingIsUse && !data.swingBreaks && data.ticksAfterPunch < 60.0f;
+            return breaking || !attacking ? "mining" : "attack";
+        }
+        if (held.getItem() instanceof ItemAxe) {
+            return breaking || data.swingBreaks && data.ticksAfterPunch < 60.0f ? "axe" : "attack";
+        }
+        return "attack";
     }
 
     private boolean shouldAnimateFalling(Entity entity, Data_Player data) {

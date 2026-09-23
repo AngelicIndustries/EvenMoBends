@@ -110,6 +110,11 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   body and the other moves only its arm. After a swing, the off-hand arm settles into the mirrored `sword_stance`
   (`sword_stance_sprint` sprinting), left arm only. The off-hand item is drawn at `leftItem`, placed like the right
   hand's item, mirrored, and an off-hand sword leaves its own trail.
+- What a swing is for decides its animation. A pickaxe mines; a block mines while breaking or placing and
+  otherwise attacks like any item; an axe chops while breaking a block (and in the stance after) and otherwise
+  swings like a sword. Breaking is seen for every player; placing versus attacking only for your own swings (other
+  players' swings with a block count as placing). A bow drawn in Backhand's off hand plays the bow mirrored.
+  Mirrored animations are given the look's yaw reflected, so the head still turns where the player looks.
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.

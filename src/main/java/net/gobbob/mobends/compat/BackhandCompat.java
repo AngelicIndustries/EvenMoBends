@@ -1,6 +1,7 @@
 package net.gobbob.mobends.compat;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemStack;
 import xonin.backhand.api.core.BackhandUtils;
 import xonin.backhand.api.core.IBackhandPlayer;
@@ -19,6 +20,13 @@ public final class BackhandCompat {
         return getOffhandItem(player) != null;
     }
 
+    /** Whether the player is drawing a bow held in the off hand. */
+    public static boolean isDrawingOffhandBow(EntityPlayer player) {
+        if (player == null || !CompatibilityPolicy.isBackhandLoaded() || player.getItemInUseCount() <= 0) return false;
+        ItemStack offhand = getOffhandItem(player);
+        return offhand != null && offhand.getItemUseAction() == EnumAction.bow && Api.isOffhandItemInUse(player);
+    }
+
     /** How far through its swing the off hand is, 0 when it isn't swinging. */
     public static float getOffSwingProgress(EntityPlayer player, float partialTicks) {
         if (player == null || !CompatibilityPolicy.isBackhandLoaded()) return 0;
@@ -29,6 +37,10 @@ public final class BackhandCompat {
     private static final class Api {
         static ItemStack getOffhandItem(EntityPlayer player) {
             return BackhandUtils.getOffhandItem(player);
+        }
+
+        static boolean isOffhandItemInUse(EntityPlayer player) {
+            return player instanceof IBackhandPlayer && ((IBackhandPlayer)player).isOffhandItemInUse();
         }
 
         static float getOffSwingProgress(EntityPlayer player, float partialTicks) {

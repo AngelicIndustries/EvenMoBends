@@ -136,6 +136,25 @@ class OffhandTest {
         }
     }
 
+    /** Played mirrored (for the off hand), an animation's head still follows the player's look, not its reflection. */
+    @Test
+    void mirroredAnimationsStillLookWhereThePlayerLooks() throws Exception {
+        String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";
+        Animation swing = AnimationBaking.load(Paths.get(dir + "mine.animation.json")).getAnimation("animation.mobends.player.mine_swing");
+        for (float yaw : new float[] {-40, 25}) {
+            ModelBendsPlayer plain = AnimationBaking.model(10, yaw), mirrored = AnimationBaking.model(10, -yaw);
+            // The same swing, played for the other hand by a player looking the other way: exact reflections.
+            AnimationBaking.frame(plain, m -> PlayerAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
+                PlayerAnimator.context(m, null, false)), 1000, 1, null, null, false), 1000);
+            AnimationBaking.frame(mirrored, m -> PlayerAnimator.apply(m, swing, AnimationProcessor.evaluate(swing, 0.2,
+                PlayerAnimator.context(m, null, true)), 1000, 1, null, null, true), 1000);
+            org.joml.Matrix4f reflect = new org.joml.Matrix4f().scale(-1, 1, 1);
+            org.joml.Matrix4f expected = new org.joml.Matrix4f(reflect).mul(AnimationBaking.orientation(Bone.HEAD.part(plain))).mul(reflect);
+            float off = AnimationBaking.angleBetween(expected, AnimationBaking.orientation(Bone.HEAD.part(mirrored)));
+            org.junit.jupiter.api.Assertions.assertTrue(off < 0.1f, "looking " + yaw + ": the mirrored head is off by " + off);
+        }
+    }
+
     @Test
     void mainHandAnimationsLeaveAnOccupiedOffhandArmAlone() throws Exception {
         String dir = "src/main/resources/assets/mobends/geckolib/animations/player/";

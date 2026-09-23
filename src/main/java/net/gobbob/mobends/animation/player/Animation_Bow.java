@@ -38,10 +38,15 @@ extends Animation {
      * {@link #DRAW_TICKS}, then {@code bow_aim}, which holds its last frame. Falls back to the Java bow below.
      */
     public static void play(ModelBendsPlayer model, Data_Player data, float useTicks) {
+        play(model, data, useTicks, false);
+    }
+
+    /** As above; {@code mirror} for a bow in the off hand, held in the left hand and drawn with the right. */
+    public static void play(ModelBendsPlayer model, Data_Player data, float useTicks, boolean mirror) {
         boolean played = useTicks < DRAW_TICKS
-            ? PlayerAnimator.playOnce(model, data, FILE, "animation.mobends.player.bow_draw", useTicks / 20.0, "bow", FADE, null)
+            ? PlayerAnimator.playOnce(model, data, FILE, "animation.mobends.player.bow_draw", useTicks / 20.0, "bow", FADE, null, mirror)
             : PlayerAnimator.playOnce(model, data, FILE, "animation.mobends.player.bow_aim", (useTicks - DRAW_TICKS) / 20.0, "bow",
-                FADE, null);
+                FADE, null, mirror);
         if (!played) apply(model, useTicks);
     }
 

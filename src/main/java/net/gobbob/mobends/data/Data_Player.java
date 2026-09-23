@@ -6,6 +6,7 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.renderer.SwordTrail;
+import net.gobbob.mobends.client.animation.HandAction;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.gobbob.mobends.data.EntityData;
@@ -49,6 +50,12 @@ extends EntityData {
     public final float[] fistPunchedAt = {-1000.0f, -1000.0f};
     public int seenPunches = -1, seenOffhandPunches = -1;
     public boolean punchRetracts, offhandPunchRetracts;
+    /**
+     * What each hand's last swing was for, as it started (see HandAction): whether that is known (only for the local
+     * player), a use such as placing a block, or breaking a block.
+     */
+    public boolean swingKnown, swingIsUse, swingBreaks;
+    public boolean offhandSwingKnown, offhandSwingIsUse, offhandSwingBreaks;
     public int currentAttack = 0;
     /** Backhand's off hand: ticks since it last started swinging, and its place in its own sword combo (0 none). */
     public float ticksAfterOffhandPunch = 60.0f;
@@ -188,6 +195,11 @@ extends EntityData {
 
     /** The off hand started a swing: an empty hand punches, anything else goes through the combo like the main hand. */
     private void onOffhandPunch(boolean holding) {
+        EntityPlayer player = (EntityPlayer)this.getEntity();
+        this.offhandSwingKnown = HandAction.isKnown(player);
+        this.offhandSwingIsUse = HandAction.isUse(player);
+        // Backhand breaks with the off hand only while the main hand isn't swinging.
+        this.offhandSwingBreaks = HandAction.isBreakingBlock(player) && player.swingProgress <= 0;
         if (!holding) {
             this.ticksAfterOffhandPunch = 0.0f;
             ++this.offhandPunches;
@@ -209,6 +221,12 @@ extends EntityData {
 
     @Override
     public void onPunch() {
+        if (this.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)this.getEntity();
+            this.swingKnown = HandAction.isKnown(player);
+            this.swingIsUse = HandAction.isUse(player);
+            this.swingBreaks = HandAction.isBreakingBlock(player);
+        }
         if (this.getEntity().getHeldItem() != null) {
             if (this.ticksAfterPunch > 6.0f) {
                 if (this.currentAttack == 0) {

@@ -96,7 +96,7 @@ public final class PlayerAnimator {
             float blended = (float)(data.ticksPlaying(slot, file + "#" + name) / (blendSeconds * 20));
             if (blended < 1) maxRate = blendRate(blended);
         }
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), maxRate, weight, without,
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data, mirror)), maxRate, weight, without,
             null, mirror);
         return true;
     }
@@ -147,13 +147,13 @@ public final class PlayerAnimator {
                 // The offsets from where the animation was a frame ago, which is where the fade starts.
                 inertia.capture();
                 double previous = Math.max(0, seconds - data.ticksPerFrame / 20.0);
-                apply(model, animation, AnimationProcessor.evaluate(animation, previous, context(model, data)), FOLLOW_RATE, 1,
+                apply(model, animation, AnimationProcessor.evaluate(animation, previous, context(model, data, mirror)), FOLLOW_RATE, 1,
                     without, inertia, mirror);
             }
             inertia.fade((float)((elapsed + data.ticksPerFrame) / (fadeSeconds * 20)));
             if (!inertia.active()) inertia = null;
         }
-        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data)), FOLLOW_RATE, 1,
+        apply(model, animation, AnimationProcessor.evaluate(animation, seconds, context(model, data, mirror)), FOLLOW_RATE, 1,
             without, inertia, mirror);
     }
 
@@ -304,10 +304,18 @@ public final class PlayerAnimator {
 
     /** Molang queries available to player animations. */
     public static MolangContext context(ModelBendsPlayer model, Data_Player data) {
+        return context(model, data, false);
+    }
+
+    /**
+     * As above, for an animation played {@code mirror}ed: the look's yaw is given reflected, so that mirroring the
+     * pose turns the head back to where the player actually looks.
+     */
+    static MolangContext context(ModelBendsPlayer model, Data_Player data, boolean mirror) {
         return variable -> {
             switch (variable) {
                 case "query.mobends_head_pitch": return model.headRotationX;
-                case "query.mobends_head_yaw": return model.headRotationY;
+                case "query.mobends_head_yaw": return mirror ? -model.headRotationY : model.headRotationY;
                 case "query.mobends_ticks": return data == null ? 0 : data.ticks;
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
                 case "query.mobends_holding": return isHolding(data) ? 1 : 0;
