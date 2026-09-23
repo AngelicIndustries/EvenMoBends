@@ -7,7 +7,9 @@ import java.util.Map;
 import net.gobbob.mobends.util.BendsLogger;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderGlobal;
+import net.gobbob.mobends.compat.BackhandCompat;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
@@ -32,6 +34,23 @@ public final class HandAction {
         }
         Map<?, ?> damaged = damagedBlocks(minecraft.renderGlobal);
         return damaged != null && damaged.containsKey(player.getEntityId());
+    }
+
+    /**
+     * Whether the player is breaking a block with Backhand's off hand: the local player holding right click on a
+     * block with a tool there (as Backhand breaks), or anyone breaking while the main hand isn't swinging.
+     */
+    public static boolean isBreakingWithOffhand(EntityPlayer player) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (player == null || minecraft == null) return false;
+        ItemStack offhand = BackhandCompat.getOffhandItem(player);
+        if (player == minecraft.thePlayer && offhand != null && BackhandCompat.isTool(offhand)
+            && minecraft.gameSettings.keyBindUseItem.getIsKeyPressed() && minecraft.objectMouseOver != null
+            && minecraft.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            return true;
+        }
+        Map<?, ?> damaged = damagedBlocks(minecraft.renderGlobal);
+        return damaged != null && damaged.containsKey(player.getEntityId()) && player.swingProgress <= 0;
     }
 
     /** Whether we know what the player's swing was for: only for the local player. */

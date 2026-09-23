@@ -62,7 +62,7 @@ extends EntityData {
     /** Ticks since the off hand last started any swing (mining or chopping swings keep restarting it). */
     public float ticksAfterOffhandSwing = 60.0f;
     public int currentOffhandAttack = 0;
-    private boolean alreadyOffhandPunched;
+    private float lastOffhandSwingProgress;
 
     /** The diving lean along the travel direction, eased (q.mobends_travel_pitch). */
     public float divingTravelPitch;
@@ -180,15 +180,13 @@ extends EntityData {
         }
         if (this.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)this.getEntity();
-            // The swing's progress at this tick, not interpolated: it is 0 for the tick a held swing restarts on.
-            if (BackhandCompat.getOffSwingProgress(player, 1.0f) > 0.0f) {
-                if (!this.alreadyOffhandPunched) {
-                    this.onOffhandPunch(BackhandCompat.getOffhandItem(player) != null);
-                    this.alreadyOffhandPunched = true;
-                }
-            } else {
-                this.alreadyOffhandPunched = false;
+            // A swing starts when the progress leaves 0, or drops back while swinging: Backhand interpolates a held
+            // swing's restart up through 1 rather than back through 0, so it never reads 0 between held swings.
+            float progress = BackhandCompat.getOffSwingProgress(player, argPartialTicks);
+            if (progress > 0.0f && (this.lastOffhandSwingProgress <= 0.0f || progress < this.lastOffhandSwingProgress - 0.3f)) {
+                this.onOffhandPunch(BackhandCompat.getOffhandItem(player) != null);
             }
+            this.lastOffhandSwingProgress = progress;
         }
         this.ticksAfterOffhandPunch += this.ticksPerFrame;
         this.ticksAfterOffhandSwing += this.ticksPerFrame;
@@ -202,8 +200,7 @@ extends EntityData {
         EntityPlayer player = (EntityPlayer)this.getEntity();
         this.offhandSwingKnown = HandAction.isKnown(player);
         this.offhandSwingIsUse = HandAction.isUse(player);
-        // Backhand breaks with the off hand only while the main hand isn't swinging.
-        this.offhandSwingBreaks = HandAction.isBreakingBlock(player) && player.swingProgress <= 0;
+        this.offhandSwingBreaks = HandAction.isBreakingWithOffhand(player);
         this.ticksAfterOffhandSwing = 0.0f;
         if (!holding) {
             this.ticksAfterOffhandPunch = 0.0f;

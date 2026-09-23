@@ -10,6 +10,7 @@ import net.gobbob.mobends.animation.player.Animation_Attack_Combo2;
 import net.gobbob.mobends.animation.player.Animation_Attack_Punch;
 import net.gobbob.mobends.animation.player.Animation_Attack_PunchStance;
 import net.gobbob.mobends.animation.player.Animation_Attack_Stance;
+import net.gobbob.mobends.client.animation.HandAction;
 import net.gobbob.mobends.client.animation.PlayerAnimator;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.renderer.SwordTrail;
@@ -92,7 +93,7 @@ extends Animation {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         // As in the main hand: a pickaxe mines, a block mines while breaking or placing (attacking otherwise; other
         // players' swings count as placing), an axe chops only while breaking; anything else swings like a sword.
-        boolean breaking = data.offhandSwingBreaks && data.ticksAfterOffhandSwing < 60.0f;
+        boolean breaking = HandAction.isBreakingWithOffhand(player) || data.offhandSwingBreaks && data.ticksAfterOffhandSwing < 60.0f;
         boolean attacking = data.offhandSwingKnown && !data.offhandSwingIsUse && !breaking;
         boolean tool = item != null && (item.getItem() instanceof ItemPickaxe
             || item.getItem() instanceof ItemAxe && breaking

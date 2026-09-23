@@ -27,6 +27,11 @@ public final class BackhandCompat {
         return offhand != null && offhand.getItemUseAction() == EnumAction.bow && Api.isOffhandItemInUse(player);
     }
 
+    /** Whether Backhand counts the item as a tool (what it breaks blocks with from the off hand). */
+    public static boolean isTool(ItemStack stack) {
+        return stack != null && CompatibilityPolicy.isBackhandLoaded() && Api.isTool(stack);
+    }
+
     /** How far through its swing the off hand is, 0 when it isn't swinging. */
     public static float getOffSwingProgress(EntityPlayer player, float partialTicks) {
         if (player == null || !CompatibilityPolicy.isBackhandLoaded()) return 0;
@@ -37,6 +42,10 @@ public final class BackhandCompat {
     private static final class Api {
         static ItemStack getOffhandItem(EntityPlayer player) {
             return BackhandUtils.getOffhandItem(player);
+        }
+
+        static boolean isTool(ItemStack stack) {
+            return BackhandUtils.isItemTool(stack.getItem());
         }
 
         static boolean isOffhandItemInUse(EntityPlayer player) {
