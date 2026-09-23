@@ -344,6 +344,29 @@ final class AnimationBaking {
     }
 
     /**
+     * Bakes a loop from what an animation sets at each sample (its targets), on models from {@code factory}: for
+     * animations that set their parts outright rather than easing into them (e.g. the spider's), on any rig.
+     */
+    static <M> String bakeTargets(String name, double periodTicks, Map<String, Function<M, float[]>> channels,
+        Map<String, String[]> templates, java.util.function.Supplier<M> factory, BiConsumer<M, Float> animate) {
+        int samples = (int)Math.round(periodTicks * 8);
+        Map<String, List<float[]>> recorded = new LinkedHashMap<String, List<float[]>>();
+        for (String channel : channels.keySet()) recorded.put(channel, new ArrayList<float[]>());
+        for (int k = 0; k <= samples; ++k) {
+            M model = factory.get();
+            animate.accept(model, (float)(periodTicks * k / samples));
+            for (Map.Entry<String, Function<M, float[]>> channel : channels.entrySet()) {
+                recorded.get(channel.getKey()).add(channel.getValue().apply(model));
+            }
+        }
+        Map<String, String> tracks = new LinkedHashMap<String, String>();
+        for (String channel : channels.keySet()) {
+            tracks.put(channel, keyframes(unwrap(channel, recorded.get(channel)), periodTicks / 20.0, samples, templates.get(channel)));
+        }
+        return animation(name, periodTicks / 20.0, tracks);
+    }
+
+    /**
      * Bakes something that happens once (e.g. a jump): {@code before} settles for 400 ticks, then {@code animate}
      * runs for {@code durationTicks} (its ticks count from the start) and is recorded every eighth of a tick as an
      * animation that holds its last frame.

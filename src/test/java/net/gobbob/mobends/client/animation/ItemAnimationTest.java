@@ -38,10 +38,15 @@ class ItemAnimationTest {
     @Test
     void everyShippedAnimationUsesRigBones() throws Exception {
         for (Path file : animationFiles()) {
+            // Each file animates the rig of its folder's model.
+            String folder = file.getParent().getFileName().toString();
+            java.util.List<String> bones = folder.equals("spider") ? new net.gobbob.mobends.client.model.entity.ModelBendsSpider().rigBones()
+                : folder.equals("zombie") ? new net.gobbob.mobends.client.model.entity.ModelBendsZombie().rigBones()
+                : new net.gobbob.mobends.client.model.entity.ModelBendsPlayer().rigBones();
             for (Animation animation : load(file).animations().values()) {
                 for (BoneAnimation track : animation.boneAnimations()) {
                     String id = track.boneName();
-                    assertTrue(PlayerRig.ROOT.equals(id) || Bone.byId(id) != null,
+                    assertTrue(PlayerRig.ROOT.equals(id) || bones.contains(id),
                         file + ": " + animation.name() + " animates unknown bone " + id);
                 }
             }

@@ -1,5 +1,13 @@
 package net.gobbob.mobends.client.model.entity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import net.gobbob.mobends.MoBends;
+import net.gobbob.mobends.client.animation.AnimatedModel;
+import net.gobbob.mobends.client.animation.BendsAnimator;
+import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.data.Data_Spider;
 import net.gobbob.mobends.util.SmoothVector3f;
@@ -7,11 +15,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.model.ModelSpider;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.ResourceLocation;
+import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 public class ModelBendsSpider
-extends ModelSpider {
+extends ModelSpider implements AnimatedModel {
     public ModelRenderer spiderHead;
     public ModelRenderer spiderNeck;
     public ModelRenderer spiderBody;
@@ -35,6 +44,115 @@ extends ModelSpider {
     public SmoothVector3f renderRotation = new SmoothVector3f();
     public float headRotationX;
     public float headRotationY;
+    public float limbSwing;
+    public float limbSwingAmount;
+
+    public static final ResourceLocation WALK = new ResourceLocation(MoBends.MODID, "spider/walk");
+
+    /**
+     * The rig: head, neck and body, and eight legs, {@code rightLeg1} to {@code rightLeg4} and {@code leftLeg1} to
+     * {@code leftLeg4} from front to back, each under an aim bone that turns it forward or back and with a foreleg.
+     */
+    private static final List<String> BONES;
+    private static final int[] RIGHT_LEGS = {7, 5, 3, 1}, LEFT_LEGS = {8, 6, 4, 2};
+
+    static {
+        List<String> bones = new ArrayList<String>(Arrays.asList("body", "neck", "head"));
+        for (int i = 1; i <= 4; ++i) {
+            for (String side : new String[] {"right", "left"}) {
+                bones.add(side + "Leg" + i + "Aim");
+                bones.add(side + "Leg" + i);
+                bones.add(side + "ForeLeg" + i);
+            }
+        }
+        BONES = Collections.unmodifiableList(bones);
+    }
+
+    @Override
+    public List<String> rigBones() {
+        return BONES;
+    }
+
+    @Override
+    public String rigParent(String bone) {
+        if (bone.contains("ForeLeg")) return bone.replace("ForeLeg", "Leg");
+        if (bone.endsWith("Aim")) return PlayerRig.ROOT;
+        if (bone.contains("Leg")) return bone + "Aim";
+        return BONES.contains(bone) ? PlayerRig.ROOT : null;
+    }
+
+    @Override
+    public ModelRendererBends rigPart(String bone) {
+        switch (bone) {
+            case "head": return (ModelRendererBends)this.spiderHead;
+            case "neck": return (ModelRendererBends)this.spiderNeck;
+            case "body": return (ModelRendererBends)this.spiderBody;
+            default:
+        }
+        if (bone.endsWith("Aim") || !bone.contains("Leg")) return null;
+        boolean right = bone.startsWith("right"), fore = bone.contains("ForeLeg");
+        int index;
+        try {
+            index = Integer.parseInt(bone.substring(bone.length() - 1));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        if (index < 1 || index > 4) return null;
+        int leg = (right ? RIGHT_LEGS : LEFT_LEGS)[index - 1];
+        return (ModelRendererBends)(fore ? this.foreLegs()[leg - 1] : this.legs()[leg - 1]);
+    }
+
+    @Override
+    public String rigAimed(String bone) {
+        return bone.endsWith("Aim") && BONES.contains(bone) ? bone.substring(0, bone.length() - 3) : null;
+    }
+
+    @Override
+    public String rigAim(String bone) {
+        return bone.contains("Leg") && !bone.contains("ForeLeg") && !bone.endsWith("Aim") ? bone + "Aim" : null;
+    }
+
+    /** The legs, spiderLeg1 to spiderLeg8. */
+    public ModelRenderer[] legs() {
+        return new ModelRenderer[] {this.spiderLeg1, this.spiderLeg2, this.spiderLeg3, this.spiderLeg4,
+            this.spiderLeg5, this.spiderLeg6, this.spiderLeg7, this.spiderLeg8};
+    }
+
+    public ModelRendererBends[] foreLegs() {
+        return new ModelRendererBends[] {this.spiderForeLeg1, this.spiderForeLeg2, this.spiderForeLeg3, this.spiderForeLeg4,
+            this.spiderForeLeg5, this.spiderForeLeg6, this.spiderForeLeg7, this.spiderForeLeg8};
+    }
+
+    /** The spider's whole-body transform (resting at 0), applied by its renderer. */
+    @Override
+    public SmoothVector3f rootOffset() {
+        return this.renderOffset;
+    }
+
+    @Override
+    public SmoothVector3f rootRotation() {
+        return this.renderRotation;
+    }
+
+    @Override
+    public float headPitch() {
+        return this.headRotationX;
+    }
+
+    @Override
+    public float headYaw() {
+        return this.headRotationY;
+    }
+
+    @Override
+    public float limbSwing() {
+        return this.limbSwing;
+    }
+
+    @Override
+    public float limbSwingAmount() {
+        return this.limbSwingAmount;
+    }
 
     public ModelBendsSpider() {
         float f = 0.0f;
@@ -197,65 +315,35 @@ extends ModelSpider {
             this.spiderForeLeg6.resetScale();
             this.spiderForeLeg7.resetScale();
             this.spiderForeLeg8.resetScale();
-            float f9 = -(MathHelper.cos(p_78087_1_ * 0.6662f * 2.0f + 0.0f) * 0.4f) * p_78087_2_;
-            float f10 = -(MathHelper.cos(p_78087_1_ * 0.6662f * 2.0f + (float)Math.PI) * 0.4f) * p_78087_2_;
-            float f11 = -(MathHelper.cos(p_78087_1_ * 0.6662f * 2.0f + 1.5707964f) * 0.4f) * p_78087_2_;
-            float f12 = -(MathHelper.cos(p_78087_1_ * 0.6662f * 2.0f + 4.712389f) * 0.4f) * p_78087_2_;
-            float f13 = Math.abs(MathHelper.sin(p_78087_1_ * 0.6662f + 0.0f) * 0.4f) * p_78087_2_;
-            float f14 = Math.abs(MathHelper.sin(p_78087_1_ * 0.6662f + (float)Math.PI) * 0.4f) * p_78087_2_;
-            float f15 = Math.abs(MathHelper.sin(p_78087_1_ * 0.6662f + 1.5707964f) * 0.4f) * p_78087_2_;
-            float f16 = Math.abs(MathHelper.sin(p_78087_1_ * 0.6662f + 4.712389f) * 0.4f) * p_78087_2_;
-            ((ModelRendererBends)this.spiderHead).rotation.setY(p_78087_4_);
-            ((ModelRendererBends)this.spiderHead).rotation.setX(p_78087_5_);
-            float f6 = 0.7853982f;
-            float sm = 40.0f;
-            ((ModelRendererBends)this.spiderLeg1).rotation.setZ(sm + f13 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg2).rotation.setZ(-sm - f13 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg3).rotation.setZ(sm + f14 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg4).rotation.setZ(-sm - f14 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg5).rotation.setZ(sm + f15 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg6).rotation.setZ(-sm - f15 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg7).rotation.setZ(sm + f16 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg8).rotation.setZ(-sm - f16 / (float)Math.PI * 180.0f);
-            float f7 = -0.0f;
-            float f8 = 0.3926991f;
-            ((ModelRendererBends)this.spiderLeg1).pre_rotation.setY(-70.0f + f9 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg2).pre_rotation.setY(70.0f - f9 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg3).pre_rotation.setY(-40.0f + f10 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg4).pre_rotation.setY(40.0f - f10 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg5).pre_rotation.setY(40.0f + f11 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg6).pre_rotation.setY(-40.0f - f11 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg7).pre_rotation.setY(70.0f + f12 / (float)Math.PI * 180.0f);
-            ((ModelRendererBends)this.spiderLeg8).pre_rotation.setY(-70.0f - f12 / (float)Math.PI * 180.0f);
-            float foreBend = 89.0f;
-            this.spiderForeLeg1.rotation.setSmoothZ(-foreBend);
-            this.spiderForeLeg2.rotation.setSmoothZ(foreBend);
-            this.spiderForeLeg3.rotation.setSmoothZ(-foreBend);
-            this.spiderForeLeg4.rotation.setSmoothZ(foreBend);
-            this.spiderForeLeg5.rotation.setSmoothZ(-foreBend);
-            this.spiderForeLeg6.rotation.setSmoothZ(foreBend);
-            this.spiderForeLeg7.rotation.setSmoothZ(-foreBend);
-            this.spiderForeLeg8.rotation.setSmoothZ(foreBend);
-            ((ModelRendererBends)this.spiderBody).rotation.setX(-30.0f);
-            ((ModelRendererBends)this.spiderHead).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderNeck).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderBody).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg1).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg2).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg3).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg4).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg5).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg6).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg7).update(p_78087_6_);
-            ((ModelRendererBends)this.spiderLeg8).update(p_78087_6_);
-            this.spiderForeLeg1.update(p_78087_6_);
-            this.spiderForeLeg2.update(p_78087_6_);
-            this.spiderForeLeg3.update(p_78087_6_);
-            this.spiderForeLeg4.update(p_78087_6_);
-            this.spiderForeLeg5.update(p_78087_6_);
-            this.spiderForeLeg6.update(p_78087_6_);
-            this.spiderForeLeg7.update(p_78087_6_);
-            this.spiderForeLeg8.update(p_78087_6_);
+            this.limbSwing = p_78087_1_;
+            this.limbSwingAmount = p_78087_2_;
+            this.renderOffset.setSmooth(new Vector3f(0.0f, 0.0f, 0.0f), 0.5f);
+            this.renderRotation.setSmooth(new Vector3f(0.0f, 0.0f, 0.0f), 0.5f);
+            // spider/walk.animation.json: the legs' stride, timed by the limb swing, and its swing layer by how
+            // strongly they swing. Without it the spider isn't posed (the animator logs the missing file).
+            BendsAnimator.playStride(this, data, WALK, "walk", "spider");
+            ((ModelRendererBends)this.spiderHead).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderNeck).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderBody).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg1).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg2).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg3).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg4).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg5).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg6).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg7).update(data.ticksPerFrame);
+            ((ModelRendererBends)this.spiderLeg8).update(data.ticksPerFrame);
+            this.spiderForeLeg1.update(data.ticksPerFrame);
+            this.spiderForeLeg2.update(data.ticksPerFrame);
+            this.spiderForeLeg3.update(data.ticksPerFrame);
+            this.spiderForeLeg4.update(data.ticksPerFrame);
+            this.spiderForeLeg5.update(data.ticksPerFrame);
+            this.spiderForeLeg6.update(data.ticksPerFrame);
+            this.spiderForeLeg7.update(data.ticksPerFrame);
+            this.spiderForeLeg8.update(data.ticksPerFrame);
+            this.renderOffset.update(data.ticksPerFrame);
+            this.renderRotation.update(data.ticksPerFrame);
+            this.renderRotation.wrapTurns(360.0f);
             data.updatedThisFrame = true;
         }
         Data_Spider.get(argEntity.getEntityId()).syncModelInfo(this);

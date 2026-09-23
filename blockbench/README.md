@@ -16,6 +16,11 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 generated from `ModelBendsZombie` by `ZombieAnimationTest` the same way. With Et Futurum Requiem, its zombie villagers
 (the 1.14 look, with professions) are drawn on the same rig, so the zombie's animations play on them too.
 
+`spider.geo.json` is the spider (the cave spider too, drawn smaller): head, neck and body, and eight legs,
+`rightLeg1` to `rightLeg4` and `leftLeg1` to `leftLeg4` from front to back, each under an aim bone
+(`rightLeg1Aim`, ...) that turns it forward or back before it lifts, and with a foreleg. Generated from
+`ModelBendsSpider` by `SpiderAnimationTest`.
+
 ## Using it
 
 1. In game, run `/evenmobends blockbench` (add `slim` or `classic` to override the arm width detected from your
@@ -130,6 +135,10 @@ texture).
 - `zombie/walk.animation.json`: `walk` and `walk_swing`, timed by the stride like the player's walk, and
   `walk_arms_up` over them while the zombie reaches forward (it takes turns at that every few seconds).
   `ZombieAnimationTest` keeps them within 1.5 degrees of the Java zombie (`MOBENDS_BAKE_ZOMBIE=1` to bake again).
+- `spider/walk.animation.json`: `walk` (the legs spread, the body tilted) and `walk_swing` (the legs' stride at
+  full swing) over it by how strongly the legs swing, timed by the stride. `SpiderAnimationTest` keeps it within 1.5
+  degrees of the original Java walk (`MOBENDS_BAKE_SPIDER=1` to bake again). Export the spider with
+  `/evenmobends blockbench spider`. The root moves and turns the whole spider.
 - A zombie hitting with something in its hand (a zombie pigman's sword) plays the player's sword swings from
   `player/sword.animation.json`, one per hit through the combo. The server makes such zombies swing on every hit,
   which vanilla pigmen don't, so this needs Mo' Bends on the server (singleplayer always has it). Salamander loads them through the resource manager, so a resource pack can replace any of

@@ -307,7 +307,7 @@ public final class BendsAnimator {
     public static Animation find(ResourceLocation file, String name) {
         Animation animation = GeckoLibResources.getBakedAnimations().getAnimations(file, null).getAnimation(name);
         if (animation == null && reportedMissing.add(file + "#" + name)) {
-            BendsLogger.log("Missing animation " + name + " in " + file + "; using the built-in pose", BendsLogger.INFO);
+            BendsLogger.log("Missing animation " + name + " in " + file + "; skipping it", BendsLogger.ERROR);
         }
         return animation;
     }

@@ -1,0 +1,1724 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.mobends.spider",
+        "texture_width": 64,
+        "texture_height": 32,
+        "visible_bounds_width": 3,
+        "visible_bounds_height": 3,
+        "visible_bounds_offset": [
+          0,
+          1.5,
+          0
+        ]
+      },
+      "bones": [
+        {
+          "name": "root",
+          "pivot": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "body",
+          "parent": "root",
+          "pivot": [
+            0,
+            9,
+            9
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -5,
+                5,
+                3
+              ],
+              "size": [
+                10,
+                8,
+                12
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    22,
+                    24
+                  ],
+                  "uv_size": [
+                    12,
+                    8
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    24
+                  ],
+                  "uv_size": [
+                    12,
+                    8
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    12,
+                    12
+                  ],
+                  "uv_size": [
+                    10,
+                    12
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    22,
+                    24
+                  ],
+                  "uv_size": [
+                    10,
+                    -12
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    12,
+                    24
+                  ],
+                  "uv_size": [
+                    10,
+                    8
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    34,
+                    24
+                  ],
+                  "uv_size": [
+                    10,
+                    8
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "neck",
+          "parent": "root",
+          "pivot": [
+            0,
+            9,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -3,
+                6,
+                -3
+              ],
+              "size": [
+                6,
+                6,
+                6
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    12,
+                    6
+                  ],
+                  "uv_size": [
+                    6,
+                    6
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    0,
+                    6
+                  ],
+                  "uv_size": [
+                    6,
+                    6
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    6,
+                    0
+                  ],
+                  "uv_size": [
+                    6,
+                    6
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    12,
+                    6
+                  ],
+                  "uv_size": [
+                    6,
+                    -6
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    6,
+                    6
+                  ],
+                  "uv_size": [
+                    6,
+                    6
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    18,
+                    6
+                  ],
+                  "uv_size": [
+                    6,
+                    6
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "head",
+          "parent": "root",
+          "pivot": [
+            0,
+            9,
+            -3
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -4,
+                5,
+                -11
+              ],
+              "size": [
+                8,
+                8,
+                8
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    48,
+                    12
+                  ],
+                  "uv_size": [
+                    8,
+                    8
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    32,
+                    12
+                  ],
+                  "uv_size": [
+                    8,
+                    8
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    40,
+                    4
+                  ],
+                  "uv_size": [
+                    8,
+                    8
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    48,
+                    12
+                  ],
+                  "uv_size": [
+                    8,
+                    -8
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    40,
+                    12
+                  ],
+                  "uv_size": [
+                    8,
+                    8
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    56,
+                    12
+                  ],
+                  "uv_size": [
+                    8,
+                    8
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightLeg1Aim",
+          "parent": "root",
+          "pivot": [
+            -4,
+            9,
+            -1
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightLeg1",
+          "parent": "rightLeg1Aim",
+          "pivot": [
+            -4,
+            9,
+            -1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15,
+                7.99,
+                -2.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightForeLeg1",
+          "parent": "rightLeg1",
+          "pivot": [
+            -15,
+            10,
+            -1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -30,
+                8,
+                -2
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftLeg1Aim",
+          "parent": "root",
+          "pivot": [
+            4,
+            9,
+            -1
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftLeg1",
+          "parent": "leftLeg1Aim",
+          "pivot": [
+            4,
+            9,
+            -1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                7.99,
+                -2.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftForeLeg1",
+          "parent": "leftLeg1",
+          "pivot": [
+            15,
+            10,
+            -1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                15,
+                8,
+                -2
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightLeg2Aim",
+          "parent": "root",
+          "pivot": [
+            -4,
+            9,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightLeg2",
+          "parent": "rightLeg2Aim",
+          "pivot": [
+            -4,
+            9,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15,
+                7.99,
+                -1.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightForeLeg2",
+          "parent": "rightLeg2",
+          "pivot": [
+            -15,
+            10,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -30,
+                8,
+                -1
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftLeg2Aim",
+          "parent": "root",
+          "pivot": [
+            4,
+            9,
+            0
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftLeg2",
+          "parent": "leftLeg2Aim",
+          "pivot": [
+            4,
+            9,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                7.99,
+                -1.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftForeLeg2",
+          "parent": "leftLeg2",
+          "pivot": [
+            15,
+            10,
+            0
+          ],
+          "cubes": [
+            {
+              "origin": [
+                15,
+                8,
+                -1
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightLeg3Aim",
+          "parent": "root",
+          "pivot": [
+            -4,
+            9,
+            1
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightLeg3",
+          "parent": "rightLeg3Aim",
+          "pivot": [
+            -4,
+            9,
+            1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15,
+                7.99,
+                -0.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightForeLeg3",
+          "parent": "rightLeg3",
+          "pivot": [
+            -15,
+            10,
+            1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -30,
+                8,
+                0
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftLeg3Aim",
+          "parent": "root",
+          "pivot": [
+            4,
+            9,
+            1
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftLeg3",
+          "parent": "leftLeg3Aim",
+          "pivot": [
+            4,
+            9,
+            1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                7.99,
+                -0.01
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftForeLeg3",
+          "parent": "leftLeg3",
+          "pivot": [
+            15,
+            10,
+            1
+          ],
+          "cubes": [
+            {
+              "origin": [
+                15,
+                8,
+                0
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightLeg4Aim",
+          "parent": "root",
+          "pivot": [
+            -4,
+            9,
+            2
+          ],
+          "cubes": []
+        },
+        {
+          "name": "rightLeg4",
+          "parent": "rightLeg4Aim",
+          "pivot": [
+            -4,
+            9,
+            2
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -15,
+                7.99,
+                0.99
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "rightForeLeg4",
+          "parent": "rightLeg4",
+          "pivot": [
+            -15,
+            10,
+            2
+          ],
+          "cubes": [
+            {
+              "origin": [
+                -30,
+                8,
+                1
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftLeg4Aim",
+          "parent": "root",
+          "pivot": [
+            4,
+            9,
+            2
+          ],
+          "cubes": []
+        },
+        {
+          "name": "leftLeg4",
+          "parent": "leftLeg4Aim",
+          "pivot": [
+            4,
+            9,
+            2
+          ],
+          "cubes": [
+            {
+              "origin": [
+                3,
+                7.99,
+                0.99
+              ],
+              "size": [
+                12,
+                2.02,
+                2.02
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "leftForeLeg4",
+          "parent": "leftLeg4",
+          "pivot": [
+            15,
+            10,
+            2
+          ],
+          "cubes": [
+            {
+              "origin": [
+                15,
+                8,
+                1
+              ],
+              "size": [
+                15,
+                2,
+                2
+              ],
+              "uv": {
+                "west": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "east": {
+                  "uv": [
+                    18,
+                    2
+                  ],
+                  "uv_size": [
+                    2,
+                    2
+                  ]
+                },
+                "up": {
+                  "uv": [
+                    20,
+                    0
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "down": {
+                  "uv": [
+                    28,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    -2
+                  ]
+                },
+                "north": {
+                  "uv": [
+                    20,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                },
+                "south": {
+                  "uv": [
+                    30,
+                    2
+                  ],
+                  "uv_size": [
+                    8,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
