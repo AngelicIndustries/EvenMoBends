@@ -392,8 +392,8 @@ extends RenderPlayer {
     /**
      * After the left arm's postRender, for Backhand's off-hand item: moves to the grip and the leftItem bone, then
      * mirrored like the right hand's placement, and undoes the offsets Backhand applies next for vanilla's arm (it
-     * moves by the arm's pivot, mirrors, moves by it again, then 7 px down), so the item lands as the right hand's
-     * would, mirrored.
+     * moves by minus the arm's pivot, mirrors, moves by (-x, y, -z) of it, then 7 px down), so the item lands as the
+     * right hand's would, mirrored.
      */
     private static void placeOffhandItem(ModelBendsPlayer model) {
         float s = 0.0625f;
@@ -403,9 +403,9 @@ extends RenderPlayer {
         GL11.glScalef(-1.0f, 1.0f, 1.0f);
         // The right hand's (-1, -2, 1) px from the grip, then Backhand's (-1, 7, 1) undone.
         GL11.glTranslatef(0.0f, -9.0f * s, 0.0f);
-        GL11.glTranslatef(-arm.rotationPointX * s, -arm.rotationPointY * s, -arm.rotationPointZ * s);
+        GL11.glTranslatef(arm.rotationPointX * s, -arm.rotationPointY * s, arm.rotationPointZ * s);
         GL11.glScalef(-1.0f, 1.0f, 1.0f);
-        GL11.glTranslatef(-arm.rotationPointX * s, -arm.rotationPointY * s, -arm.rotationPointZ * s);
+        GL11.glTranslatef(arm.rotationPointX * s, arm.rotationPointY * s, arm.rotationPointZ * s);
     }
 
     /** The modelview the player model draws in, while drawing its equipment with the sword trail on. */
