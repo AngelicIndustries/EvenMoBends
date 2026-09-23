@@ -25,7 +25,7 @@ public class CommandEvenMoBends extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/evenmobends play <file> <animation> | /evenmobends stop | /evenmobends blockbench [slim|classic]";
+        return "/evenmobends play <file> <animation> | /evenmobends stop | /evenmobends blockbench [slim|classic|zombie]";
     }
 
     @Override
@@ -41,9 +41,12 @@ public class CommandEvenMoBends extends CommandBase {
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length >= 1 && args[0].equals("blockbench")) {
-            Boolean slim = args.length > 1 ? Boolean.valueOf(args[1].equals("slim")) : null;
+            Boolean slim = args.length > 1 && !args[1].equals("zombie") ? Boolean.valueOf(args[1].equals("slim")) : null;
             try {
-                java.io.File file = BlockbenchExport.export(Minecraft.getMinecraft().thePlayer, slim);
+                java.io.File file = args.length > 1 && args[1].equals("zombie")
+                    ? BlockbenchExport.exportMob("zombie", new net.gobbob.mobends.client.model.entity.ModelBendsZombie(),
+                        "textures/entity/zombie/zombie.png")
+                    : BlockbenchExport.export(Minecraft.getMinecraft().thePlayer, slim);
                 sender.addChatMessage(new ChatComponentText("Wrote " + file.getAbsolutePath()));
             } catch (java.io.IOException e) {
                 sender.addChatMessage(new ChatComponentText("Couldn't write the Blockbench project: " + e.getMessage()));
@@ -69,7 +72,7 @@ public class CommandEvenMoBends extends CommandBase {
     @SuppressWarnings("rawtypes")
     public List addTabCompletionOptions(ICommandSender sender, String[] args) {
         if (args.length == 1) return getListOfStringsMatchingLastWord(args, "play", "stop", "blockbench");
-        if (args.length == 2 && args[0].equals("blockbench")) return getListOfStringsMatchingLastWord(args, "slim", "classic");
+        if (args.length == 2 && args[0].equals("blockbench")) return getListOfStringsMatchingLastWord(args, "slim", "classic", "zombie");
         if (args.length == 2 && args[0].equals("play")) return getListOfStringsMatchingLastWord(args, files());
         if (args.length == 3 && args[0].equals("play")) {
             List<String> names = new ArrayList<String>();

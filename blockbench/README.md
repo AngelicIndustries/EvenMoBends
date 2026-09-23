@@ -12,6 +12,9 @@ Do not edit these files by hand. After changing the player model, regenerate the
 MOBENDS_UPDATE_RIG=1 ./gradlew test
 ```
 
+`zombie.geo.json` is the zombie (also the zombie villager and zombie pigman): the player's rig without item bones,
+generated from `ModelBendsZombie` by `ZombieAnimationTest` the same way.
+
 ## Using it
 
 1. In game, run `/evenmobends blockbench` (add `slim` or `classic` to override the arm width detected from your
@@ -116,7 +119,16 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   players' swings with a block count as placing). A bow drawn in Backhand's off hand plays the bow mirrored.
   Mirrored animations are given the look's yaw reflected, so the head still turns where the player looks.
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
-- `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones. Salamander loads them through the resource manager, so a resource pack can replace any of
+- `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones.
+
+Mobs have their own folders, named `animation.mobends.<mob>.<name>` inside, e.g. `zombie/walk.animation.json`'s
+`animation.mobends.zombie.walk`. Export a mob's project with `/evenmobends blockbench zombie` (it uses the vanilla
+texture).
+
+- `zombie/stand.animation.json`: `stand`, a held pose.
+- `zombie/walk.animation.json`: `walk` and `walk_swing`, timed by the stride like the player's walk, and
+  `walk_arms_up` over them while the zombie reaches forward (it takes turns at that every few seconds).
+  `ZombieAnimationTest` keeps them within 1.5 degrees of the Java zombie (`MOBENDS_BAKE_ZOMBIE=1` to bake again). Salamander loads them through the resource manager, so a resource pack can replace any of
 them at the same path and F3+T reloads it.
 
 To edit one:

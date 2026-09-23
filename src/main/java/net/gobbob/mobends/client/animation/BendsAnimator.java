@@ -227,7 +227,7 @@ public final class BendsAnimator {
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
     public static boolean playLoop(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without, boolean mirror) {
-        String animation = "animation.mobends.player." + name;
+        String animation = animationName(file, name);
         Animation loaded = find(file, animation);
         if (loaded == null) return false;
         double seconds = loaded.length() > 0 ? (data.ticks / 20.0) % loaded.length() : 0;
@@ -254,7 +254,7 @@ public final class BendsAnimator {
     /** As above; {@code mirror} plays it on the other side (see {@link #mirror}). */
     public static boolean playPose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot,
         float weight, Set<String> without, boolean mirror) {
-        return play(model, data, file, "animation.mobends.player." + name, 0, slot, LOCOMOTION_BLEND, weight, without, mirror);
+        return play(model, data, file, animationName(file, name), 0, slot, LOCOMOTION_BLEND, weight, without, mirror);
     }
 
     /**
@@ -265,7 +265,7 @@ public final class BendsAnimator {
      * @return false if the file or either animation is missing.
      */
     public static boolean playStride(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
-        String main = "animation.mobends.player." + name, swing = main + "_swing";
+        String main = animationName(file, name), swing = main + "_swing";
         Animation mainAnimation = find(file, main), swingAnimation = find(file, swing);
         if (mainAnimation == null || swingAnimation == null) return false;
         double stride = model.limbSwing() * 0.6662 / (2 * Math.PI);
@@ -282,12 +282,21 @@ public final class BendsAnimator {
      * @return false if the file or animation is missing.
      */
     public static boolean playStridePose(AnimatedModel model, EntityData data, ResourceLocation file, String name, String slot) {
-        String animation = "animation.mobends.player." + name;
+        String animation = animationName(file, name);
         Animation loaded = find(file, animation);
         if (loaded == null) return false;
         double stride = model.limbSwing() * 0.6662 / (2 * Math.PI);
         stride -= Math.floor(stride);
         return play(model, data, file, animation, stride * loaded.length(), slot, LOCOMOTION_BLEND);
+    }
+
+    /**
+     * The full name of animation {@code name} in {@code file}, after the file's folder: {@code player/walk}'s
+     * {@code walk} is {@code animation.mobends.player.walk}, {@code zombie/walk}'s {@code animation.mobends.zombie.walk}.
+     */
+    public static String animationName(ResourceLocation file, String name) {
+        String path = file.getResourcePath();
+        return "animation.mobends." + path.substring(0, Math.max(0, path.indexOf('/'))) + "." + name;
     }
 
     /** From the usual ease rate toward following keyframes, over a blend's progress from 0 to 1. */

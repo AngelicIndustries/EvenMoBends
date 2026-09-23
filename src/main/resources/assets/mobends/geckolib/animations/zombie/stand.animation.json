@@ -1,0 +1,20 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mobends.zombie.stand": {
+			"loop": true,
+			"animation_length": 1.0000,
+			"bones": {
+				"root": {"position": {"0.0000": ["q.mobends_keep", -3, "q.mobends_keep"]}},
+				"body": {"rotation": {"0.0000": [30, "q.mobends_keep", "q.mobends_keep"]}},
+				"head": {"rotation": {"0.0000": ["q.mobends_head_pitch + -30", "q.mobends_head_yaw", "q.mobends_keep"]}},
+				"rightArm": {"rotation": {"0.0000": [-30, "q.mobends_keep", "q.mobends_keep"]}},
+				"leftArm": {"rotation": {"0.0000": [-30, "q.mobends_keep", "q.mobends_keep"]}},
+				"rightLeg": {"rotation": {"0.0000": [-20, "q.mobends_keep", 10]}},
+				"rightForeLeg": {"rotation": {"0.0000": [25, "q.mobends_keep", "q.mobends_keep"]}},
+				"leftLeg": {"rotation": {"0.0000": [-20, "q.mobends_keep", -10]}},
+				"leftForeLeg": {"rotation": {"0.0000": [25, "q.mobends_keep", "q.mobends_keep"]}}
+			}
+		}
+	}
+}

@@ -138,15 +138,23 @@ public final class PlayerRig {
 
     /** The pivot of a bone in model space at rest (Y down, pixels). */
     public static float[] restPivot(ModelBendsPlayer model, Bone bone) {
-        if (bone.aimed() != null) return restPivot(model, bone.aimed());
-        if (bone.holdingArm() != null) {
-            float[] grip = restPivot(model, bone.holdingArm());
+        return restPivot((AnimatedModel)model, bone.id);
+    }
+
+    /**
+     * The pivot of any rig's bone in model space at rest (Y down, pixels): an aim bone at its part's pivot, an item
+     * bone at its hand's grip, other bones where their parts' pivots add up.
+     */
+    public static float[] restPivot(AnimatedModel model, String bone) {
+        if (model.rigAimed(bone) != null) return restPivot(model, model.rigAimed(bone));
+        if (model.rigHoldingArm(bone) != null) {
+            float[] grip = restPivot(model, model.rigHoldingArm(bone));
             grip[1] += GRIP_DROP;
             return grip;
         }
         float[] pivot = new float[3];
-        for (Bone b = bone; b != null; b = b.parentBone()) {
-            ModelRenderer part = b.part(model);
+        for (String b = bone; b != null && !ROOT.equals(b); b = model.rigParent(b)) {
+            ModelRenderer part = model.rigPart(b);
             if (part == null) continue;
             pivot[0] += part.rotationPointX;
             pivot[1] += part.rotationPointY;
@@ -155,12 +163,19 @@ public final class PlayerRig {
         return pivot;
     }
 
-    /** Exports the model's current (rest) geometry as a Bedrock/GeckoLib {@code .geo.json}. */
+    /** The player's geometry file (Bedrock 1.12), as Blockbench and GeckoLib read it. */
     public static JsonObject exportGeometry(ModelBendsPlayer model, String identifier) {
+        return exportGeometry((AnimatedModel)model, identifier);
+    }
+
+    /** Any rig's geometry file (Bedrock 1.12): its bones with their pivots and each part's cubes. */
+    public static JsonObject exportGeometry(AnimatedModel model, String identifier) {
+        ModelRenderer anyPart = null;
+        for (String bone : model.rigBones()) if (anyPart == null) anyPart = model.rigPart(bone);
         JsonObject description = new JsonObject();
         description.addProperty("identifier", identifier);
-        description.addProperty("texture_width", (int)model.textureWidth);
-        description.addProperty("texture_height", (int)model.textureHeight);
+        description.addProperty("texture_width", (int)anyPart.textureWidth);
+        description.addProperty("texture_height", (int)anyPart.textureHeight);
         description.addProperty("visible_bounds_width", 3);
         description.addProperty("visible_bounds_height", 3);
         description.add("visible_bounds_offset", vector(0, 1.5f, 0));
@@ -170,14 +185,14 @@ public final class PlayerRig {
         root.addProperty("name", ROOT);
         root.add("pivot", vector(0, 0, 0));
         bones.add(root);
-        for (Bone bone : Bone.values()) {
+        for (String bone : model.rigBones()) {
             float[] pivot = restPivot(model, bone);
             JsonObject json = new JsonObject();
-            json.addProperty("name", bone.id);
-            json.addProperty("parent", bone.parent);
+            json.addProperty("name", bone);
+            json.addProperty("parent", model.rigParent(bone));
             json.add("pivot", vector(pivot[0], 24 - pivot[1], pivot[2]));
             JsonArray cubes = new JsonArray();
-            ModelRendererBends part = bone.part(model);
+            ModelRendererBends part = model.rigPart(bone);
             if (part != null) addCubes(cubes, part, pivot, model);
             json.add("cubes", cubes);
             bones.add(json);
@@ -194,8 +209,7 @@ public final class PlayerRig {
         return file;
     }
 
-    /** Adds the part's own boxes and those of visible, non-bone descendants (skin layers, arm variants). */
-    private static void addCubes(JsonArray cubes, ModelRenderer part, float[] origin, ModelBendsPlayer model) {
+    private static void addCubes(JsonArray cubes, ModelRenderer part, float[] origin, AnimatedModel model) {
         if (!part.showModel || part.isHidden) return;
         for (Object box : part.cubeList) {
             cubes.add(cube((ModelBoxBends)box, origin, part.textureWidth, part.textureHeight));
@@ -212,9 +226,9 @@ public final class PlayerRig {
         }
     }
 
-    private static boolean isBone(ModelBendsPlayer model, ModelRenderer part) {
-        for (Bone bone : Bone.values()) {
-            if (bone.part(model) == part) return true;
+    private static boolean isBone(AnimatedModel model, ModelRenderer part) {
+        for (String bone : model.rigBones()) {
+            if (model.rigPart(bone) == part) return true;
         }
         return false;
     }

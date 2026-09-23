@@ -203,6 +203,37 @@ public final class BlockbenchExport {
     // --- The Blockbench project ------------------------------------------------------------------------------------
 
     static JsonObject project(ModelBendsPlayer model, String name, Textures textures) throws IOException {
+        float[] grip = PlayerRig.restPivot(model, Bone.RIGHT_ITEM);
+        JsonArray gripPivot = vector(grip[0], 24 - grip[1], grip[2]);
+        return project(model, name, atlas(textures), "skin and preview items", PLAYER_PLACEHOLDERS, (groups, elements) -> {
+            for (String itemBone : new String[] {"rightItem", "rightItemFree"}) {
+                boolean inHand = itemBone.equals("rightItem");
+                addPreview(groups.get(itemBone), elements, itemBone + " preview sword", gripPivot, swordCubes(grip, textures.sword), inHand);
+                List<JsonObject> grass = new ArrayList<JsonObject>();
+                grass.add(grassCube(grip));
+                addPreview(groups.get(itemBone), elements, itemBone + " preview grass block", gripPivot, grass, false);
+            }
+        });
+    }
+
+    private static final String PLAYER_PLACEHOLDERS = "q.mobends_head_pitch = 0;\nq.mobends_head_yaw = 0;\nq.mobends_ticks = 0;\n"
+        + "q.mobends_ticks_after_punch = 0;\nq.mobends_holding = 1;\nq.mobends_offhand_holding = 0;\nq.mobends_travel_pitch = 0;";
+    private static final String MOB_PLACEHOLDERS = "q.mobends_head_pitch = 0;\nq.mobends_head_yaw = 0;\nq.mobends_ticks = 0;";
+
+    /** Exports a mob's rig with its vanilla texture, e.g. {@code zombie} from textures/entity/zombie/zombie.png. */
+    public static File exportMob(String name, AnimatedModel model, String texture) throws IOException {
+        File file = new File(Minecraft.getMinecraft().mcDataDir, "mobends/blockbench/" + name + ".bbmodel");
+        file.getParentFile().mkdirs();
+        JsonObject project = project(model, name, gameTexture(texture), name, MOB_PLACEHOLDERS, (groups, elements) -> {});
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
+            new GsonBuilder().setPrettyPrinting().create().toJson(project, writer);
+        }
+        return file;
+    }
+
+    /** A Bedrock project of a rig with one texture; {@code extras} adds cubes to its groups (bone name to group). */
+    static JsonObject project(AnimatedModel model, String name, BufferedImage image, String textureName, String placeholders,
+        java.util.function.BiConsumer<Map<String, JsonObject>, JsonArray> extras) throws IOException {
         JsonObject geometry = PlayerRig.exportGeometry(model, "geometry.mobends." + name)
             .getAsJsonArray("minecraft:geometry").get(0).getAsJsonObject();
         JsonArray elements = new JsonArray();
@@ -224,33 +255,24 @@ public final class BlockbenchExport {
                 group.getAsJsonArray("children").add(element.get("uuid"));
             }
         }
-        float[] grip = PlayerRig.restPivot(model, Bone.RIGHT_ITEM);
-        JsonArray gripPivot = vector(grip[0], 24 - grip[1], grip[2]);
-        for (String itemBone : new String[] {"rightItem", "rightItemFree"}) {
-            boolean inHand = itemBone.equals("rightItem");
-            addPreview(groups.get(itemBone), elements, itemBone + " preview sword", gripPivot, swordCubes(grip, textures.sword), inHand);
-            List<JsonObject> grass = new ArrayList<JsonObject>();
-            grass.add(grassCube(grip));
-            addPreview(groups.get(itemBone), elements, itemBone + " preview grass block", gripPivot, grass, false);
-        }
+        extras.accept(groups, elements);
 
         JsonObject meta = new JsonObject();
         meta.addProperty("format_version", "4.10");
         meta.addProperty("model_format", "bedrock");
         meta.addProperty("box_uv", false);
         JsonObject resolution = new JsonObject();
-        resolution.addProperty("width", 64);
-        resolution.addProperty("height", 128);
+        resolution.addProperty("width", image.getWidth());
+        resolution.addProperty("height", image.getHeight());
         JsonArray textureList = new JsonArray();
-        textureList.add(texture(atlas(textures)));
+        textureList.add(texture(image, textureName));
 
         JsonObject project = new JsonObject();
         project.add("meta", meta);
         project.addProperty("name", name);
         project.addProperty("model_identifier", "mobends." + name);
         project.add("visible_box", vector(3, 3, 1.5));
-        project.addProperty("animation_variable_placeholders",
-            "q.mobends_head_pitch = 0;\nq.mobends_head_yaw = 0;\nq.mobends_ticks = 0;\nq.mobends_ticks_after_punch = 0;\nq.mobends_holding = 1;\nq.mobends_travel_pitch = 0;");
+        project.addProperty("animation_variable_placeholders", placeholders);
         project.add("resolution", resolution);
         project.add("elements", elements);
         project.add("outliner", outliner);
@@ -354,19 +376,19 @@ public final class BlockbenchExport {
         return element;
     }
 
-    private static JsonObject texture(BufferedImage image) throws IOException {
+    private static JsonObject texture(BufferedImage image, String name) throws IOException {
         ByteArrayOutputStream png = new ByteArrayOutputStream();
         ImageIO.write(image, "png", png);
         JsonObject texture = new JsonObject();
         texture.addProperty("path", "");
-        texture.addProperty("name", "skin and preview items");
+        texture.addProperty("name", name);
         texture.addProperty("folder", "");
         texture.addProperty("namespace", "");
         texture.addProperty("id", "0");
-        texture.addProperty("width", 64);
-        texture.addProperty("height", 128);
-        texture.addProperty("uv_width", 64);
-        texture.addProperty("uv_height", 128);
+        texture.addProperty("width", image.getWidth());
+        texture.addProperty("height", image.getHeight());
+        texture.addProperty("uv_width", image.getWidth());
+        texture.addProperty("uv_height", image.getHeight());
         texture.addProperty("particle", false);
         texture.addProperty("render_mode", "default");
         texture.addProperty("visible", true);

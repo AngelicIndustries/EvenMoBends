@@ -1,5 +1,6 @@
 package net.gobbob.mobends.client.model.entity;
 
+import net.gobbob.mobends.client.animation.BipedRigModel;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.gobbob.mobends.AnimatedEntity;
@@ -20,7 +21,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 @SideOnly(value=Side.CLIENT)
 public class ModelBendsZombie
-extends ModelBiped {
+extends ModelBiped implements BipedRigModel {
     public ModelRenderer bipedRightForeArm;
     public ModelRenderer bipedLeftForeArm;
     public ModelRenderer bipedRightForeLeg;
@@ -31,6 +32,51 @@ extends ModelBiped {
     public float headRotationY;
     public float armSwing;
     public float armSwingAmount;
+
+    @Override
+    public ModelBiped biped() {
+        return this;
+    }
+
+    @Override
+    public ModelRenderer foreArm(boolean right) {
+        return right ? this.bipedRightForeArm : this.bipedLeftForeArm;
+    }
+
+    @Override
+    public ModelRenderer foreLeg(boolean right) {
+        return right ? this.bipedRightForeLeg : this.bipedLeftForeLeg;
+    }
+
+    @Override
+    public SmoothVector3f rootOffset() {
+        return this.renderOffset;
+    }
+
+    @Override
+    public SmoothVector3f rootRotation() {
+        return this.renderRotation;
+    }
+
+    @Override
+    public float headPitch() {
+        return this.headRotationX;
+    }
+
+    @Override
+    public float headYaw() {
+        return this.headRotationY;
+    }
+
+    @Override
+    public float limbSwing() {
+        return this.armSwing;
+    }
+
+    @Override
+    public float limbSwingAmount() {
+        return this.armSwingAmount;
+    }
 
     public ModelBendsZombie() {
         this(0.0f, false);
