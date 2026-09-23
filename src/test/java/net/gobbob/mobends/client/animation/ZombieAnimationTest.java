@@ -133,6 +133,27 @@ class ZombieAnimationTest {
         playsLikeThePlayerModel(new net.gobbob.mobends.client.model.entity.ModelBendsZombieVillagerEtFuturum());
     }
 
+    /** Each of its boxes reads Et Futurum's zombie villager texture where Et Futurum's own model does. */
+    @Test
+    void etFuturumZombieVillagerBoxesUseItsTextureLayout() {
+        net.gobbob.mobends.client.model.entity.ModelBendsZombieVillagerEtFuturum model =
+            new net.gobbob.mobends.client.model.entity.ModelBendsZombieVillagerEtFuturum();
+        assertTexture(model.bipedHead, 0, 0, 0);
+        assertTexture(model.bipedBody, 0, 16, 20);
+        assertTexture(model.bipedBody, 1, 0, 38);
+        for (boolean right : new boolean[] {true, false}) {
+            assertTexture(right ? model.bipedRightArm : model.bipedLeftArm, 0, 44, 38);
+            assertTexture(model.foreArm(right), 0, 44, 44);
+            assertTexture(right ? model.bipedRightLeg : model.bipedLeftLeg, 0, 0, 22);
+            assertTexture(model.foreLeg(right), 0, 0, 28);
+        }
+    }
+
+    private static void assertTexture(net.minecraft.client.model.ModelRenderer part, int box, int u, int v) {
+        net.gobbob.mobends.client.model.ModelBoxBends cube = (net.gobbob.mobends.client.model.ModelBoxBends)part.cubeList.get(box);
+        assertEquals(u + "," + v, (int)cube.txOffsetX + "," + (int)cube.txOffsetY, "texture of box " + box);
+    }
+
     private static void playsLikeThePlayerModel(ModelBendsZombie zombie) throws Exception {
         BakedAnimations file = load("walk");
         ModelBendsPlayer player = AnimationBaking.model(15, -20);

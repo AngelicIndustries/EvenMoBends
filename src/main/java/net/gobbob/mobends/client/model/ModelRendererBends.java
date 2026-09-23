@@ -301,6 +301,15 @@ extends ModelRenderer {
         this.cubeList.add(new ModelBoxBends(this, this.txOffsetX, this.txOffsetY, p_78790_1_, p_78790_2_, p_78790_3_, p_78790_4_, p_78790_5_, p_78790_6_, p_78790_7_));
     }
 
+    /** As vanilla's, for the boxes this part adds too (they take their texture offset from {@link #txOffsetX}). */
+    @Override
+    public ModelRenderer setTextureOffset(int x, int y) {
+        super.setTextureOffset(x, y);
+        this.txOffsetX = x;
+        this.txOffsetY = y;
+        return this;
+    }
+
     public ModelBoxBends getBox() {
         return (ModelBoxBends)this.cubeList.get(0);
     }
