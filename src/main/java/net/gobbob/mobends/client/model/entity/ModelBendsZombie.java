@@ -234,6 +234,8 @@ extends ModelBiped implements BipedRigModel {
             ((ModelRendererBends)this.bipedRightForeLeg).update(data.ticksPerFrame);
             this.renderOffset.update(data.ticksPerFrame);
             this.renderRotation.update(data.ticksPerFrame);
+            this.renderRotation.wrapTurns(360.0f);
+            data.swordTrail.update(data.ticksPerFrame);
             data.updatedThisFrame = true;
         }
         Data_Zombie.get(argEntity.getEntityId()).syncModelInfo(this);

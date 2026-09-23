@@ -1,5 +1,11 @@
 package net.gobbob.mobends.client.renderer.entity;
 
+import org.lwjgl.opengl.GL11;
+import net.gobbob.mobends.util.SmoothVector3f;
+import net.gobbob.mobends.settings.SettingsNode;
+import net.gobbob.mobends.settings.SettingsBoolean;
+import net.gobbob.mobends.data.Data_Zombie;
+import net.gobbob.mobends.client.renderer.SwordTrail;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.gobbob.mobends.MoBends;
@@ -65,7 +71,19 @@ extends RenderBiped {
 
     protected void renderEquippedItems(EntityZombie p_77029_1_, float p_77029_2_) {
         this.func_82427_a(p_77029_1_);
+        SwordTrail trail = ((SettingsBoolean)SettingsNode.getSetting("swordTrail")).data
+            ? Data_Zombie.get(p_77029_1_.getEntityId()).swordTrail : null;
+        if (trail != null && trail.takeSample() && p_77029_1_.getHeldItem() != null) {
+            // Where RenderBiped draws the held item from: the arm, then vanilla's hand offset.
+            float[] modelFrame = trail.modelview();
+            GL11.glPushMatrix();
+            this.modelBipedMain.bipedRightArm.postRender(0.0625f);
+            GL11.glTranslatef(-0.0625f, 0.4375f, 0.0625f);
+            trail.sampleFromHand(modelFrame, trail.modelview());
+            GL11.glPopMatrix();
+        }
         super.renderEquippedItems(p_77029_1_, p_77029_2_);
+        if (trail != null) trail.render();
     }
 
     private void func_82427_a(EntityZombie p_82427_1_) {
@@ -92,6 +110,12 @@ extends RenderBiped {
             p_77043_3_ += (float)(Math.cos((double)p_77043_1_.ticksExisted * 3.25) * Math.PI * 0.25);
         }
         super.rotateCorpse((EntityLivingBase)p_77043_1_, p_77043_2_, p_77043_3_, p_77043_4_);
+        // The root's turn (a swing turning the body, the spin), as the player's renderer applies it. (Not its
+        // offset: zombies have always stood where vanilla puts them.)
+        SmoothVector3f rotation = Data_Zombie.get(p_77043_1_.getEntityId()).renderRotation;
+        GL11.glRotatef(-rotation.getX(), 1.0f, 0.0f, 0.0f);
+        GL11.glRotatef(-rotation.getY(), 0.0f, 1.0f, 0.0f);
+        GL11.glRotatef(rotation.getZ(), 0.0f, 0.0f, 1.0f);
     }
 
     @Override

@@ -9,7 +9,8 @@ import net.minecraft.entity.EntityLivingBase;
 /**
  * A zombie swinging what it holds (a zombie pigman's sword): the player's sword swings, from
  * {@code player/sword.animation.json}, through the combo one swing per hit, the moving versions while it walks. The
- * zombie has no item bones, so the swings' turns of the sword itself don't apply.
+ * zombie has no item bones, so the swings' turns of the sword itself don't apply. A sword or an axe leaves a trail,
+ * as the player's does.
  */
 public final class Animation_Swing {
     private Animation_Swing() {}
@@ -17,6 +18,12 @@ public final class Animation_Swing {
     public static void play(ModelBendsZombie model, Data_Zombie data, EntityLivingBase zombie) {
         int attack = data.currentAttack;
         if (zombie.getHeldItem() == null || attack < 1 || data.ticksAfterPunch >= 10.0f) return;
+        if (data.ticksAfterPunch < 0.5f) data.swordTrail.reset();
+        net.minecraft.item.Item item = zombie.getHeldItem().getItem();
+        if ((item instanceof net.minecraft.item.ItemSword || item instanceof net.minecraft.item.ItemAxe)
+            && (attack != 1 || data.ticksAfterPunch < 4.0f)) {
+            data.swordTrail.add(net.gobbob.mobends.client.renderer.SwordTrail.edgeOf(zombie.getHeldItem()));
+        }
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         BendsAnimator.playOnce(model, data, Animation_Attack.SWORD,
             "animation.mobends.player.sword_" + attack + (attack < 3 && moving ? "_moving" : ""), data.ticksAfterPunch / 20.0,

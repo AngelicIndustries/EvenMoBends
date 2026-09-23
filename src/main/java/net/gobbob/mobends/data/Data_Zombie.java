@@ -31,6 +31,7 @@ extends EntityData {
     /** Which of the sword swings (1 to 3) the last swing was, and how many swings there have been. */
     public int currentAttack = 0;
     public int swings = 0;
+    public final net.gobbob.mobends.client.renderer.SwordTrail swordTrail = new net.gobbob.mobends.client.renderer.SwordTrail();
     public float ticksBeforeStateChange = 0.0f;
 
     public Data_Zombie(int argEntityID) {
