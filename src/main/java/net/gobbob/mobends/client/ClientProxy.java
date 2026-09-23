@@ -56,6 +56,10 @@ extends CommonProxy {
         // while retaining EFR's crown render pass when that mod is present.
         RenderingRegistry.registerEntityRenderingHandler(EntityPig.class, createPigRenderer());
         EtFuturumRequiemCompat.registerBoatRenderers();
+        // EFR renders its own zombie villagers, also from init: animate them as zombies, after it.
+        for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
+            if (entity.id.equals("zombie") && entity.animate) EtFuturumRequiemCompat.registerZombieVillagerRenderer();
+        }
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 

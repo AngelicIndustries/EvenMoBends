@@ -27,6 +27,16 @@ public final class EtFuturumRequiemCompat {
         return CompatibilityPolicy.isEtFuturumRequiemLoaded() ? Api.getBoatState(player, partialTicks) : null;
     }
 
+    /** Et Futurum's zombie villagers render as Mo' Bends zombies while zombies are animated. */
+    public static void registerZombieVillagerRenderer() {
+        if (CompatibilityPolicy.isEtFuturumRequiemLoaded()) Api.registerZombieVillagerRenderer();
+    }
+
+    /** An Et Futurum zombie villager's profession (its villager type), or -1. */
+    public static int getZombieVillagerType(Entity entity) {
+        return CompatibilityPolicy.isEtFuturumRequiemLoaded() ? Api.getZombieVillagerType(entity) : -1;
+    }
+
     public static void registerBoatRenderers() {
         if (CompatibilityPolicy.isEtFuturumRequiemLoaded() && CompatibilityPolicy.arePlayerAnimationsEnabled()) {
             Api.registerBoatRenderers();
@@ -67,6 +77,17 @@ public final class EtFuturumRequiemCompat {
 
         private static void registerBoatRenderers() {
             RenderRowingBoatEtFuturum.register();
+        }
+
+        private static void registerZombieVillagerRenderer() {
+            cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+                ganymedes01.etfuturum.entities.EntityZombieVillager.class,
+                new net.gobbob.mobends.client.renderer.entity.RenderBendsZombieVillagerEtFuturum());
+        }
+
+        private static int getZombieVillagerType(Entity entity) {
+            return entity instanceof ganymedes01.etfuturum.entities.EntityZombieVillager
+                ? ((ganymedes01.etfuturum.entities.EntityZombieVillager)entity).getType() : -1;
         }
 
         private static boolean hasBendsDriver(Entity entity) {

@@ -13,7 +13,8 @@ MOBENDS_UPDATE_RIG=1 ./gradlew test
 ```
 
 `zombie.geo.json` is the zombie (also the zombie villager and zombie pigman): the player's rig without item bones,
-generated from `ModelBendsZombie` by `ZombieAnimationTest` the same way.
+generated from `ModelBendsZombie` by `ZombieAnimationTest` the same way. With Et Futurum Requiem, its zombie villagers
+(the 1.14 look, with professions) are drawn on the same rig, so the zombie's animations play on them too.
 
 ## Using it
 

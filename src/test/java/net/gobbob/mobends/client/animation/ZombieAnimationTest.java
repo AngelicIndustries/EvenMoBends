@@ -124,9 +124,18 @@ class ZombieAnimationTest {
     /** Played on the zombie's own model, the files pose it exactly as the player's test model. */
     @Test
     void theZombieModelPlaysTheSame() throws Exception {
+        playsLikeThePlayerModel(new ModelBendsZombie());
+    }
+
+    /** Et Futurum's zombie villager, reshaped on the zombie's rig, animates the same as well. */
+    @Test
+    void etFuturumZombieVillagersPlayTheSame() throws Exception {
+        playsLikeThePlayerModel(new net.gobbob.mobends.client.model.entity.ModelBendsZombieVillagerEtFuturum());
+    }
+
+    private static void playsLikeThePlayerModel(ModelBendsZombie zombie) throws Exception {
         BakedAnimations file = load("walk");
         ModelBendsPlayer player = AnimationBaking.model(15, -20);
-        ModelBendsZombie zombie = new ModelBendsZombie();
         zombie.headRotationX = 15;
         zombie.headRotationY = -20;
         for (float t = 0; t < 60; t += AnimationBaking.TICKS_PER_FRAME) {
