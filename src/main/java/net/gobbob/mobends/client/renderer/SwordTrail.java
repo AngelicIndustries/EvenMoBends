@@ -6,6 +6,8 @@ import java.util.List;
 import net.gobbob.mobends.client.ClientProxy;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.minecraft.client.Minecraft;
+import net.minecraft.item.ItemAxe;
+import net.minecraft.item.ItemStack;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -15,12 +17,17 @@ import org.lwjgl.opengl.GL11;
  * Samples are kept in the player model's frame and drawn from there.
  */
 public class SwordTrail {
-    /** The blade of a vanilla sword icon, guard to tip, in ItemRenderer's 2D item frame (x and y run against u and v). */
-    private static final float[] GUARD = {12 / 16f, 5 / 16f, -1 / 32f}, TIP = {1 / 16f, 15 / 16f, -1 / 32f};
+    /**
+     * The edges a trail traces, in ItemRenderer's 2D item frame (x and y run against the icon's u and v): a vanilla
+     * sword's blade, guard to tip, and a vanilla axe's cutting edge, the outer side of its head.
+     */
+    public static final float[][] SWORD = {{12 / 16f, 5 / 16f, -1 / 32f}, {1 / 16f, 15 / 16f, -1 / 32f}};
+    public static final float[][] AXE = {{9 / 16f, 9.5f / 16, -1 / 32f}, {6.5f / 16, 14.5f / 16, -1 / 32f}};
     private static final float LIFETIME = 5.0f;
 
     public List<TrailPart> trailPartList = new ArrayList<TrailPart>();
     private boolean sampling;
+    private float[][] edge = SWORD;
     private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
 
     public void reset() {
@@ -29,7 +36,18 @@ public class SwordTrail {
 
     /** A swing wants the blade traced this frame. */
     public void add(ModelBendsPlayer model) {
+        this.add(SWORD);
+    }
+
+    /** A swing wants {@code edge} ({@link #SWORD} or {@link #AXE}) traced this frame. */
+    public void add(float[][] edge) {
         this.sampling = true;
+        this.edge = edge;
+    }
+
+    /** The edge an item's trail traces: an axe's head, a sword's blade (and anything else's, as a sword). */
+    public static float[][] edgeOf(ItemStack item) {
+        return item != null && item.getItem() instanceof ItemAxe ? AXE : SWORD;
     }
 
     /** Whether the blade should be sampled as the item is drawn this frame; asks again next frame. */
@@ -61,8 +79,8 @@ public class SwordTrail {
         icon = Affine.multiply(icon, Affine.translation(-0.9375f, -0.0625f, 0));
         float[] relative = Affine.multiply(Affine.invert(modelFrame), icon);
         TrailPart part = new TrailPart();
-        part.guard = Affine.transform(relative, GUARD);
-        part.tip = Affine.transform(relative, TIP);
+        part.guard = Affine.transform(relative, this.edge[0]);
+        part.tip = Affine.transform(relative, this.edge[1]);
         this.trailPartList.add(part);
     }
 

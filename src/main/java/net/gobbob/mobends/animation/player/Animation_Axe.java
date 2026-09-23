@@ -33,6 +33,7 @@ extends Animation {
      * keeps its arm. Falls back to the Java axe below.
      */
     public static void play(ModelBendsPlayer model, Data_Player data, boolean swinging) {
+        if (swinging) model.swordTrail.add(net.gobbob.mobends.client.renderer.SwordTrail.AXE);
         java.util.Set<String> without = PlayerAnimator.freeHandsOnly(data, null);
         boolean played = PlayerAnimator.playPose(model, data, FILE, "axe", "tool", 1, without)
             && (!swinging || PlayerAnimator.playLoop(model, data, FILE, "axe_swing", "tool_swing", 1, without));

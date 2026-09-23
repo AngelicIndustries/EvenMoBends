@@ -81,11 +81,10 @@ extends Animation {
     /**
      * Backhand's off hand, over whatever the main hand does, for {@link #OFFHAND_TICKS} after it starts a swing: an
      * empty hand punches ({@code punch_left}); a pickaxe mines, a block mines while breaking or placing, an axe chops
-     * while breaking, and anything else swings through the sword combo (leaving a trail with a sword), each the main
-     * hand's animation mirrored, then settles
-     * into the mirrored stance with the left arm only. While the main hand holds something its arm is left alone;
-     * while the main hand acts too, whichever hand started last leads the body and the other moves only its arm.
-     * Riding leaves the root to the mount.
+     * while breaking, and anything else swings through the sword combo (a sword or an axe leaving a trail), each the
+     * main hand's animation mirrored, then settles into the mirrored stance with the left arm only. While the main
+     * hand holds something its arm is left alone; while the main hand acts too, whichever hand started last leads the
+     * body and the other moves only its arm. Riding leaves the root to the mount.
      */
     public static void playOffhand(EntityPlayer player, ModelBendsPlayer model, Data_Player data) {
         if (!CompatibilityPolicy.isBackhandLoaded()) return;
@@ -127,6 +126,7 @@ extends Animation {
             }
         } else if (tool && item.getItem() instanceof ItemAxe) {
             if (PlayerAnimationConfig.isEnabled("axe")) {
+                model.offhandTrail.add(SwordTrail.AXE);
                 PlayerAnimator.playLoop(model, data, Animation_Axe.FILE, "axe_swing", "offhand", 1, without, true);
             }
         } else if (tool) {
@@ -175,14 +175,15 @@ extends Animation {
             PlayerAnimator.freeHandsOnly(data, null));
     }
 
-    /** A sword leaves a trail through its swing (the first only in its first 4 ticks). */
+    /** A sword or axe leaves a trail through its swing (the first only in its first 4 ticks). */
     private static void trail(EntityPlayer player, ModelBendsPlayer model, Data_Player data, int attack) {
         trail(model.swordTrail, player.getCurrentEquippedItem(), data.ticksAfterPunch, attack);
     }
 
     private static void trail(SwordTrail trail, ItemStack held, float ticks, int attack) {
         if (ticks < 0.5f) trail.reset();
-        if (held != null && held.getItem() instanceof ItemSword && (attack != 1 || ticks < 4.0f)) trail.add(null);
+        if (held != null && (held.getItem() instanceof ItemSword || held.getItem() instanceof ItemAxe)
+            && (attack != 1 || ticks < 4.0f)) trail.add(SwordTrail.edgeOf(held));
     }
 
     /**
