@@ -92,12 +92,14 @@ extends Animation {
         boolean moving = !(data.motion.x == 0.0f & data.motion.z == 0.0f);
         // As in the main hand: a pickaxe mines, a block mines while breaking or placing (attacking otherwise; other
         // players' swings count as placing), an axe chops only while breaking; anything else swings like a sword.
-        boolean breaking = data.offhandSwingBreaks && data.ticksAfterOffhandPunch < 60.0f;
+        boolean breaking = data.offhandSwingBreaks && data.ticksAfterOffhandSwing < 60.0f;
         boolean attacking = data.offhandSwingKnown && !data.offhandSwingIsUse && !breaking;
         boolean tool = item != null && (item.getItem() instanceof ItemPickaxe
             || item.getItem() instanceof ItemAxe && breaking
             || Block.getBlockFromItem(item.getItem()) != Blocks.air && !attacking);
-        if (data.ticksAfterOffhandPunch >= OFFHAND_TICKS) {
+        // Tools mine or chop as long as the hand keeps swinging; punches and sword swings last their own time.
+        float since = tool ? data.ticksAfterOffhandSwing : data.ticksAfterOffhandPunch;
+        if (since >= OFFHAND_TICKS) {
             if (item != null && !tool && data.ticksAfterOffhandPunch < 60.0f && data.isOnGround() && (!moving || player.isSprinting())
                 && PlayerAnimationConfig.isEnabled("swordStance")) {
                 PlayerAnimator.playPose(model, data, SWORD, moving ? "sword_stance_sprint" : "sword_stance", "offhand_stance", 1,
@@ -105,7 +107,7 @@ extends Animation {
             }
             return;
         }
-        boolean mainLeads = data.ticksAfterPunch < data.ticksAfterOffhandPunch && data.ticksAfterPunch < OFFHAND_TICKS;
+        boolean mainLeads = data.ticksAfterPunch < since && data.ticksAfterPunch < OFFHAND_TICKS;
         Set<String> without = PlayerAnimator.ALL_BUT_LEFT_ARM;
         if (!mainLeads) {
             Set<String> keepMain = player.getHeldItem() != null ? PlayerAnimator.RIGHT_ARM : null;

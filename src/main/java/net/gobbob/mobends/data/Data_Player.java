@@ -59,6 +59,8 @@ extends EntityData {
     public int currentAttack = 0;
     /** Backhand's off hand: ticks since it last started swinging, and its place in its own sword combo (0 none). */
     public float ticksAfterOffhandPunch = 60.0f;
+    /** Ticks since the off hand last started any swing (mining or chopping swings keep restarting it). */
+    public float ticksAfterOffhandSwing = 60.0f;
     public int currentOffhandAttack = 0;
     private boolean alreadyOffhandPunched;
 
@@ -178,7 +180,8 @@ extends EntityData {
         }
         if (this.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)this.getEntity();
-            if (BackhandCompat.getOffSwingProgress(player, argPartialTicks) > 0.0f) {
+            // The swing's progress at this tick, not interpolated: it is 0 for the tick a held swing restarts on.
+            if (BackhandCompat.getOffSwingProgress(player, 1.0f) > 0.0f) {
                 if (!this.alreadyOffhandPunched) {
                     this.onOffhandPunch(BackhandCompat.getOffhandItem(player) != null);
                     this.alreadyOffhandPunched = true;
@@ -188,6 +191,7 @@ extends EntityData {
             }
         }
         this.ticksAfterOffhandPunch += this.ticksPerFrame;
+        this.ticksAfterOffhandSwing += this.ticksPerFrame;
         if (this.ticksAfterOffhandPunch > 20.0f) {
             this.currentOffhandAttack = 0;
         }
@@ -200,6 +204,7 @@ extends EntityData {
         this.offhandSwingIsUse = HandAction.isUse(player);
         // Backhand breaks with the off hand only while the main hand isn't swinging.
         this.offhandSwingBreaks = HandAction.isBreakingBlock(player) && player.swingProgress <= 0;
+        this.ticksAfterOffhandSwing = 0.0f;
         if (!holding) {
             this.ticksAfterOffhandPunch = 0.0f;
             ++this.offhandPunches;
