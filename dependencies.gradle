@@ -1,5 +1,6 @@
 dependencies {
-    def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:6bccb2c-snapshot:dev"
+    // Provider skins must retain vanilla download hooks so Salamander can preserve expression-slot alpha.
+    def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:409cfd2-snapshot:dev"
 
     // The compatibility stack used by the default EvenMoBends development client.
     // These are deliberately not published as hard dependencies of EvenMoBends.

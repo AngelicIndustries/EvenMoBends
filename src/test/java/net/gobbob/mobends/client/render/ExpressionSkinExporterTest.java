@@ -118,6 +118,43 @@ class ExpressionSkinExporterTest {
     }
 
     @Test
+    void removingBrowsClearsBothSidesAndLayersWithoutChangingEyes() {
+        select(EyeType.NORMAL_2X2, 5);
+        for (int x : new int[] {1, 2, 5, 6}) {
+            brow(x, 3);
+            data.overlayBrows[x][2] = (byte) (x < 4 ? 1 : 2);
+            data.overlayColors[x][2] = 0xff112233;
+        }
+        BufferedImage before = export();
+        data = ExpressionSkinExporter.readEditorData(before);
+        assertNotNull(data);
+        EditorData saved = data.copy();
+        data.clearBrows();
+        BufferedImage out = ExpressionSkinExporter.export(before, data);
+        for (int x = 56; x < 64; x++)
+            for (int y = 0; y < 8; y++) assertEquals(0, out.getRGB(x, y), "No brow texel should survive removal");
+        for (int x = 24; x < 28; x++)
+            for (int y = 5; y < 8; y++)
+                assertEquals(before.getRGB(x, y), out.getRGB(x, y), "Keep the user's eyes and colors");
+        roundTrip(out);
+        data.copyFrom(saved);
+        assertEquals(before.getRGB(60, 3), export().getRGB(60, 3), "Undo restores eyebrows");
+    }
+
+    @Test
+    void removingTheLastFeatureExportsACleanSkin() {
+        for (int x = 1; x <= 6; x++) brow(x, 3);
+        data.browColors[4][3] = data.browColors[3][3];
+        data.browBackgrounds[4][3] = data.browBackgrounds[3][3];
+        BufferedImage before = export();
+        data.clearBrows();
+        BufferedImage out = ExpressionSkinExporter.export(before, data);
+        for (int x = 0; x < 64; x++)
+            for (int y = 0; y < 8; y++) assertEquals(0, out.getRGB(x, y));
+        assertNull(ExpressionSkinExporter.readEditorData(out), "No expression features remain");
+    }
+
+    @Test
     void eyebrowsCanMoveIndependentlyOfTheEyesAndRoundTripTheirColors() {
         for (int row = 2; row <= 5; row++) {
             select(EyeType.NORMAL_2X1, 6);

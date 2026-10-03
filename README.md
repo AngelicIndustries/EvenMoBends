@@ -68,11 +68,16 @@ Open the Even Mo' Bends menu (default `G`) and choose **Prepare Expressive Skin*
 height, then use the arrows to edit pupils, eye whites, eyelids, eyebrows, outer-layer brows and eyelashes.
 Each color page has a picker, a hex field and a skin eyedropper. Left/right refer to the preview; choose **Both**
 to apply presets to both sides. Right-click erases optional colors or resets backgrounds. `Ctrl+Z` undoes a stroke
-or preset; `Ctrl+Y` (or `Ctrl+Shift+Z`) redoes it. **Clear feature** affects the current feature and selected side.
+or preset; `Ctrl+Y` (or `Ctrl+Shift+Z`) redoes it. **No eyebrows** removes both brows from both skin layers,
+regardless of the selected side. Other pages label the clear action **Clear left**, **Clear right** or **Clear both**.
+You can export after removing every expression feature.
 
 Export a PNG or use the Wawel Auth upload button, which asks for confirmation before replacing your skin.
 Enable **Just Expressions** or the **Animated Eyes** version of **Fresh Moves** to see expressions through
 Salamander. Saving a draft does not change your active skin or enable a pack.
+For downloaded Wawel Auth skins, use a build with the vanilla skin-download hooks (the dev client uses
+`409cfd2-snapshot`). Older builds such as `6bccb2c-snapshot` bypass Salamander's original-image capture and
+can turn transparent expression slots into black facial marks, even when the PNG itself is correct.
 
 The editor writes the shared layout used by Just Expressions 1.2.1 and Fresh Moves 3.1.1:
 

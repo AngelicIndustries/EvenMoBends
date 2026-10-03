@@ -14,6 +14,17 @@ public final class ExpressionSkinExporter {
         public final int[][] browColors = new int[8][8], browBackgrounds = new int[8][8];
         public final int[][] overlayColors = new int[8][8], lashes = new int[8][8];
 
+        /** Brows are optional. Remove both layers together so no hidden companion brow survives. */
+        public void clearBrows() {
+            for (int x = 0; x < 8; x++) {
+                java.util.Arrays.fill(brows[x], (byte) 0);
+                java.util.Arrays.fill(overlayBrows[x], (byte) 0);
+                java.util.Arrays.fill(browColors[x], 0);
+                java.util.Arrays.fill(browBackgrounds[x], 0);
+                java.util.Arrays.fill(overlayColors[x], 0);
+            }
+        }
+
         public EditorData copy() {
             EditorData result = new EditorData();
             result.copyFrom(this);
@@ -292,7 +303,7 @@ public final class ExpressionSkinExporter {
                         boolean edge = xx == (side == 0 ? 0 : 7) && (y == 5 || y == 6);
                         if ((!top && !edge) || eye == null || eye.width != 2 || eye.height != 2 || eye.y != 5)
                             throw new IllegalArgumentException("Eyelashes need bottom 2x2 eyes: paint the two pixels "
-                                                               + "above the eye and the two along its outer edge.");
+                                + "above the eye and the two along its outer edge.");
                         out.setRGB(
                             top ? 56 + side * 2 + xx - x : (side == 0 ? 56 : 59), top ? 0 : y - 4, data.lashes[xx][y]);
                     }

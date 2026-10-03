@@ -105,11 +105,11 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         int bottomX = this.width / 2 - 116;
         GuiButton upload = new GuiWawelAuthIconButton(14, bottomX, bottomY);
         upload.visible = WawelAuthCompat.isLoaded();
-        upload.enabled = this.skin != null && hasSelection() && !this.uploading;
+        upload.enabled = this.skin != null && !this.uploading;
         this.buttonList.add(upload);
         this.buttonList.add(new GuiButton(7, bottomX + 24, bottomY, 88, 20, I18n.format("mobends.gui.back")));
         GuiButton export = new GuiButton(6, bottomX + 116, bottomY, 116, 20, I18n.format("mobends.expression.export"));
-        export.enabled = this.skin != null && hasSelection();
+        export.enabled = this.skin != null;
         this.buttonList.add(export);
         this.hexField = new GuiTextField(this.fontRendererObj, x + 42, pickerY() + PICKER_HEIGHT + 4, 78, 18);
         this.hexField.setMaxStringLength(7);
@@ -161,8 +161,9 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         } else if (button.id == 5) {
             remember();
             clearSelection();
-            this.statusSuccess = false;
-            this.status = I18n.format("mobends.expression.instructions");
+            this.statusSuccess = true;
+            this.status =
+                I18n.format(isBrowTool() ? "mobends.expression.browsRemoved" : "mobends.expression.featureCleared");
         } else if (button.id == 6) {
             exportSkin();
         } else if (button.id == 14) {
@@ -497,7 +498,7 @@ public class GuiExpressionSkinEditor extends GuiScreen {
     }
 
     private void exportSkin() {
-        if (this.skin == null || !hasSelection()) {
+        if (this.skin == null) {
             this.statusSuccess = false;
             this.status = I18n.format("mobends.expression.selectionRequired");
             return;
@@ -598,6 +599,9 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         for (int id = 15; id <= 17; id++)
             if (getButton(id) != null)
                 getButton(id).visible = eye || brow;
+        if (getButton(5) != null)
+            getButton(5).displayString = I18n.format(
+                isBrowTool() ? "mobends.expression.removeBrows" : "mobends.expression.clear." + this.activeGroup);
         if (getButton(20) != null)
             getButton(20).visible = eye || brow;
         if (getButton(15) != null)
@@ -747,21 +751,23 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         edited();
     }
 
+    private boolean isBrowTool() {
+        return this.tool == Tool.EYEBROWS || this.tool == Tool.BROW_COLORS || this.tool == Tool.BROW_BACKGROUND
+            || this.tool == Tool.OVERLAY_BROWS || this.tool == Tool.OVERLAY_COLORS;
+    }
+
     private void clearSelection() {
-        boolean clearJoined = joinedBrows()
-            && (this.tool == Tool.EYEBROWS || this.tool == Tool.BROW_COLORS || this.tool == Tool.BROW_BACKGROUND);
+        if (isBrowTool()) {
+            this.data.clearBrows();
+            return;
+        }
         for (int x = 0; x < 8; x++)
-            if (clearJoined || this.activeGroup == 0 || this.activeGroup == (x < 4 ? 1 : 2))
+            if (this.activeGroup == 0 || this.activeGroup == (x < 4 ? 1 : 2))
                 for (int y = 0; y < 8; y++) {
                     if (this.tool == Tool.EYE_REGION) {
                         this.eyeGroups[x][y] = 0;
                         this.pupils[x][y] = false;
-                    } else if (this.tool == Tool.EYEBROWS || this.tool == Tool.BROW_COLORS
-                        || this.tool == Tool.BROW_BACKGROUND)
-                        this.eyebrowGroups[x][y] = 0;
-                    else if (this.tool == Tool.OVERLAY_BROWS || this.tool == Tool.OVERLAY_COLORS)
-                        this.data.overlayBrows[x][y] = 0;
-                    else if (this.tool == Tool.EYELASHES)
+                    } else if (this.tool == Tool.EYELASHES)
                         this.data.lashes[x][y] = 0;
                     else if (this.tool == Tool.PUPIL_COLORS)
                         this.data.pupilColors[x][y] = 0;
@@ -795,7 +801,8 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         }
         this.saturation = hsb[1];
         this.brightness = hsb[2];
-        if (updateField) updateHex();
+        if (updateField)
+            updateHex();
     }
 
     private int currentColor() {
@@ -843,15 +850,6 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         int green = (((overlay >> 8) & 255) * alpha + ((base >> 8) & 255) * inverse) / 255;
         int blue = ((overlay & 255) * alpha + (base & 255) * inverse) / 255;
         return 0xff000000 | red << 16 | green << 8 | blue;
-    }
-
-    private boolean hasSelection() {
-        for (int x = 0; x < 8; x++)
-            for (int y = 0; y < 8; y++)
-                if (this.eyeGroups[x][y] != 0 || this.eyebrowGroups[x][y] != 0 || this.data.overlayBrows[x][y] != 0
-                    || (this.data.lashes[x][y] >>> 24) != 0)
-                    return true;
-        return false;
     }
 
     private boolean isOutlined(int x, int y) {
@@ -911,7 +909,7 @@ public class GuiExpressionSkinEditor extends GuiScreen {
 
     private void updateExportButton() {
         this.validationError = null;
-        boolean valid = this.skin != null && hasSelection();
+        boolean valid = this.skin != null;
         if (valid) {
             try {
                 ExpressionSkinExporter.export(this.skin, this.data);
