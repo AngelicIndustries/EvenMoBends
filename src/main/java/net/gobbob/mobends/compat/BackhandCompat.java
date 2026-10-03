@@ -20,6 +20,10 @@ public final class BackhandCompat {
         return getOffhandItem(player) != null;
     }
 
+    public static boolean isOffhandItemInUse(EntityPlayer player) {
+        return player != null && CompatibilityPolicy.isBackhandLoaded() && Api.isOffhandItemInUse(player);
+    }
+
     /** Whether the player is drawing a bow held in the off hand. */
     public static boolean isDrawingOffhandBow(EntityPlayer player) {
         if (player == null || !CompatibilityPolicy.isBackhandLoaded() || player.getItemInUseCount() <= 0) return false;

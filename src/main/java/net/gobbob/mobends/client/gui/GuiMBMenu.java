@@ -52,7 +52,7 @@ extends GuiScreen {
             this.buttonList.add(new GuiButton(0, 10, this.height - 30, 60, 20, I18n.format("mobends.gui.back")));
         } else {
             this.buttonList.add(new GuiButton(1, -90 + (int)(this.leftBgState * 100.0f), this.height - 30, 60, 20, I18n.format("mobends.menu.settings")));
-            this.buttonList.add(new GuiButton(6, this.width / 2 - 60, this.height - 30, 120, 20, I18n.format("mobends.blink.title")));
+            this.buttonList.add(new GuiButton(6, this.width / 2 - 80, this.height - 30, 160, 20, I18n.format("mobends.blink.title")));
         }
         if (this.settingsWindow) {
             for (int i = 0; i < SettingsNode.settings.length; ++i) {

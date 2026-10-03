@@ -23,7 +23,7 @@ import java.util.UUID;
 import javax.imageio.ImageIO;
 import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
-import net.gobbob.mobends.client.render.BlinkingTextures;
+import net.gobbob.mobends.client.render.PlayerSkinImages;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -52,7 +52,7 @@ public final class BlockbenchExport {
     /** Exports the local player; {@code slim} null detects the arm width from the skin. */
     public static File export(AbstractClientPlayer player, Boolean slim) throws IOException {
         Textures textures = new Textures();
-        textures.skin = BlinkingTextures.copyPlayerSkin(player);
+        textures.skin = PlayerSkinImages.copyPlayerSkin(player);
         if (textures.skin == null) throw new IOException("the skin isn't loaded yet");
         textures.sword = gameTexture("textures/items/iron_sword.png");
         int grass = ColorizerGrass.getGrassColor(0.5, 1.0);

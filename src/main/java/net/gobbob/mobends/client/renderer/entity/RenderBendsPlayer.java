@@ -6,7 +6,7 @@ import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
-import net.gobbob.mobends.client.render.BlinkingTextures;
+import net.gobbob.mobends.compat.CemCompat;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.BackhandCompat;
@@ -53,7 +53,8 @@ public class RenderBendsPlayer
 extends RenderPlayer {
     private static final float MODEL_SCALE = 0.0625f;
     public int refreshModel = 0;
-    private final ModelRenderer eyebrowOverlay;
+    private final RenderPlayer packRenderer = new RenderPlayer();
+    private final ModelBendsPlayer firstPersonModel = new ModelBendsPlayer(0);
     private final ModelBiped wawelFirstPersonModel = new ModelBiped();
     private final ModelBiped ssbFirstPersonModel = new ModelBiped();
 
@@ -62,40 +63,6 @@ extends RenderPlayer {
         this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
         this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
         this.modelArmor = new ModelBendsPlayer(0.5f);
-        this.eyebrowOverlay = new ModelRenderer((ModelBiped)this.mainModel, 0, 0);
-        this.eyebrowOverlay.setTextureSize(64, 64);
-        this.eyebrowOverlay.addBox(-4.0f, -8.0f, -4.0f, 8, 8, 8, 0.02f);
-    }
-
-    @Override
-    protected ResourceLocation getEntityTexture(AbstractClientPlayer player) {
-        ResourceLocation normalTexture = super.getEntityTexture(player);
-        return BlinkingTextures.forPlayer(player, normalTexture);
-    }
-
-    @Override
-    protected void renderModel(EntityLivingBase entity, float limbSwing, float limbSwingAmount, float age,
-        float headYaw, float headPitch, float scale) {
-        super.renderModel(entity, limbSwing, limbSwingAmount, age, headYaw, headPitch, scale);
-        if (!(entity instanceof AbstractClientPlayer) || entity.isInvisible()) {
-            return;
-        }
-        AbstractClientPlayer player = (AbstractClientPlayer)entity;
-        ModelBendsPlayer model = (ModelBendsPlayer)this.mainModel;
-        for (int group = 1; group <= 2; ++group) {
-            ResourceLocation brows = BlinkingTextures.eyebrowTexture(player, player.getLocationSkin(), group);
-            if (brows == null) {
-                continue;
-            }
-            this.bindTexture(brows);
-            GL11.glPushMatrix();
-            model.bipedBody.postRender(MODEL_SCALE);
-            model.bipedHead.postRender(MODEL_SCALE);
-            float idle = (float)Math.sin((player.ticksExisted + group * 17) / (20.0 + group * 3.0)) * 0.04f;
-            GL11.glTranslatef(0.0f, idle, -0.002f);
-            this.eyebrowOverlay.render(MODEL_SCALE);
-            GL11.glPopMatrix();
-        }
     }
 
     @Override
@@ -147,6 +114,12 @@ extends RenderPlayer {
 
     @Override
     public void renderFirstPersonArm(EntityPlayer p_82441_1_) {
+        if (p_82441_1_ instanceof AbstractClientPlayer && CemCompat.hasModel(p_82441_1_,
+            this.packRenderer.modelBipedMain, ((AbstractClientPlayer)p_82441_1_).getLocationSkin())) {
+            this.packRenderer.setRenderManager(this.renderManager);
+            this.packRenderer.renderFirstPersonArm(p_82441_1_);
+            return;
+        }
         float f = 1.0f;
         GL11.glColor3f((float)f, (float)f, (float)f);
 
@@ -163,11 +136,14 @@ extends RenderPlayer {
 
         // SSB's hand event updates modelBipedMain, not the straight arm drawn here.
         // Use its converter only on a vanilla model, never on ModelRendererBends boxes.
-        ModelBiped model = SimpleSkinBackportCompat.prepareFirstPersonModel(this.ssbFirstPersonModel, p_82441_1_)
-            ? this.ssbFirstPersonModel : new ModelBiped();
-        model.onGround = 0.0f;
-        model.setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0625f, p_82441_1_);
-        model.bipedRightArm.render(0.0625f);
+        if (SimpleSkinBackportCompat.prepareFirstPersonModel(this.ssbFirstPersonModel, p_82441_1_)) {
+            this.ssbFirstPersonModel.onGround = 0.0f;
+            this.ssbFirstPersonModel.setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, MODEL_SCALE, p_82441_1_);
+            this.ssbFirstPersonModel.bipedRightArm.render(MODEL_SCALE);
+        } else {
+            this.firstPersonModel.geometry().render(MODEL_SCALE,
+                name -> this.firstPersonModel.geometry().rig.descendant(name, "rightArm"));
+        }
     }
 
     private float interpolateRotation(float p_77034_1_, float p_77034_2_, float p_77034_3_) {
@@ -199,6 +175,11 @@ extends RenderPlayer {
 
     @Override
     public void doRender(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
+        if (CemCompat.hasModel(p_76986_1_, this.packRenderer.modelBipedMain, p_76986_1_.getLocationSkin())) {
+            this.packRenderer.setRenderManager(this.renderManager);
+            this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+            return;
+        }
         if (this.refreshModel != MoBends.refreshModel) {
             this.mainModel = WawelAuthCompat.createPlayerModel(0.0f);
             this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
@@ -253,8 +234,7 @@ extends RenderPlayer {
         if (itemstack != null && event.renderHelmet) {
             float f1;
             GL11.glPushMatrix();
-            this.modelBipedMain.bipedBody.postRender(0.0625f);
-            this.modelBipedMain.bipedHead.postRender(0.0625f);
+            ((ModelBendsPlayer)this.modelBipedMain).geometry().attach("head", MODEL_SCALE);
             if (itemstack.getItem() instanceof ItemBlock) {
                 boolean is3D;
                 IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(itemstack, IItemRenderer.ItemRenderType.EQUIPPED);
@@ -305,7 +285,7 @@ extends RenderPlayer {
         if (flag && !argPlayer.isInvisible() && !argPlayer.getHideCape()) {
             this.bindTexture(argPlayer.getLocationCape());
             GL11.glPushMatrix();
-            this.modelBipedMain.bipedBody.postRender(0.0625f);
+            ((ModelBendsPlayer)this.modelBipedMain).geometry().attach("body", MODEL_SCALE);
             GL11.glTranslatef((float)0.0f, (float)-0.75f, (float)0.125f);
             double d3 = argPlayer.field_71091_bM + (argPlayer.field_71094_bP - argPlayer.field_71091_bM) * (double)argPartialTicks - (argPlayer.prevPosX + (argPlayer.posX - argPlayer.prevPosX) * (double)argPartialTicks);
             double d4 = argPlayer.field_71096_bN + (argPlayer.field_71095_bQ - argPlayer.field_71096_bN) * (double)argPartialTicks - (argPlayer.prevPosY + (argPlayer.posY - argPlayer.prevPosY) * (double)argPartialTicks);
@@ -356,10 +336,8 @@ extends RenderPlayer {
             ModelBendsPlayer bends = this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
             if (bends == null || bends.rightItem.isVisible()) {
                 GL11.glPushMatrix();
-                this.modelBipedMain.bipedRightArm.postRender(0.0625f);
-                GL11.glTranslatef(0.0f, PlayerRig.GRIP_DROP * 0.0625f, 0.0f);
                 if (bends != null) {
-                    bends.rightItem.apply(0.0625f);
+                    bends.geometry().attach("rightItem", MODEL_SCALE);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.x, (float)1.0f, (float)0.0f, (float)0.0f);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.y, (float)0.0f, (float)-1.0f, (float)0.0f);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
@@ -370,9 +348,7 @@ extends RenderPlayer {
             if (bends != null && bends.rightItemFree.isVisible()) {
                 // A free item hangs from the model root, at the resting grip, so it can leave the hand.
                 GL11.glPushMatrix();
-                float[] grip = PlayerRig.restPivot(bends, PlayerRig.Bone.RIGHT_ITEM_FREE);
-                GL11.glTranslatef(grip[0] * 0.0625f, grip[1] * 0.0625f, grip[2] * 0.0625f);
-                bends.rightItemFree.apply(0.0625f);
+                bends.geometry().attach("rightItemFree", MODEL_SCALE);
                 this.renderHeldItem(argPlayer, itemstack1, null);
                 GL11.glPopMatrix();
             }

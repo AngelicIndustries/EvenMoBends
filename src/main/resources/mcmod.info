@@ -2,7 +2,7 @@
   {
     "modid": "${modId}",
     "name": "${modName}",
-    "description": "A maintained Minecraft 1.7.10 fork of Mo' Bends with explicit compatibility policies.",
+    "description": "Mo' Bends for Minecraft 1.7.10, with Salamander models and animations, resource-pack support and an expressive skin editor.",
     "version": "${modVersion}",
     "mcversion": "${minecraftVersion}",
     "url": "https://github.com/JackOfNoneTrades/EvenMoBends",

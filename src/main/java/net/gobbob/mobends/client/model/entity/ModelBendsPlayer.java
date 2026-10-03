@@ -1,6 +1,7 @@
 package net.gobbob.mobends.client.model.entity;
 
 import net.gobbob.mobends.client.animation.BipedRigModel;
+import net.gobbob.mobends.client.animation.BendsGeometry;
 import java.util.UUID;
 
 import net.gobbob.mobends.AnimatedEntity;
@@ -10,6 +11,7 @@ import net.minecraft.item.ItemStack;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.client.animation.HandAction;
 import net.gobbob.mobends.animation.player.Animation_Bow;
+import net.gobbob.mobends.animation.player.Animation_Eating;
 import net.gobbob.mobends.animation.player.Animation_Attack;
 import net.gobbob.mobends.animation.player.Animation_Blocking;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
@@ -70,6 +72,23 @@ extends ModelBiped implements BipedRigModel {
     private final float modelScale;
     private final float modelYOffset;
     private float partialTicks;
+    private BendsGeometry geometry;
+    private String geometryName;
+
+    public String geometryName() {
+        if (this.modelScale == 1) return "player_armor_outer";
+        if (this.modelScale == 0.5f) return "player_armor_inner";
+        return this.modern ? (this.slim ? "player_slim" : "player") : "player_legacy";
+    }
+
+    public BendsGeometry geometry() {
+        String name = geometryName();
+        if (!name.equals(this.geometryName)) {
+            this.geometryName = name;
+            this.geometry = new BendsGeometry(this, name);
+        }
+        return this.geometry;
+    }
 
     @Override
     public ModelBiped biped() {
@@ -292,22 +311,15 @@ extends ModelBiped implements BipedRigModel {
             GL11.glPushMatrix();
             GL11.glScalef((float)(1.5f / f6), (float)(1.5f / f6), (float)(1.5f / f6));
             GL11.glTranslatef((float)0.0f, (float)(16.0f * p_78088_7_), (float)0.0f);
-            this.bipedHead.render(p_78088_7_);
+            this.geometry().render(p_78088_7_, name -> this.geometry().rig.descendant(name, "head"));
             GL11.glPopMatrix();
             GL11.glPushMatrix();
             GL11.glScalef((float)(1.0f / f6), (float)(1.0f / f6), (float)(1.0f / f6));
             GL11.glTranslatef((float)0.0f, (float)(24.0f * p_78088_7_), (float)0.0f);
-            this.bipedBody.render(p_78088_7_);
-            this.bipedRightArm.render(p_78088_7_);
-            this.bipedLeftArm.render(p_78088_7_);
-            this.bipedRightLeg.render(p_78088_7_);
-            this.bipedLeftLeg.render(p_78088_7_);
-            this.bipedHeadwear.render(p_78088_7_);
+            this.geometry().render(p_78088_7_, name -> !this.geometry().rig.descendant(name, "head"));
             GL11.glPopMatrix();
         } else {
-            this.bipedBody.render(p_78088_7_);
-            this.bipedRightLeg.render(p_78088_7_);
-            this.bipedLeftLeg.render(p_78088_7_);
+            this.geometry().render(p_78088_7_);
         }
 
         if (layers3D != null) {
@@ -441,9 +453,10 @@ extends ModelBiped implements BipedRigModel {
                 }
             }
             int blockingHands = PlayerBlockingCompat.getBlockingHands(player, this);
+            int eatingHand = Animation_Eating.hand(player);
             if (rowing && boat.driver) {
                 // Both hands are occupied by paddles, even while coasting or holding a tool.
-            } else if ((blockingHands & PlayerBlockingCompat.MAIN_HAND) != 0) {
+            } else if (eatingHand == 1 || (blockingHands & PlayerBlockingCompat.MAIN_HAND) != 0) {
                 // Do not let a recent sword swing/stance compete with main-hand blocking.
             } else if (aqua.isActive() && !player.isSwingInProgress && player.getItemInUseCount() == 0) {
                 // Keep weapon recovery stances from replacing the swimming/crawling arm cycle.
@@ -455,11 +468,12 @@ extends ModelBiped implements BipedRigModel {
             } else {
                 this.animatePlayer(mainHandAnimation(player, data), argEntity, data);
             }
-            if (!(rowing && boat.driver) && (blockingHands & PlayerBlockingCompat.OFF_HAND) == 0) {
+            if (!(rowing && boat.driver) && eatingHand != 2 && (blockingHands & PlayerBlockingCompat.OFF_HAND) == 0) {
                 Animation_Attack.playOffhand(player, this, data);
             }
             if (!(rowing && boat.driver)) {
                 Animation_Blocking.play(this, data, blockingHands);
+                if (eatingHand != 0) Animation_Eating.play(this, data, player.getItemInUseDuration() + this.partialTicks, eatingHand == 2);
             }
             AnimationPreview.apply(this, data, argEntity);
             ((ModelRendererBends)this.bipedHead).update(data.ticksPerFrame);
@@ -876,8 +890,11 @@ extends ModelBiped implements BipedRigModel {
             return;
         }
         GL11.glPushMatrix();
-        for (ModelRendererBends part : hierarchy) {
-            part.applyTransform(scale);
+        if (hierarchy[0] == this.bipedBody || hierarchy[0] == this.bipedRightLeg || hierarchy[0] == this.bipedLeftLeg) {
+            this.geometry().attach(this.geometry().rig.name(hierarchy[hierarchy.length - 1]), scale);
+        } else {
+            // Skin-mod first-person callbacks enter with their own arm origin already applied.
+            for (ModelRendererBends part : hierarchy) part.applyTransform(scale);
         }
         WawelAuth3DSkinLayers.renderMesh(
             mesh,

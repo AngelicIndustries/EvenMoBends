@@ -244,22 +244,19 @@ extends ModelSpider implements AnimatedModel {
         this.spiderLeg8.addChild(this.spiderForeLeg8);
     }
 
+    private net.gobbob.mobends.client.animation.BendsGeometry geometry;
+
+    public net.gobbob.mobends.client.animation.BendsGeometry geometry() {
+        if (this.geometry == null) this.geometry = new net.gobbob.mobends.client.animation.BendsGeometry(this, "spider");
+        return this.geometry;
+    }
+
     @Override
     public void render(Entity p_78088_1_, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float p_78088_7_) {
         this.setRotationAngles(p_78088_2_, p_78088_3_, p_78088_4_, p_78088_5_, p_78088_6_, p_78088_7_, p_78088_1_);
         GL11.glPushMatrix();
         GL11.glTranslatef((float)0.0f, (float)0.2f, (float)0.0f);
-        this.spiderHead.render(p_78088_7_);
-        this.spiderNeck.render(p_78088_7_);
-        this.spiderBody.render(p_78088_7_);
-        this.spiderLeg1.render(p_78088_7_);
-        this.spiderLeg2.render(p_78088_7_);
-        this.spiderLeg3.render(p_78088_7_);
-        this.spiderLeg4.render(p_78088_7_);
-        this.spiderLeg5.render(p_78088_7_);
-        this.spiderLeg6.render(p_78088_7_);
-        this.spiderLeg7.render(p_78088_7_);
-        this.spiderLeg8.render(p_78088_7_);
+        this.geometry().render(p_78088_7_);
         GL11.glPopMatrix();
     }
 

@@ -1,60 +1,82 @@
 package net.gobbob.mobends.compat;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import net.minecraft.entity.Entity;
+import static org.junit.jupiter.api.Assertions.*;
+import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import net.minecraft.client.model.ModelSpider;
+import net.minecraft.client.resources.IResource;
+import net.minecraft.client.resources.IResourceManager;
+import net.minecraft.client.resources.data.IMetadataSection;
+import net.minecraft.util.ResourceLocation;
+import org.fentanylsolutions.salamander.cem.client.CemBinding;
+import org.fentanylsolutions.salamander.cem.client.CemResources;
+import org.fentanylsolutions.salamander.config.CemConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** Mo' Bends asks Salamander, by name, whether a resource pack's CEM model takes an entity over. */
+/** Exercises the actual dependency, including parsing and reloads; no invented reflection API. */
 class CemCompatTest {
-    /** Stands in for Salamander's {@code SalamanderCem}: takes over whatever {@link #claims} says. */
-    public static final class FakeCem {
-        static boolean claims;
-        static boolean broken;
+    private final Resources resources = new Resources();
+    private final CemBinding binding;
+    private final Object subject = new Object();
 
-        public static boolean hasModel(Entity entity) {
-            if (broken) throw new IllegalStateException("broken");
-            return claims;
-        }
+    CemCompatTest() {
+        ModelSpider model = new ModelSpider();
+        binding = new CemBinding(model, Collections.singletonMap("head", model.spiderHead));
     }
 
     @AfterEach
     void restore() {
-        FakeCem.claims = false;
-        FakeCem.broken = false;
-        CemCompat.useApi(CemCompat.API);
+        CemConfig.enabled = true;
+        resources.files.clear();
+        CemResources.INSTANCE.onResourceManagerReload(resources);
     }
 
-    private static Entity entity() throws Exception {
-        java.lang.reflect.Field field = sun.misc.Unsafe.class.getDeclaredField("theUnsafe");
-        field.setAccessible(true);
-        return (Entity)((sun.misc.Unsafe)field.get(null)).allocateInstance(net.minecraft.entity.monster.EntitySpider.class);
+    private boolean selects() { return CemCompat.selects(subject, binding, Collections.singletonList("spider")); }
+
+    @Test
+    void validPackTakesOverAndReloadGivesTheEntityBack() {
+        CemResources.INSTANCE.onResourceManagerReload(resources);
+        assertFalse(selects());
+        resources.files.put("optifine/cem/spider.jem", "{\"textureSize\":[64,32],\"models\":[{\"part\":\"head\",\"id\":\"head\",\"boxes\":[{\"textureOffset\":[0,0],\"coordinates\":[-4,-4,-4,8,8,8]}]}]}");
+        CemResources.INSTANCE.onResourceManagerReload(resources);
+        assertTrue(selects());
+        CemConfig.enabled = false;
+        assertFalse(selects());
+        CemConfig.enabled = true;
+        assertTrue(selects());
+        resources.files.clear();
+        CemResources.INSTANCE.onResourceManagerReload(resources);
+        assertFalse(selects());
     }
 
     @Test
-    void aSalamanderWithoutCemNeverTakesOver() throws Exception {
-        CemCompat.useApi("org.example.NoSuchApi");
-        assertFalse(CemCompat.hasModel(entity()));
+    void malformedPackDoesNotSuppressBends() {
+        resources.files.put("optifine/cem/spider.jem", "broken JSON");
+        CemResources.INSTANCE.onResourceManagerReload(resources);
+        assertFalse(selects());
     }
 
-    @Test
-    void followsSalamandersAnswer() throws Exception {
-        CemCompat.useApi(FakeCem.class.getName());
-        Entity spider = entity();
-        assertFalse(CemCompat.hasModel(spider));
-        FakeCem.claims = true;
-        assertTrue(CemCompat.hasModel(spider), "a pack model takes the spider over");
-        FakeCem.claims = false;
-        assertFalse(CemCompat.hasModel(spider), "and gives it back when the pack goes");
-    }
-
-    @Test
-    void aFailingCheckLeavesMoBendsRendering() throws Exception {
-        CemCompat.useApi(FakeCem.class.getName());
-        FakeCem.claims = true;
-        FakeCem.broken = true;
-        assertFalse(CemCompat.hasModel(entity()));
+    private static final class Resources implements IResourceManager {
+        final Map<String, String> files = new HashMap<>();
+        @Override public Set<String> getResourceDomains() { return Collections.singleton("minecraft"); }
+        @Override public IResource getResource(ResourceLocation location) throws FileNotFoundException {
+            String value = files.get(location.getResourcePath());
+            if (value == null) throw new FileNotFoundException(location.toString());
+            return new IResource() {
+                @Override public java.io.InputStream getInputStream() { return new ByteArrayInputStream(value.getBytes(StandardCharsets.UTF_8)); }
+                @Override public boolean hasMetadata() { return false; }
+                @Override public IMetadataSection getMetadata(String name) { return null; }
+            };
+        }
+        @Override public List<IResource> getAllResources(ResourceLocation location) throws FileNotFoundException {
+            return Collections.singletonList(getResource(location));
+        }
     }
 }

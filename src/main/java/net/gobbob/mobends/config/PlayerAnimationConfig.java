@@ -18,6 +18,7 @@ public final class PlayerAnimationConfig {
     private static boolean swimming = true;
     private static boolean diving = true;
     private static boolean bow = true;
+    private static boolean eating = true;
     private static boolean riding = true;
     private static boolean rowing = true;
     private static boolean mining = true;
@@ -45,6 +46,7 @@ public final class PlayerAnimationConfig {
         swimming = read(config, "swimming", "Surface, idle and Aqua Acrobatics swimming animation.");
         diving = read(config, "diving", "Directional animation used while moving fully underwater.");
         bow = read(config, "bow", "Bow aiming pose.");
+        eating = read(config, "eating", "Raise the active hand to eat or drink, including Backhand off-hand use.");
         riding = read(config, "riding", "Mounted player pose.");
         rowing = read(config, "rowing", "Et Futurum Requiem paddle-synchronized boating pose. Requires riding; falls back to riding when disabled.");
         mining = read(config, "mining", "Pickaxe and block-mining pose.");
@@ -71,6 +73,7 @@ public final class PlayerAnimationConfig {
         write(config, "swimming", swimming);
         write(config, "diving", diving);
         write(config, "bow", bow);
+        write(config, "eating", eating);
         write(config, "riding", riding);
         write(config, "rowing", rowing);
         write(config, "mining", mining);
@@ -97,6 +100,7 @@ public final class PlayerAnimationConfig {
         if ("swimming".equals(animation)) return swimming;
         if ("diving".equals(animation)) return diving;
         if ("bow".equals(animation)) return bow;
+        if ("eating".equals(animation)) return eating;
         if ("riding".equals(animation)) return riding;
         if ("rowing".equals(animation)) return rowing;
         if ("mining".equals(animation)) return mining;

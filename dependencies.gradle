@@ -12,10 +12,12 @@ dependencies {
 
     // devOnlyNonPublishable includes both compile and non-published runtime scopes.
     devOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.51:dev")
-    // GeckoLib backport: loads and evaluates the Blockbench-authored player animations.
-    implementation("org.fentanylsolutions.salamander:Salamander:76e5603-snapshot:dev")
+    // Models, animation evaluation, rendering and resource-pack CEM support.
+    implementation("org.fentanylsolutions.salamander:Salamander:8e5a945-snapshot:dev")
     // GTNHLib provides JOML in game through its dependency loader; Salamander's CPU renderer needs it in tests.
     testImplementation("org.joml:joml:1.10.9")
+    // Salamander's Java 8 artifact calls the stubs normally provided by the GTNH runtime loader.
+    testRuntimeOnly("xyz.wagyourtail.jvmdowngrader:jvmdowngrader-java-api:2.0.1:downgraded-8")
     devOnlyNonPublishable("org.fentanylsolutions.fentlib:FentLib:0.0.55:dev")
     devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.91-1.7.10:dev")
     compileOnly(wawelAuthDependency)

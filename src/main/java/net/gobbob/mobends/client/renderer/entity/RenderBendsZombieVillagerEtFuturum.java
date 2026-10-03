@@ -21,6 +21,8 @@ extends RenderBiped {
         new ResourceLocation("textures/entity/zombie_villager/zombie_butcher.png"),
         new ResourceLocation("textures/entity/zombie_villager/zombie_villager.png")};
     private int refreshModel = 0;
+    private final ganymedes01.etfuturum.client.renderer.entity.VillagerZombieRenderer packRenderer =
+        new ganymedes01.etfuturum.client.renderer.entity.VillagerZombieRenderer();
 
     public RenderBendsZombieVillagerEtFuturum() {
         super(new ModelBendsZombieVillagerEtFuturum(), 0.5f, 1.0f);
@@ -34,6 +36,11 @@ extends RenderBiped {
 
     @Override
     public void doRender(EntityLiving entity, double x, double y, double z, float yaw, float partialTicks) {
+        if (net.gobbob.mobends.compat.CemCompat.hasModel(entity, this.packRenderer.modelBipedMain, getEntityTexture(entity))) {
+            this.packRenderer.setRenderManager(this.renderManager);
+            this.packRenderer.doRender(entity, x, y, z, yaw, partialTicks);
+            return;
+        }
         if (this.refreshModel != MoBends.refreshModel) {
             this.mainModel = this.modelBipedMain = new ModelBendsZombieVillagerEtFuturum();
             this.refreshModel = MoBends.refreshModel;

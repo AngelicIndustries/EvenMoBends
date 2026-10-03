@@ -10,6 +10,8 @@ extends ModelRendererBends {
     ModelRendererBends seperatedModel;
     /** Runs at the end of {@link #postRender}, while set: something drawn from this limb goes where it says. */
     public Runnable afterPostRender;
+    /** Compatibility entry point used by vanilla equipment renderers and Backhand. */
+    public java.util.function.Consumer<Float> geometryAttachment;
 
     public ModelRendererBends_SeperatedChild(ModelBase argModel) {
         super(argModel);
@@ -35,6 +37,11 @@ extends ModelRendererBends {
 
     @Override
     public void postRender(float p_78794_1_) {
+        if (this.geometryAttachment != null) {
+            this.geometryAttachment.accept(p_78794_1_);
+            if (this.afterPostRender != null) this.afterPostRender.run();
+            return;
+        }
         this.updateBends(p_78794_1_);
         this.momModel.postRender(p_78794_1_);
         if (!this.isHidden && this.showModel) {
@@ -68,4 +75,3 @@ extends ModelRendererBends {
         if (this.afterPostRender != null) this.afterPostRender.run();
     }
 }
-

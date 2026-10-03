@@ -1,5 +1,14 @@
 # Blockbench rig
 
+Runtime geometry lives in `src/main/resources/assets/mobends/geckolib/models/`. Salamander bakes and draws these
+models, including classic/slim/legacy players, inner/outer armor, zombie and villager variants, and spiders.
+The native model classes supply poses and adapters for Forge, skin layers and held items; their display lists no
+longer draw the main body. Runtime files keep skin layers as separate `_layerN` bones so clothing visibility and
+armor passes remain independent. Resource-pack overrides must preserve the rig's named attachment/animation bones.
+
+The files in this directory are reference rigs for animation authoring. In-game Blockbench export starts from the
+built-in rig and your skin; it does not import a CEM pack's model or a resource pack's geometry override.
+
 `player.geo.json` (classic arms) and `player_slim.geo.json` (slim arms) are the Even Mo' Bends player model in
 Bedrock/GeckoLib format, generated from `ModelBendsPlayer` by `PlayerRigTest`. For animating, export a Blockbench
 project from the game instead (below). Tests prove that Salamander
@@ -125,6 +134,10 @@ Player animations live in `src/main/resources/assets/mobends/geckolib/animations
   players' swings with a block count as placing). A bow drawn in Backhand's off hand plays the bow mirrored.
   Mirrored animations are given the look's yaw reflected, so the head still turns where the player looks.
 - `block.animation.json`: `block_right` / `block_left`, over everything else while that hand blocks.
+- `eating.animation.json`: `eating`, a looping hand-to-mouth pose while actually eating or drinking. Its clock is
+  time spent using the item, with a short fade in; it only keys the arm, forearm and held item. Backhand's off hand
+  plays it mirrored. Locomotion continues underneath; boat drivers keep their paddle pose. Disable it with
+  `animations.player.eating=false`.
 - `item_test.animation.json`: `item_spin` and `item_throw`, examples of item bones.
 
 Mobs have their own folders, named `animation.mobends.<mob>.<name>` inside, e.g. `zombie/walk.animation.json`'s
@@ -139,9 +152,11 @@ texture).
   full swing) over it by how strongly the legs swing, timed by the stride. `SpiderAnimationTest` keeps it within 1.5
   degrees of the original Java walk (`MOBENDS_BAKE_SPIDER=1` to bake again). Export the spider with
   `/evenmobends blockbench spider`. The root moves and turns the whole spider.
-- When a resource pack's CEM model covers a mob (Salamander's CEM support, e.g. Fresh Animations Spiders), it
-  supersedes Mo' Bends for that mob: Mo' Bends hands the mob to the vanilla renderer, which Salamander draws with the
-  pack's model. Checked every frame, so reloading packs or switching Salamander's CEM off brings Mo' Bends back.
+- When a valid, enabled CEM model covers a player, zombie, zombie villager, spider or cave spider, it supersedes
+  Mo' Bends for that entity. Mo' Bends delegates to a native renderer, which Salamander draws with the pack's model
+  and animations. Selection follows Salamander's actual loader, variants and pack priority on each frame; reloading
+  packs or switching CEM off brings Mo' Bends back. Just Expressions and Fresh Moves both own the whole player;
+  their eye geometry is not composed with the Mo' Bends body.
 - A zombie hitting with something in its hand (a zombie pigman's sword) plays the player's sword swings from
   `player/sword.animation.json`, one per hit through the combo. The server makes such zombies swing on every hit,
   which vanilla pigmen don't, so this needs Mo' Bends on the server (singleplayer always has it). Salamander loads them through the resource manager, so a resource pack can replace any of

@@ -8,7 +8,6 @@ import java.io.File;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.CommonProxy;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
-import net.gobbob.mobends.config.BlinkConfig;
 import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraftforge.common.config.Configuration;
@@ -45,7 +44,6 @@ public class MoBends {
             config.get("Animate", AnimatedEntity.animatedEntities[i].id, false).setValue(AnimatedEntity.animatedEntities[i].animate);
         }
         config.get("General", "Sword Trail", true).setValue(((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data);
-        BlinkConfig.save(config);
         PlayerAnimationConfig.save(config);
         config.save();
     }

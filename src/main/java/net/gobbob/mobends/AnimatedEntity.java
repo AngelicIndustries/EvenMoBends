@@ -81,6 +81,7 @@ public class AnimatedEntity {
                         .add(new Animation_Attack())
                         .add(new Animation_Swimming())
                         .add(new Animation_Bow())
+                        .add(new net.gobbob.mobends.animation.player.Animation_Eating())
                         .add(new Animation_Riding())
                         .add(new Animation_Rowing())
                         .add(new Animation_Mining())

@@ -34,6 +34,15 @@ extends RenderBiped {
     protected ModelBiped villagerRegularArmor;
     private int field_82431_q = 1;
     public int refreshModel = 0;
+    private final net.minecraft.client.renderer.entity.RenderZombie packRenderer = new net.minecraft.client.renderer.entity.RenderZombie() {
+        @Override
+        protected ResourceLocation getEntityTexture(EntityZombie entity) {
+            return RenderBendsZombie.this.getEntityTexture(entity);
+        }
+    };
+    // RenderZombie switches modelBipedMain when drawing a villager; keep a stable regular-model probe.
+    private final ModelBiped packZombieModel = this.packRenderer.modelBipedMain;
+    private final net.minecraft.client.model.ModelZombieVillager packVillagerModel = new net.minecraft.client.model.ModelZombieVillager();
 
     public RenderBendsZombie() {
         super(new ModelBendsZombie(), 0.5f, 1.0f);
@@ -55,6 +64,12 @@ extends RenderBiped {
     }
 
     public void doRender(EntityZombie p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
+        if (net.gobbob.mobends.compat.CemCompat.hasModel(p_76986_1_,
+            p_76986_1_.isVillager() ? this.packVillagerModel : this.packZombieModel, getEntityTexture(p_76986_1_))) {
+            this.packRenderer.setRenderManager(this.renderManager);
+            this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+            return;
+        }
         if (this.refreshModel != MoBends.refreshModel) {
             this.mainModel = new ModelBendsZombie();
             this.zombieRegularModel = this.modelBipedMain = (ModelBendsZombie)this.mainModel;

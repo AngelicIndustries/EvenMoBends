@@ -1,6 +1,6 @@
 # Even Mo' Bends
 
-Maintainable Minecraft 1.7.10 fork of Mo' Bends 0.20.1 with Wawel Auth and Smart Moving compat.
+Minecraft 1.7.10 fork of Mo' Bends 0.20.1, with Salamander models and animations, resource-pack support and an expressive skin editor.
 
 ![Even Mo' Bends logo](images/logo_small.png)
 
@@ -15,18 +15,42 @@ Maintainable Minecraft 1.7.10 fork of Mo' Bends 0.20.1 with Wawel Auth and Smart
 [![maven](images/badges/maven.png)](https://maven.fentanylsolutions.org/#/releases/net/gobbob/mobends/EvenMoBends)
 -->
 
+## Features
+
+Segmented player, zombie, zombie villager, zombie pigman, spider and cave spider animations. Salamander loads and
+renders the model geometry and evaluates the Blockbench/GeckoLib animation files. Resource packs can replace those
+assets; see the [Blockbench guide](blockbench/README.md) for exporting projects and editing animations.
+
+Eating and drinking raise the hand holding the item, including Backhand's off hand, while the rest of the body can
+keep moving. Holding food alone does not trigger the animation. Set `animations.player.eating=false` in `mobends.cfg`
+to disable it. The player animation switches also cover movement, combat, swimming, crawling and rowing.
+
+## Dependencies
+
+* [Salamander](https://github.com/JackOfNoneTrades/Salamander) is required. This development branch targets
+  `8e5a945-snapshot`; older builds without its public CEM/player-skin APIs are incompatible.
+* Salamander also requires [GTNHLib](https://github.com/GTNewHorizons/GTNHLib) 0.11.30 or newer and a compatible
+  mixin bootstrap such as [UniMixins](https://github.com/LegacyModdingMC/UniMixins).
+* Just Expressions and Fresh Moves are optional, separately installed resource packs. No pack artwork is bundled.
+
 ## Compatibility
+
+Every row below includes the required Salamander installation. A matching, enabled CEM pack takes priority over
+Mo' Bends for that entity. Player packs replace the whole player model and its animations, including eating;
+the editor does not splice pack eyes onto the Mo' Bends body. Use one player pack at a time; normal resource-pack
+priority decides which model wins if several are enabled. Removing the pack or disabling CEM restores Mo' Bends.
 
 | Installed mods | Player renderer | Mob animations |
 | --- | --- | --- |
-| Even Mo' Bends only | Mo' Bends | Enabled |
+| Even Mo' Bends | Mo' Bends through Salamander | Enabled |
 | WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth skins and modern-skin support | Enabled |
 | SimpleSkinBackport + Even Mo' Bends | Mo' Bends with modern skins, slim arms and segmented skin layers | Enabled |
 | Backhand + Just A Shield + Even Mo' Bends | Mo' Bends with per-hand blocking poses, including passive shield blocking | Enabled |
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled |
 | Smart Moving (with or without WawelAuth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
-| Salamander CEM + a CEM resource pack (e.g. Fresh Animations Spiders) | Mo' Bends | The pack's model supersedes Mo' Bends for the mobs it covers (spiders so far) |
+| Just Expressions / Fresh Moves | Salamander renders the pack's player model | Mo' Bends for uncovered mobs |
+| A matching zombie, zombie villager or spider CEM pack | Mo' Bends unless a player pack is also active | Salamander renders the pack's model for covered mobs |
 
 EFR boat drivers follow each paddle independently, including turns and coasting. Boats, chest boats,
 and rafts use their own handle and seat positions; rear passengers sit without rowing.
@@ -38,28 +62,40 @@ Stopping or touching the bottom keeps AA's prone pose, and ordinary movement in 
 Set `animations.player.crawling=false` to disable the crawl limb cycle while keeping the low pose needed to fit.
 The `swimming` animation switch also controls AA's swimming limb cycle.
 
-## Blinking
+## Expressive skin editor
 
-Player skins can opt in to blinking with the embedded blink marker and frames documented by ETF's
-[player skin guide](https://github.com/Traben-0/Entity_Texture_Features/blob/ETF-Main/.github/README-assets/SKIN_GUIDE.md#blinking---v230).
-Even Mo' Bends implements only the blinking part of that convention. Sleeping and blindness keep the eyes closed.
-By default, intermediate eyelid frames are generated and eased closed and open for a smoother, Fresh Moves-style
-blink without adding a second player body rig. Set `blinking.smoothEyelids=false` to use the authored frames directly.
+Open the Even Mo' Bends menu (default `G`) and choose **Prepare Expressive Skin**. Select an eye preset, move it to
+match your face, mark the pupils, and paint eyelid/background colors. Export a PNG or use the Wawel Auth upload
+button, which asks for confirmation before replacing your skin. Enable Just Expressions or the animated-eyes
+version of Fresh Moves to see the expressions through Salamander.
 
-Currently only pigs blink. A resource pack can override a pig's generated
-closed-eye texture by placing `_blink` before `.png`, with an optional `_blink2.png` half-closed frame. When Angelica
-Random Mobs is enabled, these companions are resolved after the pig variant, so `pig2.png` can use `pig2_blink.png`.
+The editor writes the shared skin layout used by Just Expressions 1.2.1 and Fresh Moves 3.1.1. The same prepared skin
+works with either pack. It supports common base-face 2x1, 2x2 and 2x3 eyes, simple one-pixel-wide blinking eyes, and
+two-pixel eyebrows. It accepts 64x64 and legacy 64x32 skins and preserves their visible face pixels. Unsupported
+positions, pupil layouts, HD skins and eyes on the hat layer produce an explanation before export; the
+[pack skin guide](https://github.com/IthanMendoza/Fresh-Moves/wiki) covers manual preparation for other layouts.
 
-Player blinking, smooth eyelids, pig blinking, blink frequency, and blink length are independently configurable in
-`mobends.cfg`.
-
-An ingame editor accessible from the Even Mo' Bends menu allows to easily create blinking-capable skins.
+The old editor's selections can be imported and adapted to these presets. Export replaces its old embedded marker
+with the shared pack data. The editor's blink preview is a color/selection aid; the active pack controls the final
+expression motion. Mo' Bends' separate player/pig blink renderer and `blinking.*` settings have been retired.
+Existing skins are not automatically rewritten.
 
 ## Building
+
+See the [0.0.3 release checklist](RELEASE_CHECKLIST.md) for migration validation and remaining publication work.
 
 ```sh
 ./gradlew build
 ```
+
+To additionally check both classic and slim models and the editor's UV layout against original pack ZIPs, without
+bundling them in the project:
+
+```sh
+EXPRESSION_PACKS='/path/to/JustExpressions_v1.2.1.zip:/path/to/FreshMoves-3.1.1-AnimatedEyes.zip' ./gradlew test --tests '*ExpressionPackTest' --rerun-tasks
+```
+
+Use your operating system's path separator between ZIPs (`:` on Linux/macOS, `;` on Windows).
 
 It can additionally load makamys' Smart Moving stack without making it a published dependency:
 
@@ -94,7 +130,9 @@ To test Aqua Acrobatics, supply its development jar. This can be combined with t
 * [Iwo Plaza / GobBob](https://www.curseforge.com/minecraft/mc-mods/mo-bends), creator of Mo' Bends.
 * [makamys](https://github.com/makamys/SmartMoving), maintainer of the Minecraft 1.7.10 Smart Moving fork used for compatibility testing.
 * [GTNH Et Futurum Requiem](https://github.com/GTNewHorizons/Et-Futurum-Requiem), whose optional API supplies Elytra flight and boat paddle state.
-* [Entity Texture Features](https://github.com/Traben-0/Entity_Texture_Features), whose documented player-skin blink convention is supported.
+* [Salamander](https://github.com/JackOfNoneTrades/Salamander), for model rendering, animation evaluation and CEM support.
+* [FreshLX / Ithan Mendoza](https://github.com/IthanMendoza/Fresh-Moves), for the Just Expressions / Fresh Moves skin layout used by the editor.
+* [Entity Texture Features](https://github.com/Traben-0/Entity_Texture_Features), whose blink marker was used by the legacy editor's skin format.
 * [GT:NH buildscript](https://github.com/GTNewHorizons/ExampleMod1.7.10).
 
 See [UPSTREAM.md](UPSTREAM.md) for exact source and binary provenance.

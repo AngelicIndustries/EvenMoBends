@@ -1,54 +1,56 @@
 package net.gobbob.mobends.compat;
 
-import java.lang.reflect.Method;
-import net.gobbob.mobends.util.BendsLogger;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.model.ModelBiped;
+import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.model.ModelSpider;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.ResourceLocation;
+import org.fentanylsolutions.salamander.cem.client.CemBinding;
+import org.fentanylsolutions.salamander.cem.client.CemModelParts;
+import org.fentanylsolutions.salamander.cem.client.CemPlayers;
+import org.fentanylsolutions.salamander.cem.client.CemResources;
+import org.fentanylsolutions.salamander.cem.client.CemRuntime;
+import org.fentanylsolutions.salamander.cem.client.CemTargets;
 
-/**
- * Salamander's CEM support (OptiFine-format entity models from resource packs, e.g. Fresh Animations): whether a pack
- * model currently takes over an entity. When it does, Mo' Bends steps aside for that entity and lets the vanilla
- * renderer draw it, which Salamander then renders with the pack's model.
- *
- * <p>Looked up by reflection, so Salamander versions without CEM simply never take over anything.
- */
+/** Ask the same loader/variant selector as Salamander's renderer, including config and invalid-pack fallback. */
 public final class CemCompat {
-    static final String API = "org.fentanylsolutions.salamander.cem.SalamanderCem";
-
-    private static String api = API;
-    private static Method hasModel;
-    private static boolean resolved;
+    private static final ModelSpider SPIDER = new ModelSpider();
+    private static final Map<ModelBase, CemBinding> BINDINGS = new IdentityHashMap<>();
 
     private CemCompat() {}
 
-    /** Whether a resource pack's CEM model renders {@code entity} right now (it follows pack reloads and config). */
     public static boolean hasModel(Entity entity) {
-        Method method = method();
-        if (method == null || entity == null) return false;
+        return hasModel(entity, SPIDER, null);
+    }
+
+    public static boolean hasModel(Entity entity, ModelBase model, ResourceLocation texture) {
+        if (entity == null || !(model instanceof CemModelParts)) return false;
+        if (entity instanceof AbstractClientPlayer && model instanceof ModelBiped) {
+            CemPlayers.register((ModelBiped)model);
+            if (WawelAuthCompat.isModernSkinSupportEnabled())
+                CemPlayers.skinModel((AbstractClientPlayer)entity, WawelAuthCompat.isSlim((AbstractClientPlayer)entity));
+        }
+        Map<String, ModelRenderer> parts = ((CemModelParts)model).salamander$cemParts();
+        CemBinding binding = BINDINGS.get(model);
+        if (binding == null || !binding.matches(parts)) {
+            binding = new CemBinding(model, parts);
+            BINDINGS.put(model, binding);
+        }
+        ResourceLocation previous = CemRuntime.texture();
         try {
-            return (Boolean)method.invoke(null, entity);
-        } catch (ReflectiveOperationException | RuntimeException e) {
-            hasModel = null;
-            BendsLogger.log("Salamander's CEM check failed; Mo' Bends keeps rendering: " + e, BendsLogger.ERROR);
-            return false;
+            CemRuntime.texture(texture);
+            return selects(entity, binding, CemTargets.candidates(entity, model, texture));
+        } finally {
+            CemRuntime.texture(previous);
         }
     }
 
-    private static Method method() {
-        if (!resolved) {
-            resolved = true;
-            try {
-                hasModel = Class.forName(api).getMethod("hasModel", Entity.class);
-            } catch (ReflectiveOperationException | LinkageError e) {
-                hasModel = null;
-            }
-        }
-        return hasModel;
-    }
-
-    /** Looks the check up in {@code className} from now on (tests). */
-    static void useApi(String className) {
-        api = className;
-        resolved = false;
-        hasModel = null;
+    static boolean selects(Object subject, CemBinding binding, List<String> candidates) {
+        return CemResources.INSTANCE.select(candidates, binding, subject) != null;
     }
 }

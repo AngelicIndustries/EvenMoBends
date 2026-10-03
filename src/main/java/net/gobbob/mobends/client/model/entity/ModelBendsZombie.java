@@ -20,6 +20,22 @@ import org.lwjgl.util.vector.Vector3f;
 @SideOnly(value=Side.CLIENT)
 public class ModelBendsZombie
 extends ModelBiped implements BipedRigModel {
+    private float geometryInflate;
+    private net.gobbob.mobends.client.animation.BendsGeometry geometry;
+
+    public String geometryName() {
+        if (this.geometryInflate == 1) return "zombie_armor_outer";
+        if (this.geometryInflate == 0.5f) return "zombie_armor_inner";
+        if (this instanceof ModelBendsZombieVillagerEtFuturum) return "zombie_villager_modern";
+        if (this instanceof ModelBendsZombieVillager) return "zombie_villager";
+        return "zombie";
+    }
+
+    public net.gobbob.mobends.client.animation.BendsGeometry geometry() {
+        if (this.geometry == null) this.geometry = new net.gobbob.mobends.client.animation.BendsGeometry(this, geometryName());
+        return this.geometry;
+    }
+
     public ModelRenderer bipedRightForeArm;
     public ModelRenderer bipedLeftForeArm;
     public ModelRenderer bipedRightForeLeg;
@@ -85,6 +101,7 @@ extends ModelBiped implements BipedRigModel {
     }
 
     protected ModelBendsZombie(float p_i1167_1_, float p_i1167_2_, int p_i1167_3_, int p_i1167_4_) {
+        this.geometryInflate = p_i1167_1_;
         this.textureWidth = p_i1167_3_;
         this.textureHeight = p_i1167_4_;
         this.bipedCloak = new ModelRendererBends(this, 0, 0);
@@ -159,14 +176,13 @@ extends ModelBiped implements BipedRigModel {
             GL11.glPushMatrix();
             GL11.glScalef((float)(1.0f / f6), (float)(1.0f / f6), (float)(1.0f / f6));
             GL11.glTranslatef((float)0.0f, (float)(24.0f * p_78088_7_), (float)0.0f);
-            this.bipedBody.render(p_78088_7_);
-            this.bipedRightLeg.render(p_78088_7_);
-            this.bipedLeftLeg.render(p_78088_7_);
+            this.geometry().render(p_78088_7_);
             GL11.glPopMatrix();
+            ((ModelRendererBends)this.bipedHead).scaleX /= 1.5f;
+            ((ModelRendererBends)this.bipedHead).scaleY /= 1.5f;
+            ((ModelRendererBends)this.bipedHead).scaleZ /= 1.5f;
         } else {
-            this.bipedBody.render(p_78088_7_);
-            this.bipedRightLeg.render(p_78088_7_);
-            this.bipedLeftLeg.render(p_78088_7_);
+            this.geometry().render(p_78088_7_);
         }
     }
 

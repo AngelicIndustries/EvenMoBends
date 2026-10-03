@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.util.Collections;
 import javax.imageio.ImageIO;
 import net.gobbob.mobends.client.render.BlinkSkinExporter;
-import net.gobbob.mobends.client.render.BlinkingTextures;
+import net.gobbob.mobends.client.render.PlayerSkinImages;
+import net.gobbob.mobends.client.render.ExpressionSkinExporter;
 import net.gobbob.mobends.compat.WawelAuthCompat;
 import net.gobbob.mobends.compat.WawelAuthSkinUpload;
 import net.gobbob.mobends.compat.WawelAuthSkinUpload.Account;
@@ -20,7 +21,7 @@ import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.resources.I18n;
 import org.lwjgl.input.Keyboard;
 
-/** Pixel editor that exports ETF-compatible blinking metadata into the current skin. */
+/** Prepares a skin for Just Expressions or Fresh Moves through Salamander. */
 public class GuiBlinkSkinEditor extends GuiScreen {
     private static final int CANVAS_SIZE = 128;
     private static final int PIXEL_SIZE = CANVAS_SIZE / 8;
@@ -63,6 +64,8 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     private boolean replaceArmed;
     private boolean editorDataLoaded;
     private boolean uploading;
+    private int preset;
+    private int presetRow = 4;
 
     public GuiBlinkSkinEditor(GuiScreen parent) {
         this.parent = parent;
@@ -71,7 +74,7 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     @Override
     public void initGui() {
         this.buttonList.clear();
-        this.skin = BlinkingTextures.copyPlayerSkin(this.mc.thePlayer);
+        this.skin = PlayerSkinImages.copyPlayerSkin(this.mc.thePlayer);
         if (!this.editorDataLoaded) {
             loadExistingData();
             this.editorDataLoaded = true;
@@ -82,6 +85,9 @@ public class GuiBlinkSkinEditor extends GuiScreen {
         this.buttonList.add(new GuiButton(13, x + 158, y, 24, 20, ">"));
         this.buttonList.add(new GuiButton(9, x, y + 24, 88, 20, I18n.format("mobends.blink.leftEye")));
         this.buttonList.add(new GuiButton(10, x + 94, y + 24, 88, 20, I18n.format("mobends.blink.rightEye")));
+        this.buttonList.add(new GuiButton(15, x, y + 50, 182, 20, ""));
+        this.buttonList.add(new GuiButton(16, x, y + 74, 88, 20, I18n.format("mobends.expression.up")));
+        this.buttonList.add(new GuiButton(17, x + 94, y + 74, 88, 20, I18n.format("mobends.expression.down")));
         this.buttonList.add(new GuiButton(3, x, y + 119, 182, 20, I18n.format("mobends.blink.pickColor")));
         this.buttonList.add(new GuiButton(4, x, this.height - 50, 88, 20, I18n.format("mobends.blink.blink")));
         this.buttonList.add(new GuiButton(5, x + 94, this.height - 50, 88, 20, I18n.format("mobends.blink.clear")));
@@ -114,6 +120,10 @@ public class GuiBlinkSkinEditor extends GuiScreen {
             this.status = this.activeGroup == 1 ? I18n.format("mobends.blink.paintingLeft")
                 : I18n.format("mobends.blink.paintingRight");
             updateToolControls();
+        } else if (button.id >= 15 && button.id <= 17) {
+            if (button.id == 15) this.preset = (this.preset + 1) % 6;
+            else this.presetRow += button.id == 16 ? -1 : 1;
+            applyPreset();
         } else if (button.id == 3) {
             this.eyedropperArmed = !this.eyedropperArmed;
             updateToolControls();
@@ -433,18 +443,17 @@ public class GuiBlinkSkinEditor extends GuiScreen {
             this.status = I18n.format("mobends.blink.selectionRequired");
             return;
         }
-        if (BlinkSkinExporter.hasBlinkData(this.skin) && !this.replaceArmed) {
+        BufferedImage output = generatedSkin();
+        if (output == null) return;
+        if ((BlinkSkinExporter.hasBlinkData(this.skin) || ExpressionSkinExporter.readEditorData(this.skin) != null) && !this.replaceArmed) {
             this.replaceArmed = true;
             this.statusSuccess = false;
             this.status = I18n.format("mobends.blink.replaceWarning");
             return;
         }
-        BufferedImage output = BlinkSkinExporter.export(
-            this.skin, this.eyeGroups, this.pupils, this.closedColors, this.pupilBackgroundColors,
-            this.eyebrowGroups, this.eyebrowColors);
         FileDialog dialog = new FileDialog((Frame)null, I18n.format("mobends.blink.saveDialog"), FileDialog.SAVE);
         String playerName = this.mc.thePlayer == null ? "player" : this.mc.thePlayer.getCommandSenderName();
-        dialog.setFile(safeName(playerName) + "_blinking.png");
+        dialog.setFile(safeName(playerName) + "_expressions.png");
         dialog.setVisible(true);
         if (dialog.getFile() == null) {
             this.statusSuccess = false;
@@ -466,12 +475,18 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     }
 
     private BufferedImage generatedSkin() {
-        return BlinkSkinExporter.export(
-            this.skin, this.eyeGroups, this.pupils, this.closedColors, this.pupilBackgroundColors,
-            this.eyebrowGroups, this.eyebrowColors);
+        try {
+            return ExpressionSkinExporter.export(this.skin, this.eyeGroups, this.pupils, this.closedColors,
+                this.pupilBackgroundColors, this.eyebrowGroups, this.eyebrowColors);
+        } catch (IllegalArgumentException exception) {
+            this.statusSuccess = false;
+            this.status = exception.getMessage();
+            return null;
+        }
     }
 
     private void confirmWawelAuthUpload() {
+        if (generatedSkin() == null) return;
         Account account = WawelAuthSkinUpload.activeAccount();
         if (account == null) {
             this.statusSuccess = false;
@@ -490,11 +505,12 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     }
 
     private void startWawelAuthUpload(Account account) {
+        BufferedImage output = generatedSkin();
+        if (output == null) return;
         this.uploading = true;
         this.statusSuccess = false;
         this.status = I18n.format("mobends.upload.progress", account.name, account.provider);
         updateExportButton();
-        BufferedImage output = generatedSkin();
         boolean slim = WawelAuthCompat.isSlim(this.mc.thePlayer);
         WawelAuthSkinUpload.upload(account, output, slim, (result, error) -> {
             this.uploading = false;
@@ -502,7 +518,6 @@ public class GuiBlinkSkinEditor extends GuiScreen {
                 this.statusSuccess = false;
                 this.status = I18n.format("mobends.upload.failed", error);
             } else {
-                BlinkingTextures.invalidatePlayer(account.uuid);
                 this.statusSuccess = false;
                 this.status = result == null ? I18n.format("mobends.upload.success") : result;
             }
@@ -527,6 +542,8 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     }
 
     private void updateToolControls() {
+        for (int id=15; id<=17; id++) if (getButton(id)!=null) getButton(id).visible = this.tool == Tool.EYE_REGION;
+        if (getButton(15)!=null) getButton(15).displayString = I18n.format("mobends.expression.preset", presetName());
         GuiButton leftGroup = getButton(9);
         GuiButton rightGroup = getButton(10);
         GuiButton pick = getButton(3);
@@ -584,7 +601,7 @@ public class GuiBlinkSkinEditor extends GuiScreen {
                 this.pupilBackgroundColors[x][y] = currentColor();
             }
         } else if (this.tool == Tool.PAINT_EYELIDS) {
-            if (this.eyeGroups[x][y] == 0) {
+            if (this.eyeGroups[x][y] == 0 && this.eyebrowGroups[x][y] == 0) {
                 this.statusSuccess = false;
                 this.status = I18n.format("mobends.blink.eyelidsRequired");
                 return;
@@ -592,10 +609,39 @@ public class GuiBlinkSkinEditor extends GuiScreen {
             this.closedColors[x][y] = value ? currentColor()
                 : compositeFacePixel(this.skin, x, y, false);
         } else if (this.tool == Tool.EYEBROWS) {
+            if (value && this.eyebrowGroups[x][y] == 0) this.closedColors[x][y] = compositeFacePixel(this.skin, x, Math.max(0,y-1), false);
             this.eyebrowGroups[x][y] = value ? (byte)this.activeGroup : 0;
             this.eyebrowColors[x][y] = value ? currentColor() : 0;
         }
         this.replaceArmed = false;
+    }
+
+    private String presetName() {
+        return new String[] {"2x1", "2x2", "2x3", "1x1", "1x2", "1x3"}[this.preset];
+    }
+
+    private void applyPreset() {
+        if (this.skin == null) return;
+        int w=this.preset<3 ? 2 : 1, h=this.preset%3+1;
+        int min=this.preset==0 ? 3 : this.preset==1 ? 2 : this.preset==2 ? 4 : this.preset==5 ? 2 : 3;
+        int max=this.preset==0 ? 6 : this.preset==1 ? 5 : this.preset==2 ? 4 : this.preset==5 ? 3 : 4;
+        this.presetRow=Math.max(min,Math.min(max,this.presetRow));
+        for (int x=0; x<8; x++) for (int y=0; y<8; y++) { this.eyeGroups[x][y]=0; this.pupils[x][y]=false; }
+        for (int side=0; side<2; side++) {
+            int x=w==2 ? (side==0 ? 1 : 5) : (side==0 ? 2 : 5);
+            int whiteX=side==0 ? x : x+w-1;
+            for (int dx=0; dx<w; dx++) for (int dy=0; dy<h; dy++) {
+                int xx=x+dx, yy=this.presetRow+dy;
+                this.eyeGroups[xx][yy]=(byte)(side+1);
+                this.pupils[xx][yy]=w==2 && dx==(side==0 ? 1 : 0) && dy<Math.min(h,2);
+                this.closedColors[xx][yy]=compositeFacePixel(this.skin,xx,this.presetRow-1,false);
+                this.pupilBackgroundColors[xx][yy]=compositeFacePixel(this.skin,whiteX,yy,false);
+            }
+        }
+        this.replaceArmed=false;
+        this.statusSuccess=false;
+        this.status=I18n.format("mobends.expression.presetHelp");
+        updateToolControls();
     }
 
     private void setEyePixel(int x, int y, boolean value) {
@@ -702,7 +748,7 @@ public class GuiBlinkSkinEditor extends GuiScreen {
             return this.eyebrowGroups[x][y] == this.activeGroup;
         }
         if (this.tool == Tool.PAINT_EYELIDS) {
-            return this.eyeGroups[x][y] != 0;
+            return this.eyeGroups[x][y] != 0 || this.eyebrowGroups[x][y] != 0;
         }
         return this.eyeGroups[x][y] != 0;
     }
@@ -778,7 +824,8 @@ public class GuiBlinkSkinEditor extends GuiScreen {
     }
 
     private void loadExistingData() {
-        BlinkSkinExporter.EditorData data = BlinkSkinExporter.readEditorData(this.skin);
+        BlinkSkinExporter.EditorData data = ExpressionSkinExporter.readEditorData(this.skin);
+        if (data == null) data = BlinkSkinExporter.readEditorData(this.skin);
         if (data == null) return;
         for (int x = 0; x < 8; ++x) {
             for (int y = 0; y < 8; ++y) {
