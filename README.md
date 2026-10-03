@@ -64,21 +64,35 @@ The `swimming` animation switch also controls AA's swimming limb cycle.
 
 ## Expressive skin editor
 
-Open the Even Mo' Bends menu (default `G`) and choose **Prepare Expressive Skin**. Select an eye preset, move it to
-match your face, mark the pupils, and paint eyelid/background colors. Export a PNG or use the Wawel Auth upload
-button, which asks for confirmation before replacing your skin. Enable Just Expressions or the animated-eyes
-version of Fresh Moves to see the expressions through Salamander.
+Open the Even Mo' Bends menu (default `G`) and choose **Prepare Expressive Skin**. Choose an eye shape and
+height, then use the arrows to edit pupils, eye whites, eyelids, eyebrows, outer-layer brows and eyelashes.
+Each color page has a picker, a hex field and a skin eyedropper. Left/right refer to the preview; choose **Both**
+to apply presets to both sides. Right-click erases optional colors or resets backgrounds. `Ctrl+Z` undoes a stroke
+or preset; `Ctrl+Y` (or `Ctrl+Shift+Z`) redoes it. **Clear feature** affects the current feature and selected side.
 
-The editor writes the shared skin layout used by Just Expressions 1.2.1 and Fresh Moves 3.1.1. The same prepared skin
-works with either pack. It supports common base-face 2x1, 2x2 and 2x3 eyes, simple one-pixel-wide blinking eyes, and
-two-pixel eyebrows. It accepts 64x64 and legacy 64x32 skins and preserves their visible face pixels. Unsupported
-positions, pupil layouts, HD skins and eyes on the hat layer produce an explanation before export; the
-[pack skin guide](https://github.com/IthanMendoza/Fresh-Moves/wiki) covers manual preparation for other layouts.
+Export a PNG or use the Wawel Auth upload button, which asks for confirmation before replacing your skin.
+Enable **Just Expressions** or the **Animated Eyes** version of **Fresh Moves** to see expressions through
+Salamander. Saving a draft does not change your active skin or enable a pack.
 
-The old editor's selections can be imported and adapted to these presets. Export replaces its old embedded marker
-with the shared pack data. The editor's blink preview is a color/selection aid; the active pack controls the final
-expression motion. Mo' Bends' separate player/pig blink renderer and `blinking.*` settings have been retired.
-Existing skins are not automatically rewritten.
+The editor writes the shared layout used by Just Expressions 1.2.1 and Fresh Moves 3.1.1:
+
+* Base-face 2x1, 2x2 and 2x3 eyes, derp eyes, 3x1 Enderman eyes, wide-set eyes, and simple one-pixel-wide blinking eyes.
+* Paired, wide-set and joined eyebrows, with separately editable colors and skin covers.
+* Outer-layer eyebrows and eyelashes for bottom-positioned 2x2 eyes.
+
+It accepts 64x64 and 64x32 skins and preserves visible skin pixels. Presets use supported positions and pupil
+shapes; validation catches incompatible combinations, inconsistent colors, HD skins and eyes on the hat layer
+before export or upload. Hover the status text to read longer explanations. See the
+[pack skin guide](https://github.com/IthanMendoza/Fresh-Moves/wiki) for the underlying format.
+
+Only unambiguous current pack data is loaded. Old Mo' Bends/ETF expression data is not imported; start a new
+setup with the presets. Export clears the reserved expression areas before writing the new features, preventing
+stray corner pixels from becoming black eyes or brows. Existing skins are not automatically rewritten.
+
+The preview offers automatic motion, open/closed eyes and four gaze directions. It is a color and placement aid;
+the active pack controls final expression motion. The editor prepares the facial features supported by those
+packs, rather than authoring animation timelines. Mo' Bends' separate player/pig blink renderer and `blinking.*`
+settings have been retired.
 
 ## Building
 
@@ -132,7 +146,6 @@ To test Aqua Acrobatics, supply its development jar. This can be combined with t
 * [GTNH Et Futurum Requiem](https://github.com/GTNewHorizons/Et-Futurum-Requiem), whose optional API supplies Elytra flight and boat paddle state.
 * [Salamander](https://github.com/JackOfNoneTrades/Salamander), for model rendering, animation evaluation and CEM support.
 * [FreshLX / Ithan Mendoza](https://github.com/IthanMendoza/Fresh-Moves), for the Just Expressions / Fresh Moves skin layout used by the editor.
-* [Entity Texture Features](https://github.com/Traben-0/Entity_Texture_Features), whose blink marker was used by the legacy editor's skin format.
 * [GT:NH buildscript](https://github.com/GTNewHorizons/ExampleMod1.7.10).
 
 See [UPSTREAM.md](UPSTREAM.md) for exact source and binary provenance.
