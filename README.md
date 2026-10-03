@@ -2,7 +2,7 @@
 
 Maintainable Minecraft 1.7.10 fork of Mo' Bends 0.20.1 with Wawel Auth and Smart Moving compat.
 
-<!-- ![logo](images/logo.png) -->
+![Even Mo' Bends logo](images/logo_small.png)
 
 [![hub](images/badges/github.png)](https://github.com/JackOfNoneTrades/EvenMoBends/releases)
 [![67](images/badges/67.png)](https://67.fentanylsolutions.org/mod/even-mo-bends)
