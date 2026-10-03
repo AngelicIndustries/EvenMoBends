@@ -2,6 +2,9 @@
 
 Status checked 2026-10-03 on `release-prep-0.0.3`. Publishing is a separate maintainer step.
 
+On hold at the maintainer's request, pending the WawelAuth player-model rework. Resume renderer compatibility
+checks against that rework before preparing the release. Cleanup focus has moved to Past Footsteps and AET.
+
 ## Implemented
 
 * Salamander is required. Models, main-body rendering, attachment transforms and animation evaluation use it.
