@@ -13,7 +13,6 @@ import java.util.List;
 import net.gobbob.mobends.client.model.ModelBoxBends;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
-import net.gobbob.mobends.compat.wawelauth.WawelAuthModelBendsPlayer;
 import net.minecraft.client.model.ModelRenderer;
 
 import org.junit.jupiter.api.Test;
@@ -85,20 +84,6 @@ class SimpleSkinBackportCompatTest {
         assertSame(slimSleeve, model.getRightArmWear());
         assertSame(torso, box(model.bipedBody));
         assertEquals(parts, model.boxList.size());
-    }
-
-    @Test
-    void wawelAdapterAlsoInheritsSsbCallbacks() {
-        WawelAuthModelBendsPlayer model = new WawelAuthModelBendsPlayer(0.0f);
-        model.initModern();
-        ModelRenderer jacket = model.getBodyWear();
-        model.ssb$set64x();
-        model.ssb$setSlim(true);
-        assertSame(jacket, model.getBodyWear());
-        assertTrue(model.isSlim());
-        assertArmWidths(model, 3);
-        model.setSlim(false);
-        assertArmWidths(model, 4);
     }
 
     @Test

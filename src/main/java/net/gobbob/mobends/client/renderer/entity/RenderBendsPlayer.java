@@ -55,7 +55,7 @@ extends RenderPlayer {
     public int refreshModel = 0;
     private final RenderPlayer packRenderer = new RenderPlayer();
     private final ModelBendsPlayer firstPersonModel = new ModelBendsPlayer(0);
-    private final ModelBiped wawelFirstPersonModel = new ModelBiped();
+    private final ModelBiped wawelFirstPersonModel = WawelAuthCompat.createFirstPersonModel();
     private final ModelBiped ssbFirstPersonModel = new ModelBiped();
 
     public RenderBendsPlayer() {
@@ -123,7 +123,7 @@ extends RenderPlayer {
         float f = 1.0f;
         GL11.glColor3f((float)f, (float)f, (float)f);
 
-        if (p_82441_1_ instanceof AbstractClientPlayer && WawelAuthCompat.isModernSkinSupportEnabled()) {
+        if (p_82441_1_ instanceof AbstractClientPlayer && WawelAuthCompat.isLoaded()) {
             ModelBiped previousModel = this.modelBipedMain;
             this.modelBipedMain = this.wawelFirstPersonModel;
             try {
@@ -186,6 +186,9 @@ extends RenderPlayer {
             this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
             this.modelArmor = new ModelBendsPlayer(0.5f);
             this.refreshModel = MoBends.refreshModel;
+        }
+        if (WawelAuthCompat.isLoaded() && this.modelBipedMain instanceof ModelBendsPlayer) {
+            ((ModelBendsPlayer)this.modelBipedMain).setSlim(WawelAuthCompat.isSlim(p_76986_1_));
         }
         super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
     }

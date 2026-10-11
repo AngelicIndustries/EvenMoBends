@@ -2,7 +2,7 @@ package net.gobbob.mobends.client.model.entity;
 
 import net.gobbob.mobends.client.animation.BipedRigModel;
 import net.gobbob.mobends.client.animation.BendsGeometry;
-import java.util.UUID;
+import net.gobbob.mobends.compat.WawelAuthCompat;
 
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.animation.Animation;
@@ -23,8 +23,6 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
-import net.gobbob.mobends.compat.WawelAuth3DSkinLayers;
-import net.gobbob.mobends.compat.WawelAuth3DSkinLayers.Layers;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
 import net.gobbob.mobends.compat.PlayerBlockingCompat;
@@ -158,7 +156,6 @@ extends ModelBiped implements BipedRigModel {
 
     private boolean modern;
     private boolean slim;
-    private UUID currentPlayerUuid;
 
     private ModelRendererBends bodyWear;
     private ModelRendererBends rightLegWear;
@@ -268,79 +265,81 @@ extends ModelBiped implements BipedRigModel {
     public void render(Entity argEntity, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float p_78088_7_) {
         this.setRotationAngles(p_78088_2_, p_78088_3_, p_78088_4_, p_78088_5_, p_78088_6_, p_78088_7_, argEntity);
         this.prepareModernOverlays();
-
-        Layers layers3D = null;
-        if (this.modern && argEntity instanceof AbstractClientPlayer) {
-            this.currentPlayerUuid = argEntity.getUniqueID();
-            layers3D = WawelAuth3DSkinLayers.getLayers(this.currentPlayerUuid, this.slim);
+        if (this.modern && WawelAuthCompat.isLoaded()) {
+            // Wawel Auth draws the overlay layers, flat or as voxels, on this model's joints.
+            WawelAuthCompat.renderWithLayers(this, argEntity, p_78088_7_);
+            return;
         }
+        this.renderGeometry(p_78088_7_);
+    }
 
-        boolean headWearVisible = this.bipedHeadwear.showModel;
-        boolean bodyWearVisible = this.modern && this.bodyWear.showModel;
-        boolean rightArmWearVisible = this.modern && this.getRightArmWear().showModel;
-        boolean leftArmWearVisible = this.modern && this.getLeftArmWear().showModel;
-        boolean rightLegWearVisible = this.modern && this.rightLegWear.showModel;
-        boolean leftLegWearVisible = this.modern && this.leftLegWear.showModel;
-
-        boolean renderHat3D = false;
-        boolean renderJacket3D = false;
-        boolean renderRightSleeve3D = false;
-        boolean renderLeftSleeve3D = false;
-        boolean renderRightPants3D = false;
-        boolean renderLeftPants3D = false;
-        if (layers3D != null && argEntity instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer)argEntity;
-            renderHat3D = layers3D.hasHat() && headWearVisible && player.inventory.armorItemInSlot(3) == null;
-            renderJacket3D = layers3D.hasJacket() && bodyWearVisible && player.inventory.armorItemInSlot(2) == null;
-            renderRightSleeve3D = layers3D.hasRightSleeve() && rightArmWearVisible && player.inventory.armorItemInSlot(2) == null;
-            renderLeftSleeve3D = layers3D.hasLeftSleeve() && leftArmWearVisible && player.inventory.armorItemInSlot(2) == null;
-            boolean legsUnarmored = player.inventory.armorItemInSlot(1) == null && player.inventory.armorItemInSlot(0) == null;
-            renderRightPants3D = layers3D.hasRightPants() && rightLegWearVisible && legsUnarmored;
-            renderLeftPants3D = layers3D.hasLeftPants() && leftLegWearVisible && legsUnarmored;
-
-            if (renderHat3D) this.bipedHeadwear.showModel = false;
-            if (renderJacket3D) this.bodyWear.showModel = false;
-            if (renderRightSleeve3D) this.setRightSleeveVisible(false);
-            if (renderLeftSleeve3D) this.setLeftSleeveVisible(false);
-            if (renderRightPants3D) this.setRightPantsVisible(false);
-            if (renderLeftPants3D) this.setLeftPantsVisible(false);
-        }
-
+    /** The rigged model including its own overlay boxes, grouped like ModelBiped for children. */
+    public void renderGeometry(float scale) {
         if (this.isChild) {
             float f6 = 2.0f;
             GL11.glPushMatrix();
             GL11.glScalef((float)(1.5f / f6), (float)(1.5f / f6), (float)(1.5f / f6));
-            GL11.glTranslatef((float)0.0f, (float)(16.0f * p_78088_7_), (float)0.0f);
-            this.geometry().render(p_78088_7_, name -> this.geometry().rig.descendant(name, "head"));
+            GL11.glTranslatef((float)0.0f, (float)(16.0f * scale), (float)0.0f);
+            this.geometry().render(scale, name -> this.geometry().rig.descendant(name, "head"));
             GL11.glPopMatrix();
             GL11.glPushMatrix();
             GL11.glScalef((float)(1.0f / f6), (float)(1.0f / f6), (float)(1.0f / f6));
-            GL11.glTranslatef((float)0.0f, (float)(24.0f * p_78088_7_), (float)0.0f);
-            this.geometry().render(p_78088_7_, name -> !this.geometry().rig.descendant(name, "head"));
+            GL11.glTranslatef((float)0.0f, (float)(24.0f * scale), (float)0.0f);
+            this.geometry().render(scale, name -> !this.geometry().rig.descendant(name, "head"));
             GL11.glPopMatrix();
         } else {
-            this.geometry().render(p_78088_7_);
+            this.geometry().render(scale);
         }
+    }
 
-        if (layers3D != null) {
-            this.render3DLayers(
-                p_78088_7_,
-                layers3D,
-                renderHat3D,
-                renderJacket3D,
-                renderRightSleeve3D,
-                renderLeftSleeve3D,
-                renderRightPants3D,
-                renderLeftPants3D);
+    /** Which overlay boxes a draw shows. */
+    public static final class WearState {
+        public final boolean hat;
+        public final boolean jacket;
+        public final boolean rightSleeve;
+        public final boolean leftSleeve;
+        public final boolean rightPants;
+        public final boolean leftPants;
+
+        WearState(boolean hat, boolean jacket, boolean rightSleeve, boolean leftSleeve, boolean rightPants,
+            boolean leftPants) {
+            this.hat = hat;
+            this.jacket = jacket;
+            this.rightSleeve = rightSleeve;
+            this.leftSleeve = leftSleeve;
+            this.rightPants = rightPants;
+            this.leftPants = leftPants;
         }
+    }
 
-        this.bipedHeadwear.showModel = headWearVisible;
+    /** Hides the overlay boxes for a draw whose layers another renderer draws; returns which were shown. */
+    public WearState hideWear() {
+        WearState shown = new WearState(
+            this.bipedHeadwear.showModel,
+            this.modern && this.bodyWear.showModel,
+            this.modern && this.getRightArmWear().showModel,
+            this.modern && this.getLeftArmWear().showModel,
+            this.modern && this.rightLegWear.showModel,
+            this.modern && this.leftLegWear.showModel);
+        this.bipedHeadwear.showModel = false;
         if (this.modern) {
-            this.bodyWear.showModel = bodyWearVisible;
-            this.setRightSleeveVisible(rightArmWearVisible);
-            this.setLeftSleeveVisible(leftArmWearVisible);
-            this.setRightPantsVisible(rightLegWearVisible);
-            this.setLeftPantsVisible(leftLegWearVisible);
+            this.bodyWear.showModel = false;
+            this.setRightSleeveVisible(false);
+            this.setLeftSleeveVisible(false);
+            this.setRightPantsVisible(false);
+            this.setLeftPantsVisible(false);
+        }
+        return shown;
+    }
+
+    public void restoreWear(WearState shown) {
+        this.bipedHeadwear.showModel = shown.hat;
+        if (this.modern) {
+            this.bodyWear.showModel = shown.jacket;
+            this.setRightSleeveVisible(shown.rightSleeve);
+            this.setLeftSleeveVisible(shown.leftSleeve);
+            this.setRightPantsVisible(shown.rightPants);
+            this.setLeftPantsVisible(shown.leftPants);
         }
     }
 
@@ -713,35 +712,6 @@ extends ModelBiped implements BipedRigModel {
         return this.slim;
     }
 
-    public void render3DRightArmWear(float scale) {
-        Layers layers = WawelAuth3DSkinLayers.getLayers(this.currentPlayerUuid, this.slim);
-        if (layers == null || !layers.hasRightSleeve()) {
-            return;
-        }
-
-        boolean blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-        this.renderRightSleeve3D(scale, layers, false);
-        if (!blendEnabled) {
-            GL11.glDisable(GL11.GL_BLEND);
-        }
-    }
-
-    public void setCurrentPlayerUuid(java.util.UUID uuid) {
-        this.currentPlayerUuid = uuid;
-    }
-
-    public boolean prepare3DRightArmWear(AbstractClientPlayer player) {
-        if (!this.modern || player == null) {
-            return false;
-        }
-        this.currentPlayerUuid = player.getUniqueID();
-        WawelAuth3DSkinLayers.ensurePlayerState(player, this.slim);
-        Layers layers = WawelAuth3DSkinLayers.getLayers(this.currentPlayerUuid, this.slim);
-        return layers != null && layers.hasRightSleeve();
-    }
-
     public ModelRenderer getBodyWear() {
         return this.bodyWear;
     }
@@ -773,139 +743,6 @@ extends ModelBiped implements BipedRigModel {
         this.slimLeftForeArmWear.showModel = this.slim && this.slimLeftArmWear.showModel;
         this.rightForeLegWear.showModel = this.rightLegWear.showModel;
         this.leftForeLegWear.showModel = this.leftLegWear.showModel;
-    }
-
-    private void render3DLayers(float scale, Layers layers, boolean hat, boolean jacket, boolean rightSleeve,
-        boolean leftSleeve, boolean rightPants, boolean leftPants) {
-        boolean blendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
-        GL11.glEnable(GL11.GL_BLEND);
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-        if (this.isChild) {
-            float childScale = 2.0f;
-            if (hat) {
-                GL11.glPushMatrix();
-                GL11.glScalef(1.5f / childScale, 1.5f / childScale, 1.5f / childScale);
-                GL11.glTranslatef(0.0f, 16.0f * scale, 0.0f);
-                this.renderHat3D(scale, layers, false);
-                GL11.glPopMatrix();
-            }
-
-            GL11.glPushMatrix();
-            GL11.glScalef(1.0f / childScale, 1.0f / childScale, 1.0f / childScale);
-            GL11.glTranslatef(0.0f, 24.0f * scale, 0.0f);
-            if (jacket) this.renderJacket3D(scale, layers);
-            if (rightSleeve) this.renderRightSleeve3D(scale, layers, true);
-            if (leftSleeve) this.renderLeftSleeve3D(scale, layers);
-            if (rightPants) this.renderRightPants3D(scale, layers);
-            if (leftPants) this.renderLeftPants3D(scale, layers);
-            GL11.glPopMatrix();
-        } else {
-            if (hat) this.renderHat3D(scale, layers, true);
-            if (jacket) this.renderJacket3D(scale, layers);
-            if (rightSleeve) this.renderRightSleeve3D(scale, layers, true);
-            if (leftSleeve) this.renderLeftSleeve3D(scale, layers);
-            if (rightPants) this.renderRightPants3D(scale, layers);
-            if (leftPants) this.renderLeftPants3D(scale, layers);
-        }
-
-        if (!blendEnabled) {
-            GL11.glDisable(GL11.GL_BLEND);
-        }
-    }
-
-    private void renderHat3D(float scale, Layers layers, boolean includeBody) {
-        float voxel = WawelAuth3DSkinLayers.getHeadVoxelSize();
-        if (includeBody) {
-            this.renderAttached(layers.hat, scale, voxel, voxel, voxel, 0.0f, 0.0f, 0.0f,
-                (ModelRendererBends)this.bipedBody, (ModelRendererBends)this.bipedHead);
-        } else {
-            this.renderAttached(layers.hat, scale, voxel, voxel, voxel, 0.0f, 0.0f, 0.0f,
-                (ModelRendererBends)this.bipedHead);
-        }
-    }
-
-    private void renderJacket3D(float scale, Layers layers) {
-        this.renderAttached(
-            layers.jacket,
-            scale,
-            WawelAuth3DSkinLayers.getBodyVoxelWidthSize(),
-            1.035f,
-            WawelAuth3DSkinLayers.getBaseVoxelSize(),
-            0.0f,
-            -12.2f,
-            0.0f,
-            (ModelRendererBends)this.bipedBody);
-    }
-
-    private void renderRightSleeve3D(float scale, Layers layers, boolean includeBody) {
-        float voxel = WawelAuth3DSkinLayers.getBaseVoxelSize();
-        float upperX = this.slim ? -0.499f : -0.998f;
-        if (includeBody) {
-            this.renderAttached(layers.rightArm, scale, voxel, 1.035f, voxel, upperX, -0.1f, 0.0f,
-                (ModelRendererBends)this.bipedBody, (ModelRendererBends)this.bipedRightArm);
-            this.renderAttached(layers.rightForeArm, scale, voxel, 1.035f, voxel,
-                (this.slim ? 3.0f : 4.0f) / 2.0f, -0.1f, -2.0f,
-                (ModelRendererBends)this.bipedBody, (ModelRendererBends)this.bipedRightArm,
-                (ModelRendererBends)this.bipedRightForeArm);
-        } else {
-            this.renderAttached(layers.rightArm, scale, voxel, 1.035f, voxel, upperX, -0.1f, 0.0f,
-                (ModelRendererBends)this.bipedRightArm);
-            this.renderAttached(layers.rightForeArm, scale, voxel, 1.035f, voxel,
-                (this.slim ? 3.0f : 4.0f) / 2.0f, -0.1f, -2.0f,
-                (ModelRendererBends)this.bipedRightArm, (ModelRendererBends)this.bipedRightForeArm);
-        }
-    }
-
-    private void renderLeftSleeve3D(float scale, Layers layers) {
-        float voxel = WawelAuth3DSkinLayers.getBaseVoxelSize();
-        float upperX = this.slim ? 0.499f : 0.998f;
-        this.renderAttached(layers.leftArm, scale, voxel, 1.035f, voxel, upperX, -0.1f, 0.0f,
-            (ModelRendererBends)this.bipedBody, (ModelRendererBends)this.bipedLeftArm);
-        this.renderAttached(layers.leftForeArm, scale, voxel, 1.035f, voxel,
-            (this.slim ? 3.0f : 4.0f) / 2.0f, -0.1f, -2.0f,
-            (ModelRendererBends)this.bipedBody, (ModelRendererBends)this.bipedLeftArm,
-            (ModelRendererBends)this.bipedLeftForeArm);
-    }
-
-    private void renderRightPants3D(float scale, Layers layers) {
-        float voxel = WawelAuth3DSkinLayers.getBaseVoxelSize();
-        this.renderAttached(layers.rightLeg, scale, voxel, 1.035f, voxel, 0.0f, -0.2f, 0.0f,
-            (ModelRendererBends)this.bipedRightLeg);
-        this.renderAttached(layers.rightForeLeg, scale, voxel, 1.035f, voxel, 0.0f, -0.2f, 2.0f,
-            (ModelRendererBends)this.bipedRightLeg, (ModelRendererBends)this.bipedRightForeLeg);
-    }
-
-    private void renderLeftPants3D(float scale, Layers layers) {
-        float voxel = WawelAuth3DSkinLayers.getBaseVoxelSize();
-        this.renderAttached(layers.leftLeg, scale, voxel, 1.035f, voxel, 0.0f, -0.2f, 0.0f,
-            (ModelRendererBends)this.bipedLeftLeg);
-        this.renderAttached(layers.leftForeLeg, scale, voxel, 1.035f, voxel, 0.0f, -0.2f, 2.0f,
-            (ModelRendererBends)this.bipedLeftLeg, (ModelRendererBends)this.bipedLeftForeLeg);
-    }
-
-    private void renderAttached(Object mesh, float scale, float voxelX, float voxelY, float voxelZ,
-        float localOffsetX, float localOffsetY, float localOffsetZ, ModelRendererBends... hierarchy) {
-        if (mesh == null) {
-            return;
-        }
-        GL11.glPushMatrix();
-        if (hierarchy[0] == this.bipedBody || hierarchy[0] == this.bipedRightLeg || hierarchy[0] == this.bipedLeftLeg) {
-            this.geometry().attach(this.geometry().rig.name(hierarchy[hierarchy.length - 1]), scale);
-        } else {
-            // Skin-mod first-person callbacks enter with their own arm origin already applied.
-            for (ModelRendererBends part : hierarchy) part.applyTransform(scale);
-        }
-        WawelAuth3DSkinLayers.renderMesh(
-            mesh,
-            scale,
-            voxelX,
-            voxelY,
-            voxelZ,
-            localOffsetX,
-            localOffsetY,
-            localOffsetZ);
-        GL11.glPopMatrix();
     }
 
     private void setRightSleeveVisible(boolean visible) {

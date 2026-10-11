@@ -1,11 +1,11 @@
 package net.gobbob.mobends.client.render;
 
+import net.gobbob.mobends.compat.WawelAuthCompat;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -18,12 +18,12 @@ import org.fentanylsolutions.salamander.cem.client.CemSkinImage;
 
 /** Read original skin pixels for the editor and Blockbench export, without generated expression textures. */
 public final class PlayerSkinImages {
-    private static boolean wawelReflectionResolved;
-    private static Method wawelGetCachedImage;
     private PlayerSkinImages() {}
 
     public static BufferedImage copyPlayerSkin(AbstractClientPlayer player) {
         if (player == null) return null;
+        BufferedImage wawelAuth = WawelAuthCompat.originalSkin(player);
+        if (wawelAuth != null) return CemSkinImage.copy(wawelAuth);
         ResourceLocation location = player.getLocationSkin();
         ITextureObject texture = Minecraft.getMinecraft().getTextureManager().getTexture(location);
         return CemSkinImage.copy(getSourceImage(location, texture));
@@ -37,10 +37,6 @@ public final class PlayerSkinImages {
             return image;
         }
 
-        image = getWawelCachedImage(location);
-        if (image != null) {
-            return image;
-        }
 
         if (textureObject instanceof DynamicTexture) {
             int[] pixels = ((DynamicTexture)textureObject).getTextureData();
@@ -99,25 +95,5 @@ public final class PlayerSkinImages {
         return null;
     }
 
-    private static BufferedImage getWawelCachedImage(ResourceLocation location) {
-        if (!wawelReflectionResolved) {
-            wawelReflectionResolved = true;
-            try {
-                Class<?> loader = Class.forName("org.fentanylsolutions.wawelauth.client.render.LocalTextureLoader");
-                wawelGetCachedImage = loader.getMethod("getCachedImage", ResourceLocation.class);
-            } catch (ReflectiveOperationException ignored) {
-                wawelGetCachedImage = null;
-            }
-        }
-        if (wawelGetCachedImage == null) {
-            return null;
-        }
-        try {
-            Object image = wawelGetCachedImage.invoke(null, location);
-            return image instanceof BufferedImage ? (BufferedImage)image : null;
-        } catch (ReflectiveOperationException ignored) {
-            return null;
-        }
-    }
 
 }

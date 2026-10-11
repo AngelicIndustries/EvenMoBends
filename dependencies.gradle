@@ -1,6 +1,14 @@
 dependencies {
     // Provider skins must retain vanilla download hooks so Salamander can preserve expression-slot alpha.
+    // Supply a local Wawel Auth development jar with -PwawelAuthJar, e.g. a build with an unpublished skin API.
     def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:409cfd2-snapshot:dev"
+    if (project.hasProperty("wawelAuthJar")) {
+        def wawelAuthJar = file(project.property("wawelAuthJar"))
+        if (!wawelAuthJar.isFile()) {
+            throw new GradleException("Wawel Auth development jar not found: ${wawelAuthJar}")
+        }
+        wawelAuthDependency = files(wawelAuthJar)
+    }
 
     // The compatibility stack used by the default EvenMoBends development client.
     // These are deliberately not published as hard dependencies of EvenMoBends.
