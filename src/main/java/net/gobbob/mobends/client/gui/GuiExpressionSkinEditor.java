@@ -328,8 +328,9 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         }
 
         long now = System.currentTimeMillis();
-        float blink = this.previewMode == 2 ? 1 : blinkProgress(now);
-        if (this.previewMode == 0 && now % 4200 < BLINK_DURATION_MS)
+        // The Eyelids step keeps the eyes closed, so each painted lid shows at once.
+        float blink = this.previewMode == 2 || this.tool == Tool.PAINT_EYELIDS ? 1 : blinkProgress(now);
+        if (this.tool != Tool.PAINT_EYELIDS && this.previewMode == 0 && now % 4200 < BLINK_DURATION_MS)
             blink = blinkPhase(now % 4200);
         int pupilOffsetX = this.previewMode == 3 ? -6
             : this.previewMode == 4              ? 6
