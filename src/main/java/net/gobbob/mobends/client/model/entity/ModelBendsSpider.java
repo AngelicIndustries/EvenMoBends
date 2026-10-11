@@ -12,6 +12,7 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.data.Data_Spider;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.MathHelper;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.model.ModelSpider;
 import net.minecraft.entity.Entity;
@@ -270,7 +271,8 @@ extends ModelSpider implements AnimatedModel {
         }
         Data_Spider data = Data_Spider.get(argEntity.getEntityId());
         this.headRotationX = p_78087_5_;
-        this.headRotationY = p_78087_4_;
+        // 1.7.10 passes head minus body yaw unwrapped, whole turns apart; blends would spin through them.
+        this.headRotationY = MathHelper.wrapAngleTo180_float(p_78087_4_);
         ((ModelRendererBends)this.spiderHead).sync(data.spiderHead);
         ((ModelRendererBends)this.spiderNeck).sync(data.spiderNeck);
         ((ModelRendererBends)this.spiderBody).sync(data.spiderBody);

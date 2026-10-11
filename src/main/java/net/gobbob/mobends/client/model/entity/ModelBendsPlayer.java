@@ -32,6 +32,8 @@ import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.MathHelper;
+import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
@@ -365,8 +367,10 @@ extends ModelBiped implements BipedRigModel {
         this.armSwing = argSwingTime;
         this.armSwingAmount = argSwingAmount;
         this.headRotationX = argHeadX;
-        this.headRotationY = argHeadY;
-        if (Minecraft.getMinecraft().currentScreen != null) {
+        // 1.7.10 passes head minus body yaw unwrapped, whole turns apart; blends would spin through them.
+        this.headRotationY = MathHelper.wrapAngleTo180_float(argHeadY);
+        // Inventory and menu previews face forward. GUI drawing happens outside the world's render passes.
+        if (MinecraftForgeClient.getRenderPass() == -1) {
             this.headRotationY = 0.0f;
         }
         ((ModelRendererBends)this.bipedHead).sync(data.head);

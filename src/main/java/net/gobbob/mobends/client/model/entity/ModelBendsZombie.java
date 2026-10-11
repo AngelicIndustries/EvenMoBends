@@ -9,6 +9,7 @@ import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.data.Data_Zombie;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.MathHelper;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
@@ -198,7 +199,8 @@ extends ModelBiped implements BipedRigModel {
         this.armSwing = argSwingTime;
         this.armSwingAmount = argSwingAmount;
         this.headRotationX = argHeadX;
-        this.headRotationY = argHeadY;
+        // 1.7.10 passes head minus body yaw unwrapped, whole turns apart; blends would spin through them.
+        this.headRotationY = MathHelper.wrapAngleTo180_float(argHeadY);
         ((ModelRendererBends)this.bipedHead).sync(data.head);
         ((ModelRendererBends)this.bipedHeadwear).sync(data.headwear);
         ((ModelRendererBends)this.bipedBody).sync(data.body);
