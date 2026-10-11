@@ -5,23 +5,17 @@ import java.util.concurrent.CompletableFuture;
 
 import net.gobbob.mobends.compat.WawelAuthSkinUpload.Account;
 import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.model.ModelBiped;
 
 import org.fentanylsolutions.wawelauth.api.account.AccountInfo;
 import org.fentanylsolutions.wawelauth.api.account.WawelAccounts;
 import org.fentanylsolutions.wawelauth.api.skin.PlayerSkin;
 import org.fentanylsolutions.wawelauth.api.skin.PlayerSkins;
-import org.fentanylsolutions.wawelauth.client.skin.model.ModelPlayer;
 import org.fentanylsolutions.wawelauth.wawelcore.data.SkinModel;
 
 /** Wawel Auth's skin and account API. Loaded only when Wawel Auth is present. */
 public final class WawelAuthBridge {
 
     private WawelAuthBridge() {}
-
-    public static ModelBiped createFirstPersonModel() {
-        return new ModelPlayer(0.0f);
-    }
 
     public static boolean isSlim(AbstractClientPlayer player) {
         return PlayerSkins.get(player).model() == SkinModel.SLIM;

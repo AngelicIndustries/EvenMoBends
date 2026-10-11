@@ -55,7 +55,8 @@ extends RenderPlayer {
     public int refreshModel = 0;
     private final RenderPlayer packRenderer = new RenderPlayer();
     private final ModelBendsPlayer firstPersonModel = new ModelBendsPlayer(0);
-    private final ModelBiped wawelFirstPersonModel = WawelAuthCompat.createFirstPersonModel();
+    /** The model RenderPlayer's constructor installed; with Wawel Auth, its player model, which adds the sleeve. */
+    private final ModelBiped wawelFirstPersonModel = this.modelBipedMain;
     private final ModelBiped ssbFirstPersonModel = new ModelBiped();
 
     public RenderBendsPlayer() {

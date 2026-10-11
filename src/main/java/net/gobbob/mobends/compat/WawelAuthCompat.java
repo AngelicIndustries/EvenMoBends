@@ -6,7 +6,6 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.wawelauth.WawelAuthBridge;
 import net.gobbob.mobends.compat.wawelauth.WawelAuthLayers;
 import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.model.ModelBiped;
 import net.minecraft.entity.Entity;
 
 /**
@@ -26,11 +25,6 @@ public final class WawelAuthCompat {
         ModelBendsPlayer model = new ModelBendsPlayer(scale);
         if (isLoaded()) model.initModern();
         return model;
-    }
-
-    /** The straight first-person arm: Wawel Auth's player model with Wawel Auth, which also draws its sleeve. */
-    public static ModelBiped createFirstPersonModel() {
-        return isLoaded() ? WawelAuthBridge.createFirstPersonModel() : new ModelBiped();
     }
 
     public static boolean isSlim(AbstractClientPlayer player) {
