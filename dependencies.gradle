@@ -1,7 +1,7 @@
 dependencies {
     // Provider skins must retain vanilla download hooks so Salamander can preserve expression-slot alpha.
     // Supply a local Wawel Auth development jar with -PwawelAuthJar, e.g. a build with an unpublished skin API.
-    def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:409cfd2-snapshot:dev"
+    def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:c82ca8d-snapshot:dev"
     if (project.hasProperty("wawelAuthJar")) {
         def wawelAuthJar = file(project.property("wawelAuthJar"))
         if (!wawelAuthJar.isFile()) {
