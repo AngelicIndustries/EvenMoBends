@@ -61,7 +61,7 @@ public final class WawelAuthLayers {
 
     /**
      * Draws the rigged model without its own overlay boxes, then the layers. The draw is open around the model too,
-     * so code that replaces it can suppress exactly these layers.
+     * so code that replaces it can suppress these layers or claim some of their parts.
      */
     public static void render(ModelBendsPlayer model, Entity entity, float scale) {
         try (LayerDraw draw = SkinLayers.begin(entity, drawKind(), scale)) {
@@ -116,7 +116,7 @@ public final class WawelAuthLayers {
 
     private static void submit(LayerDraw draw, ModelBendsPlayer model, ModelRenderer part, LayerSegment segment,
         float scale) {
-        if (part.isHidden || !part.showModel) return;
+        if (part.isHidden || !part.showModel || draw.claimed(segment.part())) return;
         BendsGeometry geometry = model.geometry();
         String bone = geometry.rig.name(part);
         if (bone == null) return;
