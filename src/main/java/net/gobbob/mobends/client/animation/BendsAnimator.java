@@ -304,6 +304,12 @@ public final class BendsAnimator {
         return progress >= 1 ? FOLLOW_RATE : EASE_RATE + (BLEND_END_RATE - EASE_RATE) * progress * progress;
     }
 
+    /** {@code seconds} wrapped into the animation's length, for looping one with {@link #playOnce}. */
+    public static double looped(ResourceLocation file, String name, double seconds) {
+        Animation animation = find(file, name);
+        return animation == null || animation.length() <= 0 ? seconds : seconds % animation.length();
+    }
+
     public static Animation find(ResourceLocation file, String name) {
         Animation animation = GeckoLibResources.getBakedAnimations().getAnimations(file, null).getAnimation(name);
         if (animation == null && reportedMissing.add(file + "#" + name)) {

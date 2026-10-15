@@ -43,6 +43,8 @@ public final class Animation_Eating extends Animation {
     }
 
     public static void play(ModelBendsPlayer model, Data_Player data, float useTicks, boolean offhand) {
-        BendsAnimator.playOnce(model, data, FILE, NAME, useTicks / 20.0, offhand ? "eatingLeft" : "eatingRight", FADE, null, offhand);
+        // The bite bob loops for as long as the item is in use.
+        double seconds = BendsAnimator.looped(FILE, NAME, useTicks / 20.0);
+        BendsAnimator.playOnce(model, data, FILE, NAME, seconds, offhand ? "eatingLeft" : "eatingRight", FADE, null, offhand);
     }
 }
