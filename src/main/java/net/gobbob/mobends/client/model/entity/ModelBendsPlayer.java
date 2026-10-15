@@ -158,6 +158,9 @@ extends ModelBiped implements BipedRigModel {
 
     private boolean modern;
     private boolean slim;
+    /** The arms this model was built with. Ears puts its own arms into any player renderer's model each draw. */
+    private ModelRenderer ownRightArm;
+    private ModelRenderer ownLeftArm;
 
     private ModelRendererBends bodyWear;
     private ModelRendererBends rightLegWear;
@@ -216,6 +219,8 @@ extends ModelBiped implements BipedRigModel {
         this.bipedLeftArm.mirror = true;
         this.bipedLeftArm.addBox(-1.0f, -2.0f, -2.0f, 4, 6, 4, p_i1149_1_);
         this.bipedLeftArm.setRotationPoint(5.0f, 2.0f + p_i1149_2_ - 12.0f, 0.0f);
+        this.ownRightArm = this.bipedRightArm;
+        this.ownLeftArm = this.bipedLeftArm;
         this.bipedRightLeg = new ModelRendererBends(this, 0, 16);
         this.bipedRightLeg.addBox(-2.0f, 0.0f, -2.0f, 4, 6, 4, p_i1149_1_);
         this.bipedRightLeg.setRotationPoint(-1.9f, 12.0f + p_i1149_2_, 0.0f);
@@ -357,6 +362,8 @@ extends ModelBiped implements BipedRigModel {
 
     @Override
     public void setRotationAngles(float argSwingTime, float argSwingAmount, float argArmSway, float argHeadY, float argHeadX, float argNr6, Entity argEntity) {
+        this.bipedRightArm = this.ownRightArm;
+        this.bipedLeftArm = this.ownLeftArm;
         if (Minecraft.getMinecraft().theWorld == null) {
             return;
         }
