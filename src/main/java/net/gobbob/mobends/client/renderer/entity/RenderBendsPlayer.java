@@ -363,10 +363,13 @@ extends RenderPlayer {
             && BackhandCompat.getOffhandItem(argPlayer) != null ? (ModelRendererBends_SeperatedChild)trailModel.bipedLeftArm : null;
         SwordTrail offhandTrail = trail != null && trailModel.offhandTrail.takeSample() ? trailModel.offhandTrail : null;
         if (leftArm != null) leftArm.afterPostRender = () -> this.placeOffhandItem(trailModel, offhandTrail);
+        // A handler that throws mid-draw must not leave its matrices to the rest of the frame.
+        int depth = GL11.glGetInteger(GL11.GL_MODELVIEW_STACK_DEPTH);
         try {
             MinecraftForge.EVENT_BUS.post(new RenderPlayerEvent.Specials.Post(argPlayer, this, argPartialTicks));
         } finally {
             if (leftArm != null) leftArm.afterPostRender = null;
+            while (GL11.glGetInteger(GL11.GL_MODELVIEW_STACK_DEPTH) > depth) GL11.glPopMatrix();
         }
         if (trail != null) trailModel.offhandTrail.render();
     }
