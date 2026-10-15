@@ -1,6 +1,7 @@
 package net.gobbob.mobends.compat;
 
 import cpw.mods.fml.common.Loader;
+import net.minecraft.launchwrapper.Launch;
 import net.gobbob.mobends.compat.wawelauth.WawelAuthApi;
 import net.gobbob.mobends.util.BendsLogger;
 
@@ -15,11 +16,26 @@ public final class CompatibilityPolicy {
     private static final boolean AQUA_ACROBATICS_LOADED = Loader.isModLoaded("aquaacrobatics");
     private static final boolean ET_FUTURUM_REQUIEM_LOADED = Loader.isModLoaded("etfuturum");
     private static final boolean BACKHAND_LOADED = Loader.isModLoaded("backhand");
-    private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED;
+    /** Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have. */
+    private static final boolean EARS_LOADED = Loader.isModLoaded("ears") || foamFixEarsActive();
+    private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED || EARS_LOADED;
 
     private static boolean modeLogged;
 
     private CompatibilityPolicy() {}
+
+    /** FoamFix bundles Ears and applies it unless its config turns it off. */
+    private static boolean foamFixEarsActive() {
+        if (!Loader.isModLoaded("foamfix")) return false;
+        try {
+            Class<?> transformer = Class.forName("pl.asie.foamfix.bugfixmod.coremod.BugfixModClassTransformer", false,
+                Launch.classLoader);
+            Object instance = transformer.getField("instance").get(null);
+            return instance != null && (Boolean) transformer.getMethod("applyEarsPatch").invoke(instance);
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return false;
+        }
+    }
 
     public static boolean arePlayerAnimationsEnabled() {
         return !MOB_ONLY_MODE;
@@ -65,7 +81,7 @@ public final class CompatibilityPolicy {
                 BendsLogger.INFO);
         }
         if (MOB_ONLY_MODE) {
-            String owner = SMART_MOVING_LOADED ? "Smart Moving" : "Smart Render";
+            String owner = SMART_MOVING_LOADED ? "Smart Moving" : SMART_RENDER_LOADED ? "Smart Render" : "Ears";
             BendsLogger.log(
                 owner + " detected: disabling all Mo' Bends player rendering and keeping mob animations enabled.",
                 BendsLogger.INFO);
