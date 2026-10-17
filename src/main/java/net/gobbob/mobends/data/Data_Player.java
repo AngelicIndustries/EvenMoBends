@@ -66,6 +66,16 @@ extends EntityData {
 
     /** The diving lean along the travel direction, eased (q.mobends_travel_pitch). */
     public float divingTravelPitch;
+    /** The water swim (not Aqua Acrobatics') played this frame. */
+    public boolean swimming;
+    /** How far the drawn model reached ahead of and behind the player this frame, in blocks along the facing. */
+    public float reachFront, reachBack;
+    /** The same when last lying in the stroke: what lying down needs, while the swim is upright. */
+    public float strokeFront = 1.3f, strokeBack = 0.7f;
+    /** How far back the swimming model is drawn, away from blocks ahead; eased. */
+    public float swimShift;
+    /** No room here to lie in the stroke: the swim stays upright. */
+    public boolean swimBoxedIn;
 
     public Data_Player(int argEntityID) {
         super(argEntityID);

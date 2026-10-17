@@ -43,6 +43,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemPickaxe;
+import com.geckolib.cache.model.BakedGeoModel;
+import com.geckolib.renderer.base.GeoVertexConsumer;
+import org.joml.Matrix4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -271,6 +274,10 @@ extends ModelBiped implements BipedRigModel {
     @Override
     public void render(Entity argEntity, float p_78088_2_, float p_78088_3_, float p_78088_4_, float p_78088_5_, float p_78088_6_, float p_78088_7_) {
         this.setRotationAngles(p_78088_2_, p_78088_3_, p_78088_4_, p_78088_5_, p_78088_6_, p_78088_7_, argEntity);
+        if (argEntity instanceof EntityPlayer) {
+            Data_Player data = Data_Player.get(argEntity.getEntityId());
+            if (data != null && data.swimming) this.measureSwimReach(data);
+        }
         this.prepareModernOverlays();
         if (this.modern && WawelAuthCompat.isLoaded()) {
             // Wawel Auth draws the overlay layers, flat or as voxels, on this model's joints.
@@ -278,6 +285,42 @@ extends ModelBiped implements BipedRigModel {
             return;
         }
         this.renderGeometry(p_78088_7_);
+    }
+
+    /** For SwimRoom on the next frame: how far this player's pose reaches, and while lying in the stroke. */
+    private void measureSwimReach(Data_Player data) {
+        float[] reach = new float[2];
+        this.reach(null, reach);
+        data.reachFront = reach[0];
+        data.reachBack = reach[1];
+        if (Math.abs(this.renderRotation.getX()) > 45.0f) {
+            data.strokeFront = reach[0];
+            data.strokeBack = reach[1];
+        }
+    }
+
+    /**
+     * How far this model as posed reaches ahead of ({@code out[0]}) and behind ({@code out[1]}) the player's position,
+     * in blocks along the facing, drawn as RenderBendsPlayer draws it. {@code baked} null for the game's geometry.
+     */
+    public void reach(BakedGeoModel baked, float[] out) {
+        float deg = (float)(Math.PI / 180.0);
+        // Salamander's model blocks to the frame rotateCorpse leaves, facing -Z: postRender's offset and turn,
+        // RendererLivingEntity's flip, RenderPlayer's scale and the drop to the feet, then the geometry's own frame.
+        Matrix4f frame = new Matrix4f()
+            .translate(this.renderOffset.vSmooth.x * 0.0625f, this.renderOffset.vSmooth.y * 0.0625f, this.renderOffset.vSmooth.z * 0.0625f)
+            .rotateX(-this.renderRotation.getX() * deg).rotateY(-this.renderRotation.getY() * deg).rotateZ(this.renderRotation.getZ() * deg)
+            .scale(-0.9375f, -0.9375f, 0.9375f).translate(0.0f, -1.5078125f, 0.0f)
+            .translate(0.0f, 1.5f, 0.0f).scale(-1.0f, -1.0f, 1.0f);
+        out[0] = 0.0f;
+        out[1] = 0.0f;
+        GeoVertexConsumer along = (x, y, z, u, v, nx, ny, nz, r, g, b, a) -> {
+            float ahead = -(frame.m02() * x + frame.m12() * y + frame.m22() * z + frame.m32());
+            out[0] = Math.max(out[0], ahead);
+            out[1] = Math.max(out[1], -ahead);
+        };
+        if (baked == null) this.geometry().vertices(along);
+        else this.geometry().vertices(baked, along);
     }
 
     /** The rigged model including its own overlay boxes, grouped like ModelBiped for children. */
@@ -424,6 +467,7 @@ extends ModelBiped implements BipedRigModel {
             boolean creativeFlying = player.capabilities.isFlying && !data.isOnGround();
             boolean touchingWater = this.isTouchingWater(argEntity);
             boolean groundedInWater = touchingWater && data.isOnGround();
+            data.swimming = false;
             if (boat != null) {
                 rowing = this.animatePlayer("rowing", argEntity, data);
                 if (!rowing) this.animatePlayer("riding", argEntity, data);
@@ -439,8 +483,14 @@ extends ModelBiped implements BipedRigModel {
                 if (aqua.available) {
                     // With AA, being in water alone does not mean the player is swimming horizontally.
                     if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.play(this, data, false);
-                } else if (!this.shouldAnimateDiving(argEntity, data) || !this.animatePlayer("diving", argEntity, data)) {
-                    this.animatePlayer("swimming", argEntity, data);
+                } else {
+                    data.swimming = true;
+                    if (data.swimBoxedIn) {
+                        // No room to lie in the stroke here (see SwimRoom): tread water upright.
+                        if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.play(this, data, false);
+                    } else if (!this.shouldAnimateDiving(argEntity, data) || !this.animatePlayer("diving", argEntity, data)) {
+                        this.animatePlayer("swimming", argEntity, data);
+                    }
                 }
             } else if (player.isOnLadder() && this.animatePlayer("climbing", argEntity, data)) {
                 // Climbing takes precedence over the ordinary airborne animations.

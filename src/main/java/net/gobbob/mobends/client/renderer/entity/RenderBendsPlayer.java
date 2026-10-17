@@ -217,6 +217,12 @@ extends RenderPlayer {
                 // and through AA's stand-up blend so last frame's pose cannot add a second tilt.
                 return;
             }
+            Data_Player data = Data_Player.get(argPlayer.getEntityId());
+            if (data != null) {
+                // Lying in the water, draw the body back from a wall ahead (-Z is the facing here).
+                SwimRoom.update(argPlayer, data, p_77043_3_, p_77043_4_);
+                if (data.swimShift > 0.001f) GL11.glTranslatef(0.0f, 0.0f, data.swimShift);
+            }
             ((ModelBendsPlayer)this.modelBipedMain).updateWithEntityData(argPlayer);
             ((ModelBendsPlayer)this.modelBipedMain).postRender(0.0625f);
         }

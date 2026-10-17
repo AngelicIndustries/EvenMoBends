@@ -6,6 +6,7 @@ import com.geckolib.cache.GeckoLibResources;
 import com.geckolib.cache.model.BakedGeoModel;
 import com.geckolib.renderer.base.GeoModelRenderer;
 import com.geckolib.renderer.base.GeoRenderer;
+import com.geckolib.renderer.base.GeoVertexConsumer;
 import java.nio.FloatBuffer;
 import java.util.function.Predicate;
 import net.gobbob.mobends.client.model.ItemBone;
@@ -116,6 +117,16 @@ public final class BendsGeometry {
         } finally {
             GL11.glPopMatrix();
         }
+    }
+
+    /** Each vertex of the posed model as drawn, in Salamander's model blocks; hidden parts are left out. */
+    public void vertices(GeoVertexConsumer consumer) {
+        vertices(model(), consumer);
+    }
+
+    /** As above, on a given baked model. */
+    public void vertices(BakedGeoModel baked, GeoVertexConsumer consumer) {
+        GeoModelRenderer.render(baked, pose(baked), bone -> true, consumer, 1, 1, 1, 1);
     }
 
     /** Native-coordinate frame at a Salamander bone, for held items, capes and mod-provided layers. */
