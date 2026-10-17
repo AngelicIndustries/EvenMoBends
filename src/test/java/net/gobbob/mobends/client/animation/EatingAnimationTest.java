@@ -87,8 +87,9 @@ class EatingAnimationTest {
     private static final float DEG=(float)(Math.PI/180);
 
     /**
-     * The held food's center, then its corners, in pixels in the head's frame. The item draw is RenderBendsPlayer's
-     * placement for a plain item, then ItemRenderer's for an equipped 2D icon (a unit square, 1/16 thick).
+     * The held food's center, then its corners, in pixels in the head's frame. The item draw is RenderBendsPlayer's:
+     * the item bone's turn about the fist, the placement for a flat item, then ItemRenderer's for an equipped 2D icon
+     * (a unit square, 1/16 thick).
      */
     private static Vector3f[] food(String name,Animation animation,double time,float pitch,float yaw) throws Exception {
         ModelBendsPlayer model=(ModelBendsPlayer)BendsGeometryTest.models().get(name);
@@ -98,6 +99,7 @@ class EatingAnimationTest {
             AnimationProcessor.evaluate(animation,time,BendsAnimator.context(m,null)),1000,1),1000);
         Matrix4f item=new Matrix4f().rotateX(-pitch*DEG).rotateY(-yaw*DEG).scale(16)
             .mul(model.geometry().transform(BendsGeometryTest.load(name),"rightItem",1f/16))
+            .translate(model.rightItem.fistPivot(false,model.isSlim(),new Vector3f()).div(16))
             .translate(-.0625f,-.125f,.0625f).translate(.25f,.1875f,-.1875f).scale(.375f)
             .rotateZ(60*DEG).rotateX(-90*DEG).rotateZ(20*DEG).translate(0,-.3f,0).scale(1.5f)
             .rotateY(50*DEG).rotateZ(335*DEG).translate(-.9375f,-.0625f,0);

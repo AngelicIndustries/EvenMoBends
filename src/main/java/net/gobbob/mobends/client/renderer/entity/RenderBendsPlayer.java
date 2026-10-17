@@ -47,6 +47,7 @@ import net.minecraftforge.client.IItemRenderer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.event.RenderPlayerEvent;
 import net.minecraftforge.common.MinecraftForge;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 public class RenderBendsPlayer
@@ -342,6 +343,10 @@ extends RenderPlayer {
                 GL11.glPushMatrix();
                 if (bends != null) {
                     bends.geometry().attach("rightItem", MODEL_SCALE);
+                    if (isDrawnFlat(itemstack1)) {
+                        Vector3f pivot = bends.rightItem.fistPivot(false, bends.isSlim(), new Vector3f());
+                        GL11.glTranslatef(pivot.x * MODEL_SCALE, pivot.y * MODEL_SCALE, pivot.z * MODEL_SCALE);
+                    }
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.x, (float)1.0f, (float)0.0f, (float)0.0f);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.y, (float)0.0f, (float)-1.0f, (float)0.0f);
                     GL11.glRotatef((float)bends.renderItemRotation.vSmooth.z, (float)0.0f, (float)0.0f, (float)1.0f);
@@ -362,7 +367,7 @@ extends RenderPlayer {
         ModelRendererBends_SeperatedChild leftArm = trailModel != null && trailModel.bipedLeftArm instanceof ModelRendererBends_SeperatedChild
             && BackhandCompat.getOffhandItem(argPlayer) != null ? (ModelRendererBends_SeperatedChild)trailModel.bipedLeftArm : null;
         SwordTrail offhandTrail = trail != null && trailModel.offhandTrail.takeSample() ? trailModel.offhandTrail : null;
-        if (leftArm != null) leftArm.afterPostRender = () -> this.placeOffhandItem(trailModel, offhandTrail);
+        if (leftArm != null) leftArm.afterPostRender = () -> this.placeOffhandItem(trailModel, BackhandCompat.getOffhandItem(argPlayer), offhandTrail);
         // A handler that throws mid-draw must not leave its matrices to the rest of the frame.
         int depth = GL11.glGetInteger(GL11.GL_MODELVIEW_STACK_DEPTH);
         try {
@@ -380,11 +385,15 @@ extends RenderPlayer {
      * moves by minus the arm's pivot, mirrors, moves by (-x, y, -z) of it, then 7 px down), so the item lands as the
      * right hand's would, mirrored.
      */
-    private void placeOffhandItem(ModelBendsPlayer model, SwordTrail trail) {
+    private void placeOffhandItem(ModelBendsPlayer model, ItemStack item, SwordTrail trail) {
         float s = 0.0625f;
         ModelRenderer arm = model.bipedLeftArm;
         GL11.glTranslatef(0.0f, PlayerRig.GRIP_DROP * s, 0.0f);
         model.leftItem.apply(s);
+        if (item != null && isDrawnFlat(item)) {
+            Vector3f pivot = model.leftItem.fistPivot(true, model.isSlim(), new Vector3f());
+            GL11.glTranslatef(pivot.x * s, pivot.y * s, pivot.z * s);
+        }
         GL11.glScalef(-1.0f, 1.0f, 1.0f);
         // The right hand's (-1, -2, 1) px from the grip: here the item's placement starts, as in the right hand.
         GL11.glTranslatef(-s, -2.0f * s, s);
@@ -398,6 +407,18 @@ extends RenderPlayer {
 
     /** The modelview the player model draws in, while drawing its equipment with the sword trail on. */
     private float[] trailFrame;
+
+    /**
+     * Whether {@link #renderHeldItem} draws the item as a flat icon beside the grip: not a 3D block, a bow or a
+     * full-3D item such as a sword or tool, whose grip is in the fist. Item bone turns pivot such an item at the fist.
+     */
+    public static boolean isDrawnFlat(ItemStack itemstack) {
+        IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(itemstack, IItemRenderer.ItemRenderType.EQUIPPED);
+        if (customRenderer != null && customRenderer.shouldUseRenderHelper(IItemRenderer.ItemRenderType.EQUIPPED, itemstack,
+            IItemRenderer.ItemRendererHelper.BLOCK_3D)) return false;
+        if (itemstack.getItem() instanceof ItemBlock && RenderBlocks.renderItemIn3d(Block.getBlockFromItem(itemstack.getItem()).getRenderType())) return false;
+        return itemstack.getItem() != Items.bow && !itemstack.getItem().isFull3D();
+    }
 
     /** Vanilla's per-item placement from the grip, then the draw; {@code trail} (may be null) samples the blade. */
     private void renderHeldItem(AbstractClientPlayer argPlayer, ItemStack itemstack1, SwordTrail trail) {

@@ -17,6 +17,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
+import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.minecraft.util.ResourceLocation;
 import org.joml.Matrix4f;
@@ -163,6 +164,107 @@ class HoldingSwimAnimationTest {
                 }
             }
         }
+    }
+
+    /**
+     * Flat items take the strokes' forward tilt, which keeps them off the head, but not the side turn that swings a blade
+     * out: on a flat item it sticks out from the hand like a flipper.
+     */
+    @Test
+    void flatItemsSkipTheSideTurnAndClearTheHeadThroughoutHoldingStrokes() throws Exception {
+        BufferedImage icon = ImageIO.read(getClass().getResourceAsStream("/assets/minecraft/textures/items/apple.png"));
+        List<Vector3f> texels = new ArrayList<>();
+        for (int v = 0; v < 16; ++v) {
+            for (int u = 0; u < 16; ++u) {
+                if ((icon.getRGB(u, v) >>> 24) == 0) continue;
+                for (int corner = 0; corner < 8; ++corner) texels.add(FLAT.transformPosition(new Vector3f(15 - u + (corner & 1),
+                    15 - v + ((corner >> 1) & 1), -((corner >> 2) & 1))));
+            }
+        }
+        for (BakedAnimations file : files()) {
+            String base = file.getAnimation("animation.mobends.player.swim") != null ? "swim" : "dive";
+            Animation animation = file.getAnimation("animation.mobends.player." + base + "_holding");
+            for (String name : new String[] {"player", "player_slim"}) {
+                BakedGeoModel baked = BendsGeometryTest.load(name);
+                ModelBendsPlayer model = (ModelBendsPlayer)BendsGeometryTest.models().get(name);
+                for (float pitch : new float[] {-85, -45, 0, 45, 85}) {
+                    for (float yaw : new float[] {-75, -40, 0, 40, 75}) {
+                        for (int step = 0; step < 48; ++step) {
+                            double seconds = animation.length() * step / 48;
+                            model.headRotationX = pitch;
+                            model.headRotationY = yaw;
+                            AnimationBaking.frame(model, m -> BendsAnimator.apply(m, animation, AnimationProcessor.evaluate(animation, seconds,
+                                variable -> variable.endsWith("holding_flat") ? 1 : BendsAnimator.context(m, null).resolve(variable)), 1000, 1), 1000);
+                            String where = base + " " + name + " pitch=" + pitch + " yaw=" + yaw + " frame=" + step;
+                            for (ItemBone item : new ItemBone[] {model.rightItem, model.leftItem}) {
+                                assertEquals(0, item.rotation.getY(), 1e-3, where);
+                                assertEquals(0, item.rotation.getZ(), 1e-3, where);
+                            }
+                            // Item pixels -> head pixels.
+                            Matrix4f head = new Matrix4f().scale(16).mul(model.geometry().transform(baked, "head", 1 / 16f).invert())
+                                .mul(model.geometry().transform(baked, "rightItem", 1 / 16f))
+                                .translate(model.rightItem.fistPivot(false, model.isSlim(), new Vector3f()).div(16)).scale(1 / 16f);
+                            for (int i = 0; i < texels.size(); i += 8) assertClear(head, texels.subList(i, i + 8), where + " flat item");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** An item bone turn pivots a flat item at the fist; the strokes' blade tilt (8 to 102 degrees) makes a wide sweep. */
+    @Test
+    void aTurnedFlatItemStaysInTheFist() throws Exception {
+        Vector3f iconCenter = FLAT.transformPosition(new Vector3f(8, 8, -0.5f));
+        for (BakedAnimations file : files()) {
+            String base = file.getAnimation("animation.mobends.player.swim") != null ? "swim" : "dive";
+            Animation animation = file.getAnimation("animation.mobends.player." + base + "_holding");
+            for (String name : new String[] {"player", "player_slim"}) {
+                BakedGeoModel baked = BendsGeometryTest.load(name);
+                ModelBendsPlayer model = (ModelBendsPlayer)BendsGeometryTest.models().get(name);
+                float nearest = Float.POSITIVE_INFINITY, farthest = 0, leastTurn = Float.POSITIVE_INFINITY, mostTurn = 0;
+                for (int step = 0; step < 48; ++step) {
+                    double seconds = animation.length() * step / 48;
+                    AnimationBaking.frame(model, m -> BendsAnimator.apply(m, animation,
+                        AnimationProcessor.evaluate(animation, seconds, BendsAnimator.context(m, null)), 1000, 1), 1000);
+                    leastTurn = Math.min(leastTurn, model.rightItem.rotation.getX());
+                    mostTurn = Math.max(mostTurn, model.rightItem.rotation.getX());
+                    // Native pixels: the held item as drawn, and the fist, the forearm's far 4 px.
+                    Matrix4f item = new Matrix4f().scale(16).mul(model.geometry().transform(baked, "rightItem", 1 / 16f))
+                        .translate(model.rightItem.fistPivot(false, model.isSlim(), new Vector3f()).div(16)).scale(1 / 16f);
+                    float distance = item.transformPosition(new Vector3f(iconCenter)).distance(fist(model, baked));
+                    nearest = Math.min(nearest, distance);
+                    farthest = Math.max(farthest, distance);
+                }
+                assertTrue(mostTurn - leastTurn > 80, base + " sweeps too little to test: " + leastTurn + " .. " + mostTurn);
+                // A flat item is held by its edge, its middle about 5 px from the fist, whatever the turn.
+                assertTrue(farthest - nearest < 0.1f && farthest < 6, base + " " + name + " flat item leaves the fist: "
+                    + nearest + " .. " + farthest + " px");
+            }
+        }
+    }
+
+    /** A flat item's placement from the grip, in pixels: RenderBendsPlayer's, then ItemRenderer's for an equipped icon. */
+    private static final Matrix4f FLAT = new Matrix4f().translate(-1, -2, 1).translate(4, 3, -3).scale(0.375f)
+        .rotateZ((float)Math.toRadians(60)).rotateX((float)Math.toRadians(-90)).rotateZ((float)Math.toRadians(20))
+        .translate(0, -0.3f * 16, 0).scale(1.5f).rotateY((float)Math.toRadians(50)).rotateZ((float)Math.toRadians(335))
+        .translate(-0.9375f * 16, -0.0625f * 16, 0);
+
+    /** The center of the right forearm's far 4 px, in native pixels, from its drawn skin cube (wide or slim). */
+    private static Vector3f fist(ModelBendsPlayer model, BakedGeoModel baked) {
+        Matrix4f forearm = new Matrix4f().scale(16).mul(model.geometry().transform(baked, "rightForeArm", 1 / 16f)).scale(1 / 16f);
+        Matrix4f toForearm = forearm.invert(new Matrix4f());
+        Vector3f min = new Vector3f(Float.POSITIVE_INFINITY), max = new Vector3f(Float.NEGATIVE_INFINITY);
+        // Salamander's model blocks -> native pixels (X/Y mirrored, Y from the neck) -> the forearm's frame.
+        GeoModelRenderer.render(baked, model.geometry().pose(baked),
+            bone -> bone.name().equals("rightForeArm_layer0") || bone.name().equals("rightForeArm_layer1"),
+            (x, y, z, u, v, nx, ny, nz, r, g, b, a) -> {
+                Vector3f p = toForearm.transformPosition(new Vector3f(-x * 16, 24 - y * 16, z * 16));
+                min.min(p);
+                max.max(p);
+            }, 1, 1, 1, 1);
+        // The hand is the end away from the elbow, at the bottom of the hanging arm.
+        return forearm.transformPosition(new Vector3f((min.x + max.x) / 2, max.y - 2, (min.z + max.z) / 2));
     }
 
     @Test

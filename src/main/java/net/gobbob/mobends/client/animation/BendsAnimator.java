@@ -19,6 +19,7 @@ import net.gobbob.mobends.client.animation.PlayerRig.Bone;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.client.renderer.entity.RenderBendsPlayer;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.data.EntityData;
@@ -27,6 +28,7 @@ import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 
 /**
@@ -336,12 +338,26 @@ public final class BendsAnimator {
                 case "query.mobends_ticks_after_punch": return data == null ? 0 : data.ticksAfterPunch;
                 case "query.mobends_holding": return isHolding(data) ? 1 : 0;
                 case "query.mobends_offhand_holding": return isOffhandHolding(data) ? 1 : 0;
+                // Whether the hand's item is drawn as a flat icon beside the grip, rather than a sword, tool or block.
+                case "query.mobends_holding_flat": return isDrawnFlat(data, false) ? 1 : 0;
+                case "query.mobends_offhand_holding_flat": return isDrawnFlat(data, true) ? 1 : 0;
                 case "query.mobends_travel_pitch": return data instanceof Data_Player ? ((Data_Player)data).divingTravelPitch : 0;
                 // An axis set to q.mobends_keep is left to the animations before this one (e.g. a sneak over a walk).
                 case "query.mobends_keep": return Double.NaN;
                 default: return 0;
             }
         };
+    }
+
+    /** Whether the main or off hand holds an item drawn as a flat icon (false outside a running world). */
+    static boolean isDrawnFlat(EntityData data, boolean offhand) {
+        Minecraft minecraft = Minecraft.getMinecraft();
+        if (data == null || minecraft == null || minecraft.theWorld == null) return false;
+        EntityLivingBase entity = data.getEntity();
+        if (!(entity instanceof EntityPlayer)) return false;
+        EntityPlayer player = (EntityPlayer)entity;
+        ItemStack item = offhand ? BackhandCompat.getOffhandItem(player) : player.getCurrentEquippedItem();
+        return item != null && RenderBendsPlayer.isDrawnFlat(item);
     }
 
     /** Whether the player's main hand holds something (false outside a running world). */

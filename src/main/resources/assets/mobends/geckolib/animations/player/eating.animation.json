@@ -6,9 +6,9 @@
       "animation_length": 0.2,
       "bones": {
         "rightArmAim": {"rotation": ["math.clamp(q.mobends_head_pitch, -50, 50) * 0.7 - math.clamp(q.mobends_head_yaw, -60, 60) * 0.3", "math.clamp(q.mobends_head_yaw, -60, 60) * 0.4", 0]},
-        "rightArm": {"rotation": {"0.0": [-70, -25, 20], "0.1": [-78, -25, 20], "0.2": [-70, -25, 20]}},
-        "rightForeArm": {"rotation": {"0.0": [-30, 0, 0], "0.1": [-45, 0, 0], "0.2": [-30, 0, 0]}},
-        "rightItem": {"rotation": {"0.0": [35, 0, 0], "0.1": [40, 0, 0], "0.2": [35, 0, 0]}}
+        "rightArm": {"rotation": {"0.0": [-74, -25, 20], "0.1": [-82, -25, 20], "0.2": [-74, -25, 20]}},
+        "rightForeArm": {"rotation": {"0.0": [-34, 0, 0], "0.1": [-49, 0, 0], "0.2": [-34, 0, 0]}},
+        "rightItem": {"rotation": {"0.0": [45, 0, 0], "0.1": [50, 0, 0], "0.2": [45, 0, 0]}}
       }
     }
   }
