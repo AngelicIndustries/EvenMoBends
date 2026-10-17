@@ -16,6 +16,7 @@ import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
 import net.gobbob.mobends.compat.SimpleSkinBackportCompat;
+import net.gobbob.mobends.compat.WaveyCapesCompat;
 import net.gobbob.mobends.compat.WawelAuthCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.customarmor.CustomArmor;
@@ -61,6 +62,8 @@ extends RenderPlayer {
     /** The model RenderPlayer's constructor installed; with Wawel Auth, its player model, which adds the sleeve. */
     private final ModelBiped wawelFirstPersonModel = this.modelBipedMain;
     private final ModelBiped ssbFirstPersonModel = new ModelBiped();
+    /** Wavey Capes' cape layer for this renderer, made on first use. */
+    private Object waveyCape;
     /** Draws another mod's armor model on the bones, for the render pass at hand. */
     private final BonedArmorModel bonedArmor = new BonedArmorModel();
 
@@ -322,7 +325,8 @@ extends RenderPlayer {
         boolean flag = argPlayer.func_152122_n();
         boolean bl = flag = event.renderCape && flag;
         if (flag && !argPlayer.isInvisible() && !argPlayer.getHideCape()) {
-            this.bindTexture(argPlayer.getLocationCape());
+            boolean wavey = WaveyCapesCompat.drawsCape();
+            if (!wavey) this.bindTexture(argPlayer.getLocationCape());
             GL11.glPushMatrix();
             ((ModelBendsPlayer)this.modelBipedMain).geometry().attach("body", MODEL_SCALE);
             GL11.glTranslatef((float)0.0f, (float)-0.75f, (float)0.125f);
@@ -353,7 +357,19 @@ extends RenderPlayer {
                 && argPlayer.capabilities.isFlying
                 && !argPlayer.onGround
                 && !EtFuturumRequiemCompat.isElytraFlying(argPlayer);
-            if (creativeFlying) {
+            if (wavey) {
+                // Wavey Capes cancels renderCloak and draws its own cape from vanilla's cape matrix: it undoes
+                // vanilla's swing, clamped as it clamps it, then swings the cape itself.
+                f6 = Math.min(f6, 150.0f);
+                f7 = MathHelper.clamp_float(f7, -20.0f, 20.0f);
+                GL11.glRotatef(6.0f + f6 / 2.0f + f5, 1.0f, 0.0f, 0.0f);
+                GL11.glRotatef(f7 / 2.0f, 0.0f, 0.0f, 1.0f);
+                GL11.glRotatef(-f7 / 2.0f, 0.0f, 1.0f, 0.0f);
+                GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
+                if (this.waveyCape == null) this.waveyCape = WaveyCapesCompat.createLayer(this, this.modelBipedMain);
+                WaveyCapesCompat.render(this.waveyCape, argPlayer, argPartialTicks);
+                GL11.glPopMatrix();
+            } else if (creativeFlying) {
                 float flutter = MathHelper.sin((argPlayer.ticksExisted + argPartialTicks) * 0.15f) * 2.0f;
                 float sideSway = MathHelper.clamp_float(f7 * 0.15f, -8.0f, 8.0f);
                 GL11.glRotatef(8.0f + flutter, 1.0f, 0.0f, 0.0f);
@@ -364,9 +380,11 @@ extends RenderPlayer {
                 GL11.glRotatef((float)(f7 / 2.0f), (float)0.0f, (float)0.0f, (float)1.0f);
                 GL11.glRotatef((float)(-f7 / 2.0f), (float)0.0f, (float)1.0f, (float)0.0f);
             }
-            GL11.glRotatef((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);
-            this.modelBipedMain.renderCloak(0.0625f);
-            GL11.glPopMatrix();
+            if (!wavey) {
+                GL11.glRotatef((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);
+                this.modelBipedMain.renderCloak(0.0625f);
+                GL11.glPopMatrix();
+            }
         }
         if ((itemstack1 = argPlayer.inventory.getCurrentItem()) != null && event.renderItem) {
             if (argPlayer.fishEntity != null) {

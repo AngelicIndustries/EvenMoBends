@@ -16,6 +16,7 @@ public final class CompatibilityPolicy {
     private static final boolean AQUA_ACROBATICS_LOADED = Loader.isModLoaded("aquaacrobatics");
     private static final boolean ET_FUTURUM_REQUIEM_LOADED = Loader.isModLoaded("etfuturum");
     private static final boolean BACKHAND_LOADED = Loader.isModLoaded("backhand");
+    private static final boolean WAVEY_CAPES_LOADED = Loader.isModLoaded("waveycapes");
     /** Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have. */
     private static final boolean EARS_LOADED = Loader.isModLoaded("ears") || foamFixEarsActive();
     private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED || EARS_LOADED;
@@ -64,6 +65,10 @@ public final class CompatibilityPolicy {
 
     public static boolean isEtFuturumRequiemLoaded() {
         return ET_FUTURUM_REQUIEM_LOADED;
+    }
+
+    public static boolean isWaveyCapesLoaded() {
+        return WAVEY_CAPES_LOADED;
     }
 
     public static boolean isBackhandLoaded() {
