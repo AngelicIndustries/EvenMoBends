@@ -7,6 +7,8 @@ import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.CemCompat;
+import net.gobbob.mobends.compat.DraconicEvolutionCompat;
+import net.gobbob.mobends.client.model.BonedArmorModel;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.BackhandCompat;
@@ -59,6 +61,8 @@ extends RenderPlayer {
     /** The model RenderPlayer's constructor installed; with Wawel Auth, its player model, which adds the sleeve. */
     private final ModelBiped wawelFirstPersonModel = this.modelBipedMain;
     private final ModelBiped ssbFirstPersonModel = new ModelBiped();
+    /** Draws another mod's armor model on the bones, for the render pass at hand. */
+    private final BonedArmorModel bonedArmor = new BonedArmorModel();
 
     public RenderBendsPlayer() {
         this.mainModel = WawelAuthCompat.createPlayerModel(0.0f);
@@ -74,6 +78,12 @@ extends RenderPlayer {
         RenderPlayerEvent.SetArmorModel event = new RenderPlayerEvent.SetArmorModel(p_77032_1_, this, 3 - p_77032_2_, p_77032_3_, itemstack);
         MinecraftForge.EVENT_BUS.post(event);
         if (event.result != -1) {
+            float[] scales = DraconicEvolutionCompat.armorScales(this.renderPassModel);
+            if (scales != null && this.modelBipedMain instanceof ModelBendsPlayer) {
+                // Draconic Evolution put in its own armor model, posed like vanilla: draw it on the bones.
+                DraconicEvolutionCompat.prepareArmor((ModelBiped)this.renderPassModel);
+                this.setRenderPassModel(this.bonedArmor.wrap((ModelBiped)this.renderPassModel, (ModelBendsPlayer)this.modelBipedMain, scales));
+            }
             return event.result;
         }
         if (itemstack != null && (item = itemstack.getItem()) instanceof ItemArmor) {
@@ -112,6 +122,24 @@ extends RenderPlayer {
             return 1;
         }
         return -1;
+    }
+
+    @Override
+    protected void renderModel(EntityLivingBase entity, float swing, float swingAmount, float age, float headYaw, float headPitch, float scale) {
+        // Armor drawn on the bones hugs the body: the skin's outer layer would poke through it, so it is hidden there.
+        ModelBendsPlayer model = this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
+        ModelBendsPlayer.WearState shown = null;
+        if (model != null && entity instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer)entity;
+            boolean hat = DraconicEvolutionCompat.hugs(player, 0), torso = DraconicEvolutionCompat.hugs(player, 1);
+            boolean legs = DraconicEvolutionCompat.hugs(player, 2);
+            if (hat || torso || legs) shown = model.coverWear(hat, torso, legs);
+        }
+        try {
+            super.renderModel(entity, swing, swingAmount, age, headYaw, headPitch, scale);
+        } finally {
+            if (shown != null) model.restoreWear(shown);
+        }
     }
 
     @Override

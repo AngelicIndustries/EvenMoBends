@@ -8,6 +8,8 @@ import com.geckolib.renderer.base.GeoModelRenderer;
 import com.geckolib.renderer.base.GeoRenderer;
 import com.geckolib.renderer.base.GeoVertexConsumer;
 import java.nio.FloatBuffer;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.model.ModelRendererBends;
@@ -15,6 +17,7 @@ import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.ResourceLocation;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 
@@ -24,6 +27,9 @@ public final class BendsGeometry {
     private final ResourceLocation resource;
     public final RenderRig rig;
     private final FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
+    /** Rest pivots by bone, for the baked model they were taken from. */
+    private BakedGeoModel restModel;
+    private final Map<String, Vector3f> restPivots = new HashMap<>();
 
     public BendsGeometry(AnimatedModel model, String name) {
         this.resource = new ResourceLocation("mobends", "geckolib/models/" + name + ".geo.json");
@@ -135,6 +141,29 @@ public final class BendsGeometry {
             .orElseThrow(() -> new IllegalArgumentException("Missing attachment bone " + bone)).modelSpaceMatrix();
         return new Matrix4f().translate(0, 24 * scale, 0).scale(-16 * scale, -16 * scale, 16 * scale)
             .mul(frame).scale(-1, -1, 1);
+    }
+
+    /** A bone's pivot in native pixels with nothing posed, as the rig models it. */
+    public Vector3f restPivot(String bone) {
+        return restPivot(model(), bone);
+    }
+
+    /** As above, on a given baked model. */
+    public Vector3f restPivot(BakedGeoModel baked, String bone) {
+        if (baked != this.restModel) {
+            this.restModel = baked;
+            this.restPivots.clear();
+        }
+        return new Vector3f(this.restPivots.computeIfAbsent(bone, name -> {
+            Matrix4f frame = GeoModelRenderer.captureTransforms(baked, ModelPose.create(baked)).getBone(name)
+                .orElseThrow(() -> new IllegalArgumentException("Missing bone " + name)).modelSpaceMatrix();
+            return new Matrix4f().translate(0, 24, 0).scale(-16, -16, 16).mul(frame).getTranslation(new Vector3f());
+        }));
+    }
+
+    /** As above, on the game's geometry. */
+    public Matrix4f transform(String bone, float scale) {
+        return transform(model(), bone, scale);
     }
 
     public void attach(String bone, float scale) {

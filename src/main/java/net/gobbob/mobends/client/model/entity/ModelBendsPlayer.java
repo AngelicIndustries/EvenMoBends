@@ -364,6 +364,11 @@ extends ModelBiped implements BipedRigModel {
 
     /** Hides the overlay boxes for a draw whose layers another renderer draws; returns which were shown. */
     public WearState hideWear() {
+        return this.coverWear(true, true, true);
+    }
+
+    /** Hides the hat, the jacket and sleeves, or the pants, as asked; returns which were shown. */
+    public WearState coverWear(boolean hat, boolean torso, boolean legs) {
         WearState shown = new WearState(
             this.bipedHeadwear.showModel,
             this.modern && this.bodyWear.showModel,
@@ -371,13 +376,17 @@ extends ModelBiped implements BipedRigModel {
             this.modern && this.getLeftArmWear().showModel,
             this.modern && this.rightLegWear.showModel,
             this.modern && this.leftLegWear.showModel);
-        this.bipedHeadwear.showModel = false;
+        if (hat) this.bipedHeadwear.showModel = false;
         if (this.modern) {
-            this.bodyWear.showModel = false;
-            this.setRightSleeveVisible(false);
-            this.setLeftSleeveVisible(false);
-            this.setRightPantsVisible(false);
-            this.setLeftPantsVisible(false);
+            if (torso) {
+                this.bodyWear.showModel = false;
+                this.setRightSleeveVisible(false);
+                this.setLeftSleeveVisible(false);
+            }
+            if (legs) {
+                this.setRightPantsVisible(false);
+                this.setLeftPantsVisible(false);
+            }
         }
         return shown;
     }
