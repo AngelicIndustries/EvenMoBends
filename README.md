@@ -44,7 +44,6 @@ priority decides which model wins if several are enabled. Removing the pack or d
 | --- | --- | --- |
 | Even Mo' Bends | Mo' Bends through Salamander | Enabled |
 | WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth skins and modern-skin support | Enabled |
-| SimpleSkinBackport + Even Mo' Bends | Mo' Bends with modern skins, slim arms and segmented skin layers | Enabled |
 | Backhand + Just A Shield + Even Mo' Bends | Mo' Bends with per-hand blocking poses, including passive shield blocking | Enabled |
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled |
@@ -122,21 +121,11 @@ It can additionally load makamys' Smart Moving stack without making it a publish
 ./gradlew -PsmartMoving runClient25
 ```
 
-To test SimpleSkinBackport instead of Wawel Auth, supply an SSB development jar:
-
-```sh
-./gradlew -PsimpleSkinBackportJar=/path/to/simpleskinbackport-dev.jar runClient25
-```
-
-Wawel Auth remains available for compilation and tests, but is excluded from this client's runtime.
-
 Backhand is always in the development client. To test it with Just A Shield, supply a Just A Shield development jar:
 
 ```sh
 ./gradlew -PjustAShieldJar=/path/to/targaseule-dev.jar runClient25
 ```
-
-This can be combined with `-PsimpleSkinBackportJar=...`.
 
 To test Aqua Acrobatics, supply its development jar. This can be combined with the options above:
 
