@@ -35,6 +35,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -473,7 +474,7 @@ extends ModelBiped implements BipedRigModel {
             BoatState boat = Animation_Rowing.getBoatState(player, this.partialTicks);
             boolean rowing = false;
             boolean elytraFlying = EtFuturumRequiemCompat.isElytraFlying(player);
-            boolean creativeFlying = player.capabilities.isFlying && !data.isOnGround();
+            boolean creativeFlying = data.isFlying(player) && !data.isOnGround();
             boolean touchingWater = this.isTouchingWater(argEntity);
             boolean groundedInWater = touchingWater && data.isOnGround();
             data.swimming = false;
@@ -503,7 +504,7 @@ extends ModelBiped implements BipedRigModel {
                 }
             } else if (player.isOnLadder() && this.animatePlayer("climbing", argEntity, data)) {
                 // Climbing takes precedence over the ordinary airborne animations.
-            } else if (!data.isOnGround() || !groundedInWater && data.ticksAfterTouchdown < 2.0f) {
+            } else if (data.shouldAnimateAirborne(groundedInWater, player instanceof EntityOtherPlayerMP)) {
                 if (!this.shouldAnimateFalling(argEntity, data) || !this.animatePlayer("falling", argEntity, data)) {
                     this.animatePlayer("jump", argEntity, data);
                 }
@@ -519,6 +520,9 @@ extends ModelBiped implements BipedRigModel {
                 }
                 if (argEntity.isSneaking()) {
                     this.animatePlayer("sneak", argEntity, data);
+                }
+                if (player instanceof EntityOtherPlayerMP && data.ticksAfterTouchdown < 2.0f) {
+                    this.settleLanding();
                 }
             }
             int blockingHands = PlayerBlockingCompat.getBlockingHands(player, this);
@@ -569,6 +573,15 @@ extends ModelBiped implements BipedRigModel {
             data.updatedThisFrame = true;
         }
         Data_Player.get(argEntity.getEntityId()).syncModelInfo(this);
+    }
+
+    /** Extend the legs over the remote touchdown's two-tick descent instead of snapping straight on its first frame. */
+    public void settleLanding() {
+        for (ModelRenderer part : new ModelRenderer[] {
+            this.bipedBody, this.bipedRightLeg, this.bipedLeftLeg, this.bipedRightForeLeg, this.bipedLeftForeLeg}) {
+            Vector3f rate = ((ModelRendererBends)part).rotation.smoothness;
+            rate.set(Math.max(rate.x, 1.5f), Math.max(rate.y, 1.5f), Math.max(rate.z, 1.5f));
+        }
     }
 
     private boolean animatePlayer(String animationName, Entity entity, Data_Player data) {

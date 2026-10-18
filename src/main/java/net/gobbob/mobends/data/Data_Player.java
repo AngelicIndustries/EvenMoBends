@@ -8,10 +8,12 @@ import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.client.animation.HandAction;
 import net.gobbob.mobends.compat.BackhandCompat;
+import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.minecraft.entity.player.EntityPlayer;
 import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 
 public class Data_Player
 extends EntityData {
@@ -79,6 +81,31 @@ extends EntityData {
 
     public Data_Player(int argEntityID) {
         super(argEntityID);
+    }
+
+    private final RemotePlayerLanding remoteLanding = new RemotePlayerLanding();
+
+    @Override
+    public boolean calcOnGround() {
+        boolean grounded = super.calcOnGround();
+        if (this.getEntity() instanceof EntityOtherPlayerMP) {
+            EntityOtherPlayerMP player = (EntityOtherPlayerMP)this.getEntity();
+            boolean eligible = player.isEntityAlive() && !player.isPlayerSleeping() && !player.isInWater()
+                && !player.isOnLadder() && !player.isRiding() && !this.isFlying(player)
+                && !EtFuturumRequiemCompat.isElytraFlying(player);
+            this.remoteLanding.update(player, eligible, box -> player.worldObj.func_147461_a(box));
+            grounded |= this.remoteLanding.isGrounded();
+        }
+        return grounded;
+    }
+
+    /** World-space drawing correction only: never changes the player's position, hitbox, or packets. */
+    public double landingRenderOffset(float partialTicks) {
+        return this.remoteLanding.renderOffset(partialTicks);
+    }
+
+    public boolean hasLandingContact() {
+        return this.remoteLanding.isGrounded();
     }
 
     public void syncModelInfo(ModelBendsPlayer argModel) {
@@ -153,6 +180,49 @@ extends EntityData {
         return newData;
     }
 
+    /** Whether {@code player} is in creative flight: its own ability, which other players' clients are never sent. */
+    public boolean isFlying(EntityPlayer player) {
+        if (player == Minecraft.getMinecraft().thePlayer) return player.capabilities.isFlying;
+        return this.steadyAirTicks >= STEADY_FLIGHT_TICKS && this.aloftTicks >= ALOFT_FLIGHT_TICKS;
+    }
+
+    /** A remote landing can last only one packet interval; do not spend all of it holding the airborne pose. */
+    public boolean shouldAnimateAirborne(boolean groundedInWater, boolean remote) {
+        return !this.isOnGround() || !remote && !groundedInWater && this.ticksAfterTouchdown < 2.0f;
+    }
+
+    /** As above, for any player. */
+    public static boolean isFlying(EntityPlayer player, boolean fallback) {
+        Data_Player data = get(player.getEntityId());
+        return data != null ? data.isFlying(player) : fallback;
+    }
+
+    /**
+     * Another player flies when it stays well off the ground without falling: gravity changes the vertical speed by
+     * about 0.08 a tick even at a jump's top, while flight holds it steady, still or rising and sinking. Its position
+     * arrives rounded and smoothed, so it may float a hair above the ground standing, and a jump's top can look level
+     * for a few ticks: it must be clear of the ground for longer than a jump lasts.
+     */
+    private void sampleFlight(EntityPlayer player) {
+        if (player.ticksExisted == this.flightSampleTick) return;
+        this.flightSampleTick = player.ticksExisted;
+        double speed = player.posY - player.lastTickPosY;
+        boolean aloft = !this.isOnGround() && !player.isInWater() && !player.isOnLadder() && !player.isRiding() && !this.bouncedOn(player.ticksExisted)
+            && player.worldObj.func_147461_a(player.boundingBox.copy().addCoord(0.0, -GROUND_MARGIN, 0.0)).isEmpty();
+        this.aloftTicks = aloft ? this.aloftTicks + 1 : 0;
+        boolean steady = aloft && speed > -1.0 && Math.abs(speed - this.lastVerticalSpeed) < 0.04;
+        this.steadyAirTicks = steady ? this.steadyAirTicks + 1 : 0;
+        this.lastVerticalSpeed = speed;
+    }
+
+    /** Ticks of steady vertical speed, and of being clear of the ground (a jump lasts about 12), before it is flight. */
+    private static final int STEADY_FLIGHT_TICKS = 4, ALOFT_FLIGHT_TICKS = 20;
+    /** How far above the ground another player still counts as standing, in blocks. */
+    private static final double GROUND_MARGIN = 0.1;
+    private int flightSampleTick = Integer.MIN_VALUE;
+    private double lastVerticalSpeed;
+    private int steadyAirTicks, aloftTicks;
+
     @Override
     public void update(float argPartialTicks) {
         super.update(argPartialTicks);
@@ -161,6 +231,7 @@ extends EntityData {
         }
         if (this.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)this.getEntity();
+            this.sampleFlight(player);
             // A swing starts when the progress leaves 0, or drops back while swinging: Backhand interpolates a held
             // swing's restart up through 1 rather than back through 0, so it never reads 0 between held swings.
             float progress = BackhandCompat.getOffSwingProgress(player, argPartialTicks);

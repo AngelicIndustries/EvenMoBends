@@ -223,7 +223,9 @@ extends RenderPlayer {
         if (WawelAuthCompat.isLoaded() && this.modelBipedMain instanceof ModelBendsPlayer) {
             ((ModelBendsPlayer)this.modelBipedMain).setSlim(WawelAuthCompat.isSlim(p_76986_1_));
         }
-        super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+        Data_Player data = Data_Player.get(p_76986_1_.getEntityId());
+        double landingOffset = data.landingRenderOffset(p_76986_9_);
+        super.doRender(p_76986_1_, p_76986_2_, p_76986_4_ + landingOffset, p_76986_6_, p_76986_8_, p_76986_9_);
     }
 
     @Override
@@ -353,9 +355,10 @@ extends RenderPlayer {
             if (argPlayer.isSneaking()) {
                 f5 += 25.0f;
             }
+            Data_Player flight = Data_Player.get(argPlayer.getEntityId());
             boolean creativeFlying = PlayerAnimationConfig.isEnabled("flying")
-                && argPlayer.capabilities.isFlying
-                && !argPlayer.onGround
+                && flight != null && flight.isFlying(argPlayer)
+                && !flight.isOnGround()
                 && !EtFuturumRequiemCompat.isElytraFlying(argPlayer);
             if (wavey) {
                 // Wavey Capes cancels renderCloak and draws its own cape from vanilla's cape matrix: it undoes

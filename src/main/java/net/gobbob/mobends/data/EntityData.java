@@ -1,9 +1,12 @@
 package net.gobbob.mobends.data;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.AxisAlignedBB;
+import java.util.function.Predicate;
 import org.lwjgl.util.vector.Vector3f;
 
 public class EntityData {
@@ -63,15 +66,37 @@ public class EntityData {
         return !this.updatedThisFrame;
     }
 
+    /** How far above the ground another entity still stands, in blocks: twice the rounding of its sent position. */
+    private static final double REMOTE_GROUND_MARGIN = 1.0 / 16.0;
+    private boolean receivedOnGround;
+
+    /** Whether the last ground check found support at a remote player's received, unsmoothed position. */
+    public boolean isReceivedOnGround() {
+        return this.receivedOnGround;
+    }
+
     public boolean calcOnGround() {
         Entity entity = Minecraft.getMinecraft().theWorld.getEntityByID(this.entityID);
         if (entity == null) {
+            this.receivedOnGround = false;
             return false;
         }
-        return entity.onGround
-            || !entity.worldObj.getCollidingBoundingBoxes(
-                entity,
-                entity.boundingBox.addCoord(0.0, -0.001, 0.0)).isEmpty();
+        return this.calcOnGround(entity, entity == Minecraft.getMinecraft().thePlayer,
+            box -> !entity.worldObj.getCollidingBoundingBoxes(entity, box).isEmpty());
+    }
+
+    boolean calcOnGround(Entity entity, boolean local, Predicate<AxisAlignedBB> collides) {
+        // Other entities' positions arrive rounded to 1/32 block and smoothed: standing, they can float a hair above it.
+        double margin = local ? 0.001 : REMOTE_GROUND_MARGIN;
+        // Remote players interpolate a target over three ticks, but receive another every two ticks. During bunny
+        // hops the displayed position can turn upward before ever reaching the landing target. Test the received
+        // position as well, at its own X/Z (so a ledge below the displayed position cannot support that target).
+        this.receivedOnGround = !local && entity instanceof EntityOtherPlayerMP && collides.test(
+            entity.boundingBox.getOffsetBoundingBox(entity.serverPosX / 32.0 - entity.posX,
+                entity.serverPosY / 32.0 - entity.posY, entity.serverPosZ / 32.0 - entity.posZ)
+                .addCoord(0.0, -margin, 0.0));
+        return entity.onGround || this.receivedOnGround
+            || collides.test(entity.boundingBox.addCoord(0.0, -margin, 0.0));
     }
 
     public boolean isOnGround() {
@@ -86,13 +111,11 @@ public class EntityData {
         this.ticks = (float)Minecraft.getMinecraft().thePlayer.ticksExisted + argPartialTicks;
         this.updatedThisFrame = false;
         boolean calculatedOnGround = this.calcOnGround();
-        if (calculatedOnGround && !this.onGround) {
-            this.onTouchdown();
-            this.onGround = true;
-        } else if (!calculatedOnGround && this.onGround) {
-            this.onLiftoff();
-            this.onGround = false;
-        }
+        this.bounced(this.getEntity(), calculatedOnGround);
+        // When even the landing packet was skipped, show its inferred touchdown for one client tick. Resetting
+        // touchdown and liftoff together never leaves the airborne branch. Keep the result for every render frame
+        // in this tick; the next tick starts the new jump if there is still no support.
+        this.updateGround(calculatedOnGround || this.bouncedOn(this.getEntity().ticksExisted));
         if (this.getEntity().swingProgress > 0.0f) {
             if (!this.alreadyPunched) {
                 this.onPunch();
@@ -101,13 +124,67 @@ public class EntityData {
         } else {
             this.alreadyPunched = false;
         }
+        this.ticksAfterPunch += this.ticksPerFrame;
+    }
+
+    void updateGround(boolean calculatedOnGround) {
+        if (calculatedOnGround && !this.onGround) {
+            this.onTouchdown();
+            this.onGround = true;
+        } else if (!calculatedOnGround && this.onGround) {
+            this.onLiftoff();
+            this.onGround = false;
+        }
         if (!this.isOnGround()) {
             this.ticksAfterLiftoff += this.ticksPerFrame;
         }
         if (this.isOnGround()) {
             this.ticksAfterTouchdown += this.ticksPerFrame;
         }
-        this.ticksAfterPunch += this.ticksPerFrame;
+    }
+
+    /**
+     * Whether another entity turned from falling to rising this tick: it landed and took off again. Its position
+     * arrives every few ticks, smoothed, so a jump's one tick on the ground can pass between two samples.
+     */
+    private boolean bounced(Entity entity, boolean grounded) {
+        if (entity == null) return false;
+        boolean eligible = entity != Minecraft.getMinecraft().thePlayer && !grounded && !entity.isInWater()
+            && !entity.isRiding() && !(entity instanceof EntityLivingBase && ((EntityLivingBase)entity).isOnLadder());
+        boolean bounced = this.bounce.sample(entity.ticksExisted, entity.posY - entity.lastTickPosY, eligible);
+        this.lastBounce = bounced ? entity.ticksExisted : this.lastBounce;
+        return bounced;
+    }
+
+    /** Whether {@link #bounced} saw a landing on the given tick. */
+    public boolean bouncedOn(int tick) {
+        return this.lastBounce == tick;
+    }
+
+    private final BounceTracker bounce = new BounceTracker();
+    private int lastBounce = Integer.MIN_VALUE;
+
+    /** Tracks a significant descent until a significant ascent, across interpolation's near-zero samples. */
+    static final class BounceTracker {
+        private static final double SPEED = 0.02;
+        private int sampleTick = Integer.MIN_VALUE;
+        private boolean descending;
+
+        boolean sample(int tick, double speed, boolean eligible) {
+            if (!eligible) this.descending = false;
+            if (tick == this.sampleTick) return false;
+            this.sampleTick = tick;
+            if (!eligible) return false;
+            if (speed < -SPEED) {
+                this.descending = true;
+            } else if (speed > SPEED) {
+                boolean bounced = this.descending;
+                this.descending = false;
+                return bounced;
+            }
+            // Observed bunny hops turn -0.277778 -> +0.011574 -> +0.201775. The small rise must not erase the fall.
+            return false;
+        }
     }
 
     public EntityLivingBase getEntity() {

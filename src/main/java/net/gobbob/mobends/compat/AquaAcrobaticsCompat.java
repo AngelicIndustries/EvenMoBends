@@ -2,6 +2,7 @@ package net.gobbob.mobends.compat;
 
 import java.lang.reflect.Method;
 
+import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.BendsLogger;
 import net.minecraft.entity.player.EntityPlayer;
 
@@ -22,7 +23,7 @@ public final class AquaAcrobaticsCompat {
             }
             if (api == null) return State.UNAVAILABLE;
             boolean otherPose = !player.isEntityAlive() || player.isPlayerSleeping() || player.isRiding()
-                || player.capabilities.isFlying || EtFuturumRequiemCompat.isElytraFlying(player);
+                || Data_Player.isFlying(player, player.capabilities.isFlying) || EtFuturumRequiemCompat.isElytraFlying(player);
             return api.read(player, partialTicks, player.isInWater(), otherPose);
         } catch (ReflectiveOperationException | LinkageError e) {
             if (!failureLogged) {
