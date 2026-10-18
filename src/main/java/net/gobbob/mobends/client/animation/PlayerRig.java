@@ -248,15 +248,17 @@ public final class PlayerRig {
         cube.add("size", vector(max[0] - min[0], max[1] - min[1], max[2] - min[2]));
 
         JsonObject uv = new JsonObject();
-        for (int quad = 0; quad < FACES.length; ++quad) {
+        for (int face = 0; face < FACES.length; ++face) {
+            // A mirrored box's two side quads sit on each other's sides.
+            int quad = box.mirror && face < 2 ? 1 - face : face;
             if (!box.isQuadVisible(quad)) continue;
-            uv.add(FACES[quad], faceUv(box.quads[quad], FACES[quad], textureWidth, textureHeight));
+            uv.add(FACES[face], faceUv(box.quads[quad], FACES[face], box.mirror, textureWidth, textureHeight));
         }
         cube.add("uv", uv);
         return cube;
     }
 
-    private static JsonObject faceUv(TexturedQuad quad, String face, float textureWidth, float textureHeight) {
+    private static JsonObject faceUv(TexturedQuad quad, String face, boolean mirror, float textureWidth, float textureHeight) {
         float minU = Float.MAX_VALUE, minV = Float.MAX_VALUE, maxU = -Float.MAX_VALUE, maxV = -Float.MAX_VALUE;
         for (PositionTextureVertex vertex : quad.vertexPositions) {
             minU = Math.min(minU, vertex.texturePositionX * textureWidth);
@@ -267,8 +269,9 @@ public final class PlayerRig {
         JsonObject json = new JsonObject();
         // Bedrock's bottom face runs its V axis the other way, as in box UV (size.y = -depth).
         boolean down = face.equals("down");
-        json.add("uv", pair(minU, down ? maxV : minV));
-        json.add("uv_size", pair(maxU - minU, down ? minV - maxV : maxV - minV));
+        // A mirrored box flips each face's texture left to right.
+        json.add("uv", pair(mirror ? maxU : minU, down ? maxV : minV));
+        json.add("uv_size", pair(mirror ? minU - maxU : maxU - minU, down ? minV - maxV : maxV - minV));
         return json;
     }
 

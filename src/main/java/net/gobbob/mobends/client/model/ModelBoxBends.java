@@ -21,6 +21,8 @@ extends ModelBox {
     public float txOffsetY;
     public PositionTextureVertex[] vertices;
     public TexturedQuad[] quads;
+    /** Built mirrored, as vanilla mirrors a left limb: the side quads swap places and every quad's texture is flipped. */
+    public final boolean mirror;
     private final boolean[] visibleQuads = new boolean[]{true, true, true, true, true, true};
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
@@ -31,6 +33,7 @@ extends ModelBox {
 
     public ModelBoxBends(ModelRenderer p_i1171_1_, int p_i1171_2_, int p_i1171_3_, float p_i1171_4_, float p_i1171_5_, float p_i1171_6_, int p_i1171_7_, int p_i1171_8_, int p_i1171_9_, float p_i1171_10_) {
         super(p_i1171_1_, p_i1171_9_, p_i1171_9_, p_i1171_10_, p_i1171_10_, p_i1171_10_, p_i1171_9_, p_i1171_9_, p_i1171_9_, p_i1171_10_);
+        this.mirror = p_i1171_1_.mirror;
         this.offsetX = p_i1171_4_;
         this.offsetY = p_i1171_5_;
         this.offsetZ = p_i1171_6_;
