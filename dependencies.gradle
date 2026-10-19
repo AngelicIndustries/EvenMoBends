@@ -23,9 +23,8 @@ dependencies {
     // These are deliberately not published as hard dependencies of EvenMoBends.
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Hodgepodge:2.7.211:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.17:dev")
-    // Off until Resourcify moves to AngelLib: it needs FentLib, whose mixins clash with AngelLib's. vrap needs it.
-    //runtimeOnlyNonPublishable("dev.dediamondpro.resourcify:VintageResourcify:1.0.5:dev")
-    //runtimeOnlyNonPublishable("org.fentanylsolutions.vrap:vrap:1.0.1:dev")
+    runtimeOnlyNonPublishable("industries.angelic.vintageresourcify:VintageResourcify:1.0.6:dev")
+    runtimeOnlyNonPublishable("industries.angelic.vrap:vrap:1.0.2:dev")
     runtimeOnlyNonPublishable("com.falsepattern:forgelin-mc1.7.10:2.4.3-2.4.10")
     runtimeOnlyNonPublishable("tcb.spiderstpo:Spiders-2.0-1.7.10:0.1.1")
 
