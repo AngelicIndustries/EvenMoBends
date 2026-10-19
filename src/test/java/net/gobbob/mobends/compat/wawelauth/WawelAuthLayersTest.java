@@ -11,7 +11,7 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.minecraft.client.model.ModelRenderer;
 
-import org.fentanylsolutions.wawelauth.api.skin.LayerSegment;
+import industries.angelic.wawelauth.api.skin.LayerSegment;
 import org.junit.jupiter.api.Test;
 
 class WawelAuthLayersTest {

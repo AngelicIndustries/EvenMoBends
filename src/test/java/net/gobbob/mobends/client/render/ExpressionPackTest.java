@@ -14,11 +14,11 @@ import java.util.zip.ZipFile;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.util.ResourceLocation;
-import org.fentanylsolutions.salamander.cem.client.CemBinding;
-import org.fentanylsolutions.salamander.cem.client.CemPlayers;
-import org.fentanylsolutions.salamander.cem.loading.CemLoader;
-import org.fentanylsolutions.salamander.cem.model.CemBoxMesh;
-import org.fentanylsolutions.salamander.cem.model.CemModel;
+import industries.angelic.salamander.cem.client.CemBinding;
+import industries.angelic.salamander.cem.client.CemPlayers;
+import industries.angelic.salamander.cem.loading.CemLoader;
+import industries.angelic.salamander.cem.model.CemBoxMesh;
+import industries.angelic.salamander.cem.model.CemModel;
 import org.junit.jupiter.api.Test;
 
 /** Opt-in contract check against users' original pack ZIPs; no third-party artwork is redistributed. */

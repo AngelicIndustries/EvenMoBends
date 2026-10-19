@@ -4,15 +4,15 @@ Minecraft 1.7.10 fork of Mo' Bends 0.20.1, with Salamander models and animations
 
 ![Even Mo' Bends logo](images/logo_small.png)
 
-[![hub](images/badges/github.png)](https://github.com/JackOfNoneTrades/EvenMoBends/releases)
-[![67](images/badges/67.png)](https://67.fentanylsolutions.org/mod/even-mo-bends)
+[![hub](images/badges/github.png)](https://github.com/AngelicIndustries/EvenMoBends/releases)
+[![67](images/badges/67.png)](https://67minecraft.com/mod/even-mo-bends)
 ![forge](images/badges/forge.png)
 [![cord](images/badges/cord.png)](https://discord.gg/xAWCqGrguG)
 
 <!--
 [![curse](images/badges/curse.png)](https://www.curseforge.com/minecraft/mc-mods/even-mo-bends)
 [![modrinth](images/badges/modrinth.png)](https://modrinth.com/mod/even-mo-bends)
-[![maven](images/badges/maven.png)](https://maven.fentanylsolutions.org/#/releases/net/gobbob/mobends/EvenMoBends)
+[![maven](images/badges/maven.png)](https://maven.angelic.industries/#/releases/net/gobbob/mobends/EvenMoBends)
 -->
 
 ## Features
@@ -27,7 +27,7 @@ to disable it. The player animation switches also cover movement, combat, swimmi
 
 ## Dependencies
 
-* [Salamander](https://github.com/JackOfNoneTrades/Salamander) is required. This development branch targets
+* [Salamander](https://github.com/AngelicIndustries/Salamander) is required. This development branch targets
   `8e5a945-snapshot`; older builds without its public CEM/player-skin APIs are incompatible.
 * Salamander also requires [GTNHLib](https://github.com/GTNewHorizons/GTNHLib) 0.11.30 or newer and a compatible
   mixin bootstrap such as [UniMixins](https://github.com/LegacyModdingMC/UniMixins).
@@ -138,7 +138,7 @@ To test Aqua Acrobatics, supply its development jar. This can be combined with t
 * [Iwo Plaza / GobBob](https://www.curseforge.com/minecraft/mc-mods/mo-bends), creator of Mo' Bends.
 * [makamys](https://github.com/makamys/SmartMoving), maintainer of the Minecraft 1.7.10 Smart Moving fork used for compatibility testing.
 * [GTNH Et Futurum Requiem](https://github.com/GTNewHorizons/Et-Futurum-Requiem), whose optional API supplies Elytra flight and boat paddle state.
-* [Salamander](https://github.com/JackOfNoneTrades/Salamander), for model rendering, animation evaluation and CEM support.
+* [Salamander](https://github.com/AngelicIndustries/Salamander), for model rendering, animation evaluation and CEM support.
 * [FreshLX / Ithan Mendoza](https://github.com/IthanMendoza/Fresh-Moves), for the Just Expressions / Fresh Moves skin layout used by the editor.
 * [GT:NH buildscript](https://github.com/GTNewHorizons/ExampleMod1.7.10).
 

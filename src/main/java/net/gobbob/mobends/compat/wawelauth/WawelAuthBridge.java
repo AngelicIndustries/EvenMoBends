@@ -6,11 +6,11 @@ import java.util.concurrent.CompletableFuture;
 import net.gobbob.mobends.compat.WawelAuthSkinUpload.Account;
 import net.minecraft.client.entity.AbstractClientPlayer;
 
-import org.fentanylsolutions.wawelauth.api.account.AccountInfo;
-import org.fentanylsolutions.wawelauth.api.account.WawelAccounts;
-import org.fentanylsolutions.wawelauth.api.skin.PlayerSkin;
-import org.fentanylsolutions.wawelauth.api.skin.PlayerSkins;
-import org.fentanylsolutions.wawelauth.wawelcore.data.SkinModel;
+import industries.angelic.wawelauth.api.account.AccountInfo;
+import industries.angelic.wawelauth.api.account.WawelAccounts;
+import industries.angelic.wawelauth.api.skin.PlayerSkin;
+import industries.angelic.wawelauth.api.skin.PlayerSkins;
+import industries.angelic.wawelauth.wawelcore.data.SkinModel;
 
 /** Wawel Auth's skin and account API. Loaded only when Wawel Auth is present. */
 public final class WawelAuthBridge {

@@ -1,6 +1,6 @@
 package net.gobbob.mobends.compat.wawelauth;
 
-import org.fentanylsolutions.wawelauth.api.skin.WawelSkinApi;
+import industries.angelic.wawelauth.api.skin.WawelSkinApi;
 
 /** Probes the installed Wawel Auth for the skin API this build uses. Loaded only when Wawel Auth is present. */
 public final class WawelAuthApi {

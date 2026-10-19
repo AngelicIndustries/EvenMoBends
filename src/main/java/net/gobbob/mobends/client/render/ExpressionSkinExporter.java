@@ -3,7 +3,7 @@ package net.gobbob.mobends.client.render;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
-import org.fentanylsolutions.salamander.cem.client.CemSkinImage;
+import industries.angelic.salamander.cem.client.CemSkinImage;
 
 /** Shared Just Expressions 1.2.1 / Fresh Moves 3.1.1 skin layout. No pack assets or legacy formats. */
 public final class ExpressionSkinExporter {

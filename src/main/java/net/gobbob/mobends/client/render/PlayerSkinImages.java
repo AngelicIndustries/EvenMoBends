@@ -14,7 +14,7 @@ import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
-import org.fentanylsolutions.salamander.cem.client.CemSkinImage;
+import industries.angelic.salamander.cem.client.CemSkinImage;
 
 /** Read original skin pixels for the editor and Blockbench export, without generated expression textures. */
 public final class PlayerSkinImages {
@@ -30,8 +30,8 @@ public final class PlayerSkinImages {
     }
 
     private static BufferedImage getSourceImage(ResourceLocation location, ITextureObject textureObject) {
-        BufferedImage image = textureObject instanceof org.fentanylsolutions.salamander.cem.client.CemSkinTexture
-            ? ((org.fentanylsolutions.salamander.cem.client.CemSkinTexture)textureObject).salamander$skinImage() : null;
+        BufferedImage image = textureObject instanceof industries.angelic.salamander.cem.client.CemSkinTexture
+            ? ((industries.angelic.salamander.cem.client.CemSkinTexture)textureObject).salamander$skinImage() : null;
         if (image == null) image = getBufferedImageField(textureObject);
         if (image != null) {
             return image;

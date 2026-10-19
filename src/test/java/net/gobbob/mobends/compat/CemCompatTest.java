@@ -14,9 +14,9 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.data.IMetadataSection;
 import net.minecraft.util.ResourceLocation;
-import org.fentanylsolutions.salamander.cem.client.CemBinding;
-import org.fentanylsolutions.salamander.cem.client.CemResources;
-import org.fentanylsolutions.salamander.config.CemConfig;
+import industries.angelic.salamander.cem.client.CemBinding;
+import industries.angelic.salamander.cem.client.CemResources;
+import industries.angelic.salamander.config.CemConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

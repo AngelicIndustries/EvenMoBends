@@ -6,11 +6,11 @@ import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.client.MinecraftForgeClient;
 
-import org.fentanylsolutions.wawelauth.api.skin.DrawKind;
-import org.fentanylsolutions.wawelauth.api.skin.LayerDraw;
-import org.fentanylsolutions.wawelauth.api.skin.LayerSegment;
-import org.fentanylsolutions.wawelauth.api.skin.SkinLayers;
-import org.fentanylsolutions.wawelauth.api.skin.SkinPart;
+import industries.angelic.wawelauth.api.skin.DrawKind;
+import industries.angelic.wawelauth.api.skin.LayerDraw;
+import industries.angelic.wawelauth.api.skin.LayerSegment;
+import industries.angelic.wawelauth.api.skin.SkinLayers;
+import industries.angelic.wawelauth.api.skin.SkinPart;
 import org.lwjgl.opengl.GL11;
 
 /**

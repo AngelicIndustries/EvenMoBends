@@ -1,7 +1,16 @@
 dependencies {
+    // Supply a local Salamander development jar with -PsalamanderJar, e.g. a build with unpublished changes.
+    def salamanderDependency = "industries.angelic.salamander:Salamander:727fc6c-snapshot:dev"
+    if (project.hasProperty("salamanderJar")) {
+        def salamanderJar = file(project.property("salamanderJar"))
+        if (!salamanderJar.isFile()) {
+            throw new GradleException("Salamander development jar not found: ${salamanderJar}")
+        }
+        salamanderDependency = files(salamanderJar)
+    }
     // Provider skins must retain vanilla download hooks so Salamander can preserve expression-slot alpha.
     // Supply a local Wawel Auth development jar with -PwawelAuthJar, e.g. a build with an unpublished skin API.
-    def wawelAuthDependency = "org.fentanylsolutions.wawelauth:WawelAuth:c82ca8d-snapshot:dev"
+    def wawelAuthDependency = "industries.angelic.wawelauth:WawelAuth:996a655-snapshot:dev"
     if (project.hasProperty("wawelAuthJar")) {
         def wawelAuthJar = file(project.property("wawelAuthJar"))
         if (!wawelAuthJar.isFile()) {
@@ -14,20 +23,21 @@ dependencies {
     // These are deliberately not published as hard dependencies of EvenMoBends.
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Hodgepodge:2.7.211:dev")
     runtimeOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.17:dev")
-    runtimeOnlyNonPublishable("dev.dediamondpro.resourcify:VintageResourcify:1.0.5:dev")
-    runtimeOnlyNonPublishable("org.fentanylsolutions.vrap:vrap:1.0.1:dev")
+    // Off until Resourcify moves to AngelLib: it needs FentLib, whose mixins clash with AngelLib's. vrap needs it.
+    //runtimeOnlyNonPublishable("dev.dediamondpro.resourcify:VintageResourcify:1.0.5:dev")
+    //runtimeOnlyNonPublishable("org.fentanylsolutions.vrap:vrap:1.0.1:dev")
     runtimeOnlyNonPublishable("com.falsepattern:forgelin-mc1.7.10:2.4.3-2.4.10")
     runtimeOnlyNonPublishable("tcb.spiderstpo:Spiders-2.0-1.7.10:0.1.1")
 
     // devOnlyNonPublishable includes both compile and non-published runtime scopes.
     devOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.51:dev")
     // Models, animation evaluation, rendering and resource-pack CEM support.
-    implementation("org.fentanylsolutions.salamander:Salamander:8e5a945-snapshot:dev")
+    implementation(salamanderDependency)
     // GTNHLib provides JOML in game through its dependency loader; Salamander's CPU renderer needs it in tests.
     testImplementation("org.joml:joml:1.10.9")
     // Salamander's Java 8 artifact calls the stubs normally provided by the GTNH runtime loader.
     testRuntimeOnly("xyz.wagyourtail.jvmdowngrader:jvmdowngrader-java-api:2.0.1:downgraded-8")
-    devOnlyNonPublishable("org.fentanylsolutions.fentlib:FentLib:0.0.55:dev")
+    devOnlyNonPublishable("industries.angelic.angellib:AngelLib:1.0.0:dev")
     devOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.91-1.7.10:dev")
     compileOnly(wawelAuthDependency)
     testImplementation(wawelAuthDependency)

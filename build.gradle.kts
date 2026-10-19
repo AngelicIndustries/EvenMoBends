@@ -12,7 +12,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-apply(from = "https://raw.githubusercontent.com/JackOfNoneTrades/67minecraft-gradle-publish/${property("publish67ScriptTag")}/67minecraft-publish.gradle.kts")
+apply(from = "https://raw.githubusercontent.com/AngelicIndustries/67minecraft-gradle-publish/${property("publish67ScriptTag")}/67minecraft-publish.gradle.kts")
 
 tasks.withType<Jar>().configureEach {
     from("LICENSE") {

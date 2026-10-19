@@ -10,12 +10,12 @@ import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.client.model.ModelSpider;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.ResourceLocation;
-import org.fentanylsolutions.salamander.cem.client.CemBinding;
-import org.fentanylsolutions.salamander.cem.client.CemModelParts;
-import org.fentanylsolutions.salamander.cem.client.CemPlayers;
-import org.fentanylsolutions.salamander.cem.client.CemResources;
-import org.fentanylsolutions.salamander.cem.client.CemRuntime;
-import org.fentanylsolutions.salamander.cem.client.CemTargets;
+import industries.angelic.salamander.cem.client.CemBinding;
+import industries.angelic.salamander.cem.client.CemModelParts;
+import industries.angelic.salamander.cem.client.CemPlayers;
+import industries.angelic.salamander.cem.client.CemResources;
+import industries.angelic.salamander.cem.client.CemRuntime;
+import industries.angelic.salamander.cem.client.CemTargets;
 
 /** Ask the same loader/variant selector as Salamander's renderer, including config and invalid-pack fallback. */
 public final class CemCompat {
