@@ -86,6 +86,9 @@ extends RenderPlayer {
                 // Draconic Evolution put in its own armor model, posed like vanilla: draw it on the bones.
                 DraconicEvolutionCompat.prepareArmor((ModelBiped)this.renderPassModel);
                 this.setRenderPassModel(this.bonedArmor.wrap((ModelBiped)this.renderPassModel, (ModelBendsPlayer)this.modelBipedMain, scales));
+            } else if (BonedArmorModel.adapts(this.renderPassModel) && this.modelBipedMain instanceof ModelBendsPlayer) {
+                // Another mod put in its own armor model, such as the Aether's: on the bones too.
+                this.setRenderPassModel(this.bonedArmor.wrapRendered((ModelBiped)this.renderPassModel, (ModelBendsPlayer)this.modelBipedMain));
             }
             return event.result;
         }
@@ -106,6 +109,10 @@ extends RenderPlayer {
             modelbiped.onGround = this.mainModel.onGround;
             modelbiped.isRiding = this.mainModel.isRiding;
             modelbiped.isChild = this.mainModel.isChild;
+            if (BonedArmorModel.adapts(modelbiped) && this.modelBipedMain instanceof ModelBendsPlayer) {
+                // The item's own armor model, such as Botania's, posed like vanilla: draw it on the bones.
+                this.setRenderPassModel(this.bonedArmor.wrapRendered(modelbiped, (ModelBendsPlayer)this.modelBipedMain));
+            }
             modelbiped = CustomArmor.get((ModelBiped)modelbiped, (String)texture.getResourcePath(), (float)(p_77032_2_ == 2 ? 0.5f : 1.0f)).armorModel;
             int j = itemarmor.getColor(itemstack);
             if (j != -1) {
