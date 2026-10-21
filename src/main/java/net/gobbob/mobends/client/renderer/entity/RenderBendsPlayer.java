@@ -268,12 +268,18 @@ extends RenderPlayer {
                 GL11.glTranslatef(0.0f, Animation_Rowing.seatLift(boat.raft), 0.0f);
                 return;
             }
-            super.rotateCorpse(argPlayer, p_77043_2_, p_77043_3_, p_77043_4_);
-            if (AquaAcrobaticsCompat.getState(argPlayer, p_77043_4_).isActive()) {
-                // AA's RenderPlayer mixin has already rotated and positioned the whole player.
-                // Suppress our transform even on entry, before setRotationAngles updates the model,
-                // and through AA's stand-up blend so last frame's pose cannot add a second tilt.
-                return;
+            AquaAcrobaticsCompat.State aqua = AquaAcrobaticsCompat.getState(argPlayer, p_77043_4_);
+            if (aqua.bendsSwims()) {
+                // AA's RenderPlayer mixin would lay the whole player down; this mod's stroke lays the body down itself.
+                this.rotateSuperCorpse(argPlayer, p_77043_2_, p_77043_3_, p_77043_4_);
+            } else {
+                super.rotateCorpse(argPlayer, p_77043_2_, p_77043_3_, p_77043_4_);
+                if (aqua.owns()) {
+                    // AA's RenderPlayer mixin has already rotated and positioned the whole player.
+                    // Suppress our transform even on entry, before setRotationAngles updates the model,
+                    // and through AA's stand-up blend so last frame's pose cannot add a second tilt.
+                    return;
+                }
             }
             Data_Player data = Data_Player.get(argPlayer.getEntityId());
             if (data != null) {

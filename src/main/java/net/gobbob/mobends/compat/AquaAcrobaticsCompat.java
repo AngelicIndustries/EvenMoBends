@@ -2,6 +2,7 @@ package net.gobbob.mobends.compat;
 
 import java.lang.reflect.Method;
 
+import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.util.BendsLogger;
 import net.minecraft.entity.player.EntityPlayer;
@@ -51,6 +52,19 @@ public final class AquaAcrobaticsCompat {
         public boolean isActive() {
             // Keep ownership through the entire stand-up transition, not just while the flag is set.
             return this.prone || this.blend > 0.0f;
+        }
+
+        /**
+         * Whether this mod draws AA's swim in water with its own stroke and dive, whose arms keep held items clear of
+         * the head. Crawling on land stays AA's: this mod has no crawl of its own.
+         */
+        public boolean bendsSwims() {
+            return this.isActive() && this.inWater && PlayerAnimationConfig.isEnabled("swimming");
+        }
+
+        /** Whether AA owns the pose: active, and not {@link #bendsSwims}. */
+        public boolean owns() {
+            return this.isActive() && !this.bendsSwims();
         }
 
         static State fromPose(String pose, float blend, boolean inWater, boolean otherPose) {

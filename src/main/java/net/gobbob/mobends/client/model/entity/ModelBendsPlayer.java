@@ -485,18 +485,19 @@ extends ModelBiped implements BipedRigModel {
                 // Flight takes precedence over the ordinary airborne animations.
             } else if (argEntity.isRiding()) {
                 this.animatePlayer("riding", argEntity, data);
-            } else if (aqua.isActive()) {
-                // AA owns the pose, including crawling on dry land and swimming along the bottom.
+            } else if (aqua.owns()) {
+                // AA owns the pose: crawling on dry land, or swimming while this mod's swim is turned off.
                 Animation_AquaAcrobatics.apply(this, aqua.blend, aqua.inWater, argSwingTime, argSwingAmount,
                     PlayerAnimationConfig.isEnabled(aqua.inWater ? "swimming" : "crawling"));
-            } else if (touchingWater && !groundedInWater) {
-                if (aqua.available) {
+            } else if (touchingWater && !groundedInWater || aqua.bendsSwims()) {
+                if (aqua.available && !aqua.bendsSwims()) {
                     // With AA, being in water alone does not mean the player is swimming horizontally.
                     if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.play(this, data, false);
                 } else {
                     data.swimming = true;
-                    if (data.swimBoxedIn) {
-                        // No room to lie in the stroke here (see SwimRoom): tread water upright.
+                    if (data.swimBoxedIn && !aqua.bendsSwims()) {
+                        // No room to lie in the stroke here (see SwimRoom): tread water upright. AA's swimmers lie
+                        // down even in a one-block gap.
                         if (PlayerAnimationConfig.isEnabled("swimming")) Animation_Swimming.play(this, data, false);
                     } else if (!this.shouldAnimateDiving(argEntity, data) || !this.animatePlayer("diving", argEntity, data)) {
                         this.animatePlayer("swimming", argEntity, data);
@@ -531,7 +532,7 @@ extends ModelBiped implements BipedRigModel {
                 // Both hands are occupied by paddles, even while coasting or holding a tool.
             } else if (eatingHand == 1 || (blockingHands & PlayerBlockingCompat.MAIN_HAND) != 0) {
                 // Do not let a recent sword swing/stance compete with main-hand blocking.
-            } else if (aqua.isActive() && !player.isSwingInProgress && player.getItemInUseCount() == 0) {
+            } else if (aqua.owns() && !player.isSwingInProgress && player.getItemInUseCount() == 0) {
                 // Keep weapon recovery stances from replacing the swimming/crawling arm cycle.
             } else if (BackhandCompat.isDrawingOffhandBow(player)) {
                 // Backhand draws a bow in the off hand: the bow arm is the left one.
