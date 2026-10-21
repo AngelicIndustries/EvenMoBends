@@ -17,9 +17,14 @@ public final class CompatibilityPolicy {
     private static final boolean ET_FUTURUM_REQUIEM_LOADED = Loader.isModLoaded("etfuturum");
     private static final boolean BACKHAND_LOADED = Loader.isModLoaded("backhand");
     private static final boolean WAVEY_CAPES_LOADED = Loader.isModLoaded("waveycapes");
-    /** Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have. */
+    /**
+     * Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have, unless Wawel Auth moves
+     * them onto the bones the skin layers are drawn on.
+     */
     private static final boolean EARS_LOADED = Loader.isModLoaded("ears") || foamFixEarsActive();
-    private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED || EARS_LOADED;
+    private static final boolean EARS_ON_BONES = EARS_LOADED && WAWEL_AUTH_LOADED && WawelAuthApi.earsFollowLayers();
+    private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED
+        || EARS_LOADED && !EARS_ON_BONES;
 
     private static boolean modeLogged;
 
@@ -84,6 +89,9 @@ public final class CompatibilityPolicy {
         if (WAWEL_AUTH_PRESENT && !WAWEL_AUTH_LOADED) {
             BendsLogger.log("Wawel Auth detected without a compatible skin API: skipping its integration.",
                 BendsLogger.INFO);
+        }
+        if (EARS_ON_BONES && !MOB_ONLY_MODE) {
+            BendsLogger.log("Ears detected: Wawel Auth puts its features on Mo' Bends' bones.", BendsLogger.INFO);
         }
         if (MOB_ONLY_MODE) {
             String owner = SMART_MOVING_LOADED ? "Smart Moving" : SMART_RENDER_LOADED ? "Smart Render" : "Ears";
