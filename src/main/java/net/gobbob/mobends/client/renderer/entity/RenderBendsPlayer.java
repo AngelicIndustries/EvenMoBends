@@ -20,7 +20,6 @@ import net.gobbob.mobends.compat.SimpleSkinBackportCompat;
 import net.gobbob.mobends.compat.WaveyCapesCompat;
 import net.gobbob.mobends.compat.WawelAuthCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
-import net.gobbob.mobends.customarmor.CustomArmor;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
@@ -115,7 +114,6 @@ extends RenderPlayer {
                 // The item's own armor model, such as Botania's, posed like vanilla: draw it on the bones.
                 this.setRenderPassModel(this.bonedArmor.wrapRendered(modelbiped, (ModelBendsPlayer)this.modelBipedMain));
             }
-            modelbiped = CustomArmor.get((ModelBiped)modelbiped, (String)texture.getResourcePath(), (float)(p_77032_2_ == 2 ? 0.5f : 1.0f)).armorModel;
             int j = itemarmor.getColor(itemstack);
             if (j != -1) {
                 float f1 = (float)(j >> 16 & 0xFF) / 255.0f;
