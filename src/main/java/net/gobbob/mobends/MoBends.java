@@ -13,6 +13,7 @@ import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraftforge.common.config.Configuration;
 
 @Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum",
+    acceptableRemoteVersions="*",
     customProperties = {
         @Mod.CustomProperty(k = "iconFile", v = "logo.png"),
         @Mod.CustomProperty(k = "backgroundFile", v = "assets/mobends/background.png")
