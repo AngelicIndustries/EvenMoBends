@@ -7,6 +7,7 @@ import net.gobbob.mobends.compat.WawelAuthCompat;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.animation.Animation;
 import net.gobbob.mobends.animation.player.Animation_AquaAcrobatics;
+import net.gobbob.mobends.animation.player.Animation_Stunts;
 import net.minecraft.item.ItemStack;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.client.animation.HandAction;
@@ -526,6 +527,7 @@ extends ModelBiped implements BipedRigModel {
                     this.settleLanding();
                 }
             }
+            Animation_Stunts.play(this, data, player, this.partialTicks);
             int blockingHands = PlayerBlockingCompat.getBlockingHands(player, this);
             int eatingHand = Animation_Eating.hand(player);
             if (rowing && boat.driver) {

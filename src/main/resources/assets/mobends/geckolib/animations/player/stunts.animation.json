@@ -1,0 +1,54 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.mobends.player.wall_slide": {
+			"loop": true,
+			"animation_length": 2.0,
+			"bones": {
+				"body": {"rotation": {"0.0000": [8, 0, 0]}},
+				"head": {"rotation": {"0.0000": ["q.mobends_head_pitch * 0.5 + -12", "q.mobends_head_yaw", 0]}},
+				"rightArm": {"rotation": {"0.0000": [-150, -10, 10], "1.0000": [-146, -10, 10], "2.0000": [-150, -10, 10]}},
+				"leftArm": {"rotation": {"0.0000": [-146, 10, -10], "1.0000": [-150, 10, -10], "2.0000": [-146, 10, -10]}},
+				"rightForeArm": {"rotation": {"0.0000": [-20, 0, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [-20, 0, 0]}},
+				"rightLeg": {"rotation": {"0.0000": [-15, 5, 4]}},
+				"leftLeg": {"rotation": {"0.0000": [10, -5, -4]}},
+				"rightForeLeg": {"rotation": {"0.0000": [30, 0, 0]}},
+				"leftForeLeg": {"rotation": {"0.0000": [18, 0, 0]}}
+			}
+		},
+		"animation.mobends.player.wall_jump": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.05,
+			"bones": {
+				"body": {"rotation": {"0.0000": [-10, 0, 0]}},
+				"head": {"rotation": {"0.0000": ["q.mobends_head_pitch + 7", "q.mobends_head_yaw", 0]}},
+				"rightArm": {"rotation": {"0.0000": [45, 0, 25]}},
+				"leftArm": {"rotation": {"0.0000": [40, 0, -25]}},
+				"rightForeArm": {"rotation": {"0.0000": [-15, 0, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [-15, 0, 0]}},
+				"rightLeg": {"rotation": {"0.0000": [-60, 0, 0]}},
+				"leftLeg": {"rotation": {"0.0000": [30, 0, 0]}},
+				"rightForeLeg": {"rotation": {"0.0000": [60, 0, 0]}},
+				"leftForeLeg": {"rotation": {"0.0000": [15, 0, 0]}}
+			}
+		},
+		"animation.mobends.player.tuck": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.05,
+			"bones": {
+				"root": {"position": {"0.0000": [0, -4.5, 4]}},
+				"body": {"rotation": {"0.0000": [40, 0, 0]}},
+				"head": {"rotation": {"0.0000": [25, "q.mobends_head_yaw * 0.3", 0]}},
+				"rightArm": {"rotation": {"0.0000": [-55, 0, -12]}},
+				"leftArm": {"rotation": {"0.0000": [-55, 0, 12]}},
+				"rightForeArm": {"rotation": {"0.0000": [-70, 0, 0]}},
+				"leftForeArm": {"rotation": {"0.0000": [-70, 0, 0]}},
+				"rightLeg": {"rotation": {"0.0000": [-115, 0, 6]}},
+				"leftLeg": {"rotation": {"0.0000": [-115, 0, -6]}},
+				"rightForeLeg": {"rotation": {"0.0000": [130, 0, 0]}},
+				"leftForeLeg": {"rotation": {"0.0000": [130, 0, 0]}}
+			}
+		}
+	}
+}

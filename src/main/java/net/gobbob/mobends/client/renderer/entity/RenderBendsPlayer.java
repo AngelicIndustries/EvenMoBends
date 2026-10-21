@@ -24,6 +24,7 @@ import net.gobbob.mobends.customarmor.CustomArmor;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
+import net.gobbob.mobends.util.BendsLogger;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
@@ -230,6 +231,23 @@ extends RenderPlayer {
         }
     }
 
+    /**
+     * Whether the player and armor models are still this mod's. Wall Grab, for one, puts its own posed bipeds into the
+     * player renderer, which is this one; they are put back, and its poses are played on the bones instead.
+     */
+    private boolean ownsModels() {
+        if (this.mainModel instanceof ModelBendsPlayer && this.modelBipedMain == this.mainModel
+            && this.modelArmor instanceof ModelBendsPlayer && this.modelArmorChestplate instanceof ModelBendsPlayer) return true;
+        if (!this.modelsReplacedLogged) {
+            this.modelsReplacedLogged = true;
+            BendsLogger.log("Another mod put " + this.mainModel.getClass().getName()
+                + " into the player renderer; Mo' Bends puts its own models back.", BendsLogger.INFO);
+        }
+        return false;
+    }
+
+    private boolean modelsReplacedLogged;
+
     @Override
     public void doRender(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
         this.takeBackModel();
@@ -238,7 +256,7 @@ extends RenderPlayer {
             this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
             return;
         }
-        if (this.refreshModel != MoBends.refreshModel) {
+        if (this.refreshModel != MoBends.refreshModel || !this.ownsModels()) {
             this.mainModel = WawelAuthCompat.createPlayerModel(0.0f);
             this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
             this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
