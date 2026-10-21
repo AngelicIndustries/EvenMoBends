@@ -114,6 +114,7 @@ extends Animation {
             }
         } else if (tool) {
             if (PlayerAnimationConfig.isEnabled("mining")) {
+                if (!Animation_Mining.plants(item, breaking)) without = BendsAnimator.union(Animation_Mining.FEET, without);
                 BendsAnimator.playLoop(model, data, Animation_Mining.FILE, "mine_swing", "offhand", 1, without, true);
             }
         } else {
