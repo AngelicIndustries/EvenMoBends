@@ -6,6 +6,7 @@ import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CemCompat;
 import net.gobbob.mobends.compat.DraconicEvolutionCompat;
 import net.gobbob.mobends.client.model.BonedArmorModel;
@@ -138,6 +139,7 @@ extends RenderPlayer {
     protected void renderModel(EntityLivingBase entity, float swing, float swingAmount, float age, float headYaw, float headPitch, float scale) {
         // Armor drawn on the bones hugs the body: the skin's outer layer would poke through it, so it is hidden there.
         ModelBendsPlayer model = this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
+        AetherCompat.drawn(entity, model);
         ModelBendsPlayer.WearState shown = null;
         if (model != null && entity instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer)entity;
@@ -164,13 +166,8 @@ extends RenderPlayer {
         GL11.glColor3f((float)f, (float)f, (float)f);
 
         if (p_82441_1_ instanceof AbstractClientPlayer && WawelAuthCompat.isLoaded()) {
-            ModelBiped previousModel = this.modelBipedMain;
-            this.modelBipedMain = this.wawelFirstPersonModel;
-            try {
-                super.renderFirstPersonArm(p_82441_1_);
-            } finally {
-                this.modelBipedMain = previousModel;
-            }
+            this.lendFirstPersonModel(this.wawelFirstPersonModel);
+            super.renderFirstPersonArm(p_82441_1_);
             return;
         }
 
@@ -184,6 +181,26 @@ extends RenderPlayer {
             this.firstPersonModel.geometry().render(MODEL_SCALE,
                 name -> this.firstPersonModel.geometry().rig.descendant(name, "rightArm"));
         }
+        this.lendFirstPersonModel(this.ssbFirstPersonModel);
+    }
+
+    /** Whether modelBipedMain is a first-person model, lent until this renderer next draws a player. */
+    private boolean firstPersonModelLent;
+
+    /**
+     * Leaves {@code model}, posed the vanilla first-person way, in modelBipedMain until this renderer next draws a
+     * player. Mods that draw over the arm afterwards, such as the Aether's first-person glove, pose and draw
+     * modelBipedMain's right arm themselves; on this mod's model that would play the third-person animation.
+     */
+    private void lendFirstPersonModel(ModelBiped model) {
+        this.modelBipedMain = model;
+        this.firstPersonModelLent = true;
+    }
+
+    private void takeBackModel() {
+        if (!this.firstPersonModelLent) return;
+        this.firstPersonModelLent = false;
+        if (this.mainModel instanceof ModelBiped) this.modelBipedMain = (ModelBiped)this.mainModel;
     }
 
     private float interpolateRotation(float p_77034_1_, float p_77034_2_, float p_77034_3_) {
@@ -215,6 +232,7 @@ extends RenderPlayer {
 
     @Override
     public void doRender(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
+        this.takeBackModel();
         if (CemCompat.hasModel(p_76986_1_, this.packRenderer.modelBipedMain, p_76986_1_.getLocationSkin())) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
