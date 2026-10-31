@@ -64,8 +64,8 @@ public final class BlockbenchExport {
         String name = slimArms ? "player_slim" : "player";
 
         ModelBendsPlayer model = new ModelBendsPlayer();
-        model.ssb$set64x();
-        model.ssb$setSlim(slimArms);
+        model.initModern();
+        model.setSlim(slimArms);
         model.prepareModernOverlays();
         File file = new File(Minecraft.getMinecraft().mcDataDir, "mobends/blockbench/" + name + ".bbmodel");
         file.getParentFile().mkdirs();

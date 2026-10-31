@@ -34,7 +34,8 @@ class HoldingSwimAnimationTest {
                 Animation animation = file.getAnimation("animation.mobends.player." + base + suffix);
                 for (boolean slim : new boolean[] {false, true}) {
                     ModelBendsPlayer model = new ModelBendsPlayer();
-                    model.ssb$setSlim(slim);
+                    model.initModern();
+                    model.setSlim(slim);
                     BakedGeoModel rig = rig(model);
                     for (String bone : new String[] {"rightItem", "leftItem"}) {
                         float nearest = Float.POSITIVE_INFINITY;
@@ -145,7 +146,8 @@ class HoldingSwimAnimationTest {
             for (boolean slim : new boolean[] {false, true}) {
                 ModelBendsPlayer model = new ModelBendsPlayer();
                 model.ssb$set64x();
-                model.ssb$setSlim(slim);
+                model.initModern();
+                model.setSlim(slim);
                 BakedGeoModel rig = rig(model);
                 for (float pitch : new float[] {-85, -45, 0, 45, 85}) {
                     for (float yaw : new float[] {-75, -40, 0, 40, 75}) {
@@ -284,7 +286,8 @@ class HoldingSwimAnimationTest {
                 for (boolean slim : new boolean[] {false, true}) {
                     ModelBendsPlayer model = new ModelBendsPlayer();
                     model.ssb$set64x();
-                    model.ssb$setSlim(slim);
+                    model.initModern();
+                    model.setSlim(slim);
                     BakedGeoModel rig = rig(model);
                     // The hand occupies the distal half of the forearm, including its sleeve.
                     List<Vector3f> fist = new ArrayList<>();

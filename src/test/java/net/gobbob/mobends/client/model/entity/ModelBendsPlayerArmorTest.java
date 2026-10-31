@@ -12,6 +12,18 @@ class ModelBendsPlayerArmorTest {
     private static final double EPSILON = 0.00001;
 
     @Test
+    void ssbCannotOverrideTheShapeChosenFromSalamandersSkin() {
+        ModelBendsPlayer skin = new ModelBendsPlayer();
+        skin.initModern();
+        skin.setSlim(false);
+        skin.ssb$setSlim(true);
+        assertEquals(false, skin.isSlim());
+        skin.setSlim(true);
+        skin.ssb$setSlim(false);
+        assertEquals(true, skin.isSlim());
+    }
+
+    @Test
     void seamAdjustmentPreservesArmorInflationOnBothSides() {
         for (float inflation : new float[] {0.0f, 0.5f, 1.0f}) {
             ModelBendsPlayer model = new ModelBendsPlayer(inflation);
@@ -37,7 +49,8 @@ class ModelBendsPlayerArmorTest {
         ModelBendsPlayer skin = new ModelBendsPlayer();
         skin.ssb$set64x();
         for (boolean slim : new boolean[] {false, true}) {
-            skin.ssb$setSlim(slim);
+            skin.initModern();
+            skin.setSlim(slim);
             skin.prepareModernOverlays();
             ModelBendsPlayer chestplate = new ModelBendsPlayer(1.0f);
             assertEncloses(chestplate.bipedRightArm, skin.getRightArmWear());

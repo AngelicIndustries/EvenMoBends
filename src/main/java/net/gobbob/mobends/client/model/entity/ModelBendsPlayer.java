@@ -680,9 +680,8 @@ extends ModelBiped implements BipedRigModel {
     }
 
     public void ssb$setSlim(boolean slim) {
-        // Models recreated by the settings GUI miss SSB's startup-only texture conversion.
-        this.initModern();
-        this.setSlim(slim);
+        // Salamander supplies the skin and arm shape. SSB's render event may still carry the default skin's shape,
+        // so it must not replace the choice RenderBendsPlayer made for this wearer.
     }
 
     /**

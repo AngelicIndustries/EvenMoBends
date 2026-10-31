@@ -145,7 +145,8 @@ class ItemAnimationTest {
     private static GeoRenderTransforms rigPose(boolean slim, Animation animation, double seconds) {
         ModelBendsPlayer model = new ModelBendsPlayer();
         model.ssb$set64x();
-        model.ssb$setSlim(slim);
+        model.initModern();
+        model.setSlim(slim);
         BakedGeoModel baked = new GeckoLibGsonLoader()
             .loadModel(new ResourceLocation("mobends", "geckolib/models/player.geo.json"), PlayerRig.exportGeometry(model, "geometry.test"));
         ModelPose pose = ModelPose.create(baked);

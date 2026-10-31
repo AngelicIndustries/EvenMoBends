@@ -171,7 +171,8 @@ class BlockbenchProjectTest {
     private static ModelBendsPlayer model(boolean slim) {
         ModelBendsPlayer model = new ModelBendsPlayer();
         model.ssb$set64x();
-        model.ssb$setSlim(slim);
+        model.initModern();
+        model.setSlim(slim);
         model.prepareModernOverlays();
         return model;
     }
