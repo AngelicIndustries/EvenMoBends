@@ -46,6 +46,8 @@ public final class BonedArmorModel extends ModelBiped {
     private final DoubleBuffer plane = BufferUtils.createDoubleBuffer(4);
     /** The side of a joint the limb piece being drawn keeps, while cutting one; else null. */
     private Cut cut;
+    /** Whether a self-drawing armor is rendering itself now: its pieces are cut here, not by GL. */
+    private boolean drawingItself;
 
     /** This adapter, now drawing {@code armor} on {@code pose}'s bones; {@code scales} as for {@link #scales}. */
     public BonedArmorModel wrap(ModelBiped armor, ModelBendsPlayer pose, float[] scales) {
@@ -145,9 +147,11 @@ public final class BonedArmorModel extends ModelBiped {
         boolean offset = GL11.glIsEnabled(GL11.GL_POLYGON_OFFSET_FILL);
         GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
         GL11.glPolygonOffset(-1.0f, -10.0f);
+        this.drawingItself = true;
         try {
             this.armor.render(entity, limbSwing, limbSwingAmount, ageInTicks, headYaw, headPitch, scale);
         } finally {
+            this.drawingItself = false;
             GL11.glPolygonOffset(0.0f, 0.0f);
             if (!offset) GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
             for (int i = standIns.size() - 1; i >= 0; i--) standIns.get(i).restore();
@@ -198,7 +202,14 @@ public final class BonedArmorModel extends ModelBiped {
         public void render(float scale) {
             this.part.showModel = this.showModel;
             this.part.isHidden = this.isHidden;
-            BonedArmorModel.this.part(this.part, this.which, scale);
+            if (this.which == Part.RIGHT_ARM || this.which == Part.LEFT_ARM) {
+                // An arm keeps its own pivot height, which vanilla's pose never changes: a skin-tight piece on slim
+                // arms hangs half a pixel lower, as the slim arm does
+                BonedArmorModel.this.part(this.part, this.which.bone, this.which.lower, this.which.x,
+                    this.part.rotationPointY, this.which.z, scale);
+            } else {
+                BonedArmorModel.this.part(this.part, this.which, scale);
+            }
         }
 
         @Override
@@ -308,8 +319,9 @@ public final class BonedArmorModel extends ModelBiped {
             GL11.glPopMatrix();
         }
         // GL's clip plane cuts the limb, but a shader drawing the armor, such as an armor's own overlay, may ignore it:
-        // then the boxes are cut here, and the plane only cuts other mods' pieces.
-        boolean shader = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM) != 0;
+        // then the boxes are cut here, and the plane only cuts other mods' pieces. Armor drawing itself may bind its
+        // shader where the query can't see it (ARB objects behind a state cache), so it is always cut here.
+        boolean shader = this.drawingItself || GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM) != 0;
         GL11.glEnable(GL11.GL_CLIP_PLANE0);
         try {
             this.clip(down, at, -1.0f);
