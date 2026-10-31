@@ -1,19 +1,30 @@
 package net.gobbob.mobends.client.model;
 
 import java.nio.DoubleBuffer;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import net.gobbob.mobends.client.animation.BendsGeometry;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelBox;
 import net.minecraft.client.model.ModelRenderer;
+import net.minecraft.client.model.PositionTextureVertex;
+import net.minecraft.client.model.TexturedQuad;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 
 /**
  * Draws another mod's armor model on this mod's bones: each of its biped parts, with whatever hangs from them, where
@@ -22,6 +33,9 @@ import org.lwjgl.opengl.GL11;
  * halfway between the two, so the halves meet without a gap however far the joint bends.
  */
 public final class BonedArmorModel extends ModelBiped {
+    /** Armor models known to draw themselves in several passes, by class: Avaritia's infinity armor. */
+    private static final Set<String> SELF_DRAWING = new HashSet<String>(
+        Arrays.asList("fox.spiteful.avaritia.render.ModelArmorInfinity"));
     private ModelBiped armor;
     private ModelBendsPlayer pose;
     /** The scale the armor draws its head, body, arms and legs at; null for the scale it is drawn with. */
@@ -30,6 +44,8 @@ public final class BonedArmorModel extends ModelBiped {
     private boolean rendered;
     private final float[] drawScales = new float[4];
     private final DoubleBuffer plane = BufferUtils.createDoubleBuffer(4);
+    /** The side of a joint the limb piece being drawn keeps, while cutting one; else null. */
+    private Cut cut;
 
     /** This adapter, now drawing {@code armor} on {@code pose}'s bones; {@code scales} as for {@link #scales}. */
     public BonedArmorModel wrap(ModelBiped armor, ModelBendsPlayer pose, float[] scales) {
@@ -64,6 +80,10 @@ public final class BonedArmorModel extends ModelBiped {
 
     @Override
     public void render(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headYaw, float headPitch, float scale) {
+        if (this.rendered && drawsItself(this.armor)) {
+            this.renderItself(entity, limbSwing, limbSwingAmount, ageInTicks, headYaw, headPitch, scale);
+            return;
+        }
         float[] scales = this.scales;
         if (scales == null) {
             Arrays.fill(this.drawScales, scale);
@@ -94,6 +114,116 @@ public final class BonedArmorModel extends ModelBiped {
         } finally {
             GL11.glPolygonOffset(0.0f, 0.0f);
             if (!offset) GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+        }
+    }
+
+    /**
+     * Whether {@code armor} draws itself in several passes, such as a shader overlay over its base and glowing parts,
+     * which drawing its parts once would lose. Such armor renders itself, its parts riding the bones.
+     */
+    static boolean drawsItself(ModelBiped armor) {
+        return SELF_DRAWING.contains(armor.getClass().getName());
+    }
+
+    /**
+     * The armor's own render, every pass of it, with the parts of it and of the bipeds it draws along (such as an
+     * overlay) standing in for their bones: each part it draws is drawn on its bone, as {@link #render} draws them.
+     */
+    private void renderItself(Entity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float headYaw, float headPitch, float scale) {
+        List<OnBone> standIns = new ArrayList<OnBone>();
+        this.standIn(this.armor, standIns);
+        for (Field field : this.armor.getClass().getDeclaredFields()) {
+            if (!ModelBiped.class.isAssignableFrom(field.getType()) || Modifier.isStatic(field.getModifiers())) continue;
+            try {
+                field.setAccessible(true);
+                Object inner = field.get(this.armor);
+                if (inner != this.armor && inner instanceof ModelBiped) this.standIn((ModelBiped)inner, standIns);
+            } catch (ReflectiveOperationException | RuntimeException ignored) {
+                // A biped it keeps out of reach draws where it puts it
+            }
+        }
+        boolean offset = GL11.glIsEnabled(GL11.GL_POLYGON_OFFSET_FILL);
+        GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
+        GL11.glPolygonOffset(-1.0f, -10.0f);
+        try {
+            this.armor.render(entity, limbSwing, limbSwingAmount, ageInTicks, headYaw, headPitch, scale);
+        } finally {
+            GL11.glPolygonOffset(0.0f, 0.0f);
+            if (!offset) GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
+            for (int i = standIns.size() - 1; i >= 0; i--) standIns.get(i).restore();
+        }
+    }
+
+    /** Puts stand-ins in place of {@code model}'s parts, collected so they can be put back. */
+    private void standIn(ModelBiped model, List<OnBone> standIns) {
+        model.bipedHead = this.standIn(model, model.bipedHead, Part.HEAD, standIns, 0);
+        model.bipedHeadwear = this.standIn(model, model.bipedHeadwear, Part.HEAD, standIns, 1);
+        model.bipedBody = this.standIn(model, model.bipedBody, Part.BODY, standIns, 2);
+        model.bipedRightArm = this.standIn(model, model.bipedRightArm, Part.RIGHT_ARM, standIns, 3);
+        model.bipedLeftArm = this.standIn(model, model.bipedLeftArm, Part.LEFT_ARM, standIns, 4);
+        model.bipedRightLeg = this.standIn(model, model.bipedRightLeg, Part.RIGHT_LEG, standIns, 5);
+        model.bipedLeftLeg = this.standIn(model, model.bipedLeftLeg, Part.LEFT_LEG, standIns, 6);
+    }
+
+    private ModelRenderer standIn(ModelBiped model, ModelRenderer part, Part which, List<OnBone> standIns, int slot) {
+        if (part == null || part instanceof OnBone) return part;
+        OnBone standIn = new OnBone(model, part, which, slot);
+        standIns.add(standIn);
+        return standIn;
+    }
+
+    /**
+     * Stands in for one of an armor's parts while it renders itself: the visibility its passes give the stand-in goes to
+     * the real part, drawn on its bone.
+     */
+    private final class OnBone extends ModelRenderer {
+        private final ModelBiped model;
+        private final ModelRenderer part;
+        private final Part which;
+        private final int slot;
+        private final boolean showModel0, isHidden0;
+
+        OnBone(ModelBiped model, ModelRenderer part, Part which, int slot) {
+            super(model);
+            model.boxList.remove(this);
+            this.model = model;
+            this.part = part;
+            this.which = which;
+            this.slot = slot;
+            this.showModel = this.showModel0 = part.showModel;
+            this.isHidden = this.isHidden0 = part.isHidden;
+        }
+
+        @Override
+        public void render(float scale) {
+            this.part.showModel = this.showModel;
+            this.part.isHidden = this.isHidden;
+            BonedArmorModel.this.part(this.part, this.which, scale);
+        }
+
+        @Override
+        public void renderWithRotation(float scale) {
+            this.render(scale);
+        }
+
+        @Override
+        public void postRender(float scale) {
+            this.part.postRender(scale);
+        }
+
+        /** The real part back in its field, as visible as it was. */
+        void restore() {
+            this.part.showModel = this.showModel0;
+            this.part.isHidden = this.isHidden0;
+            switch (this.slot) {
+                case 0: this.model.bipedHead = this.part; break;
+                case 1: this.model.bipedHeadwear = this.part; break;
+                case 2: this.model.bipedBody = this.part; break;
+                case 3: this.model.bipedRightArm = this.part; break;
+                case 4: this.model.bipedLeftArm = this.part; break;
+                case 5: this.model.bipedRightLeg = this.part; break;
+                default: this.model.bipedLeftLeg = this.part; break;
+            }
         }
     }
 
@@ -177,21 +307,29 @@ public final class BonedArmorModel extends ModelBiped {
             this.draw(part, scale, jointY, Share.LOWER);
             GL11.glPopMatrix();
         }
+        // GL's clip plane cuts the limb, but a shader drawing the armor, such as an armor's own overlay, may ignore it:
+        // then the boxes are cut here, and the plane only cuts other mods' pieces.
+        boolean shader = GL11.glGetInteger(GL20.GL_CURRENT_PROGRAM) != 0;
         GL11.glEnable(GL11.GL_CLIP_PLANE0);
         try {
             this.clip(down, at, -1.0f);
             GL11.glPushMatrix();
             geometry.attach(bone, 0.0625f);
             GL11.glTranslatef(offsetX, offsetY, offsetZ);
+            this.cut = shader ? Cut.of(new Matrix4f(upperFrame).translate(offsetX, offsetY, offsetZ), down, at, -1.0f) : null;
             this.draw(part, scale, jointY, cut);
             GL11.glPopMatrix();
             this.clip(down, at, 1.0f);
             GL11.glPushMatrix();
             geometry.attach(lower, 0.0625f);
             GL11.glTranslatef(offsetX - joint.x, offsetY - joint.y, offsetZ - joint.z);
+            this.cut = shader ? Cut.of(
+                new Matrix4f(lowerFrame).translate(offsetX - joint.x, offsetY - joint.y, offsetZ - joint.z), down, at, 1.0f)
+                : null;
             this.draw(part, scale, jointY, cut);
             GL11.glPopMatrix();
         } finally {
+            this.cut = null;
             GL11.glDisable(GL11.GL_CLIP_PLANE0);
         }
     }
@@ -228,9 +366,11 @@ public final class BonedArmorModel extends ModelBiped {
         GL11.glPushMatrix();
         try {
             GL11.glTranslatef(part.offsetX, part.offsetY, part.offsetZ);
+            Cut cut = share == Share.CUT && this.cut != null ? this.cut.moved(part.offsetX, part.offsetY, part.offsetZ) : null;
             if (part.cubeList != null) for (Object box : part.cubeList) {
                 ModelBox cube = (ModelBox)box;
-                if (share(cube.posY1, cube.posY2, jointY) == share) cube.render(Tessellator.instance, scale);
+                if (share(cube.posY1, cube.posY2, jointY) != share) continue;
+                if (cut == null || !cut.draw(cube, scale)) cube.render(Tessellator.instance, scale);
             }
             if (part.childModels != null) for (Object child : part.childModels) {
                 ModelRenderer piece = (ModelRenderer)child;
@@ -265,6 +405,115 @@ public final class BonedArmorModel extends ModelBiped {
     }
 
     /** Keeps what lies where {@code side} * (normal . p - at) is at least 0, in the current frame. */
+    /**
+     * One side of a joint's cut, in a piece's own frame: the boxes of a limb's armor are cut there, keeping what lies on
+     * that side, so each bone draws its half when a shader drawing it ignores GL's clip planes.
+     */
+    static final class Cut {
+        private static Field quads;
+        /** The plane's normal and offset in the piece's frame: a point v is kept where normal . v + offset >= 0. */
+        final Vector3f normal;
+        final float offset;
+
+        private Cut(Vector3f normal, float offset) {
+            this.normal = normal;
+            this.offset = offset;
+        }
+
+        /**
+         * The side of the plane {@code down . p = at} in the frame the limb is drawn from, {@code side} -1 above it and 1
+         * below, seen from a piece drawn with {@code frame}.
+         */
+        static Cut of(Matrix4f frame, Vector3f down, float at, float side) {
+            Vector3f normal = frame.transpose3x3(new Matrix3f()).transform(new Vector3f(down)).mul(side);
+            float offset = side * (down.dot(frame.getTranslation(new Vector3f())) - at);
+            return new Cut(normal, offset);
+        }
+
+        /** As seen from inside this frame, moved by (x, y, z). */
+        Cut moved(float x, float y, float z) {
+            return new Cut(this.normal, this.offset + this.normal.x * x + this.normal.y * y + this.normal.z * z);
+        }
+
+        float distance(float x, float y, float z) {
+            return this.normal.x * x + this.normal.y * y + this.normal.z * z + this.offset;
+        }
+
+        /** Draws the kept part of the box, as {@link ModelBox#render} draws it whole; false if its faces are out of reach. */
+        boolean draw(ModelBox box, float scale) {
+            TexturedQuad[] faces = faces(box);
+            if (faces == null) return false;
+            Tessellator tessellator = Tessellator.instance;
+            float[] x = new float[8], y = new float[8], z = new float[8], u = new float[8], v = new float[8];
+            for (TexturedQuad face : faces) {
+                if (face == null || face.nVertices < 3) continue;
+                int count = this.keep(face, scale, x, y, z, u, v);
+                if (count < 3) continue;
+                // The face's normal as vanilla's TexturedQuad works it out: (v2 - v1) x (v0 - v1)
+                Vec3 p0 = face.vertexPositions[0].vector3D, p1 = face.vertexPositions[1].vector3D, p2 = face.vertexPositions[2].vector3D;
+                double ax = p0.xCoord - p1.xCoord, ay = p0.yCoord - p1.yCoord, az = p0.zCoord - p1.zCoord;
+                double bx = p2.xCoord - p1.xCoord, by = p2.yCoord - p1.yCoord, bz = p2.zCoord - p1.zCoord;
+                double nx = by * az - bz * ay, ny = bz * ax - bx * az, nz = bx * ay - by * ax;
+                double length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                if (length < 1.0e-4) length = 1.0;
+                tessellator.startDrawingQuads();
+                tessellator.setNormal((float)(nx / length), (float)(ny / length), (float)(nz / length));
+                // A fan of quads, a triangle repeating its last corner
+                for (int i = 1; i + 1 < count; i += 2) {
+                    int last = Math.min(i + 2, count - 1);
+                    tessellator.addVertexWithUV(x[0], y[0], z[0], u[0], v[0]);
+                    tessellator.addVertexWithUV(x[i], y[i], z[i], u[i], v[i]);
+                    tessellator.addVertexWithUV(x[i + 1], y[i + 1], z[i + 1], u[i + 1], v[i + 1]);
+                    tessellator.addVertexWithUV(x[last], y[last], z[last], u[last], v[last]);
+                }
+                tessellator.draw();
+            }
+            return true;
+        }
+
+        /** The face's corners on the kept side, scaled, with new corners where its edges cross the plane. */
+        private int keep(TexturedQuad face, float scale, float[] x, float[] y, float[] z, float[] u, float[] v) {
+            int count = 0;
+            int n = Math.min(face.nVertices, face.vertexPositions.length);
+            for (int i = 0; i < n && count < 7; i++) {
+                PositionTextureVertex from = face.vertexPositions[i], to = face.vertexPositions[(i + 1) % n];
+                float x0 = (float)from.vector3D.xCoord * scale, y0 = (float)from.vector3D.yCoord * scale, z0 = (float)from.vector3D.zCoord * scale;
+                float x1 = (float)to.vector3D.xCoord * scale, y1 = (float)to.vector3D.yCoord * scale, z1 = (float)to.vector3D.zCoord * scale;
+                float d0 = this.distance(x0, y0, z0), d1 = this.distance(x1, y1, z1);
+                if (d0 >= 0.0f) {
+                    x[count] = x0; y[count] = y0; z[count] = z0; u[count] = from.texturePositionX; v[count] = from.texturePositionY;
+                    count++;
+                }
+                if ((d0 >= 0.0f) != (d1 >= 0.0f)) {
+                    float t = d0 / (d0 - d1);
+                    x[count] = x0 + (x1 - x0) * t; y[count] = y0 + (y1 - y0) * t; z[count] = z0 + (z1 - z0) * t;
+                    u[count] = from.texturePositionX + (to.texturePositionX - from.texturePositionX) * t;
+                    v[count] = from.texturePositionY + (to.texturePositionY - from.texturePositionY) * t;
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static TexturedQuad[] faces(ModelBox box) {
+            try {
+                if (quads == null) {
+                    Field field;
+                    try {
+                        field = ModelBox.class.getDeclaredField("field_78254_i");
+                    } catch (NoSuchFieldException e) {
+                        field = ModelBox.class.getDeclaredField("quadList");
+                    }
+                    field.setAccessible(true);
+                    quads = field;
+                }
+                return (TexturedQuad[])quads.get(box);
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                return null;
+            }
+        }
+    }
+
     private void clip(Vector3f normal, float at, float side) {
         this.plane.clear();
         this.plane.put(side * normal.x).put(side * normal.y).put(side * normal.z).put(-side * at).flip();
