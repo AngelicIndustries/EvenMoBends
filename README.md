@@ -27,8 +27,10 @@ to disable it. The player animation switches also cover movement, combat, swimmi
 
 ## Dependencies
 
-* [Salamander](https://github.com/AngelicIndustries/Salamander) is required. This development branch targets
-  `8e5a945-snapshot`; older builds without its public CEM/player-skin APIs are incompatible.
+* [Salamander](https://github.com/AngelicIndustries/Salamander) is required, 0.0.2 or newer: it draws the skin layers
+  on Mo' Bends' joints through its skin layer API.
+* [Wawel Auth](https://github.com/AngelicIndustries/WawelAuth) is optional, for players' skins from their own auth
+  providers.
 * Salamander also requires [GTNHLib](https://github.com/GTNewHorizons/GTNHLib) 0.11.30 or newer and a compatible
   mixin bootstrap such as [UniMixins](https://github.com/LegacyModdingMC/UniMixins).
 * Just Expressions and Fresh Moves are optional, separately installed resource packs. No pack artwork is bundled.
@@ -43,7 +45,10 @@ priority decides which model wins if several are enabled. Removing the pack or d
 | Installed mods | Player renderer | Mob animations |
 | --- | --- | --- |
 | Even Mo' Bends | Mo' Bends through Salamander | Enabled |
-| WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth skins and modern-skin support | Enabled |
+| WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth's skins, layers drawn by Salamander | Enabled |
+| The Aether + Even Mo' Bends | Mo' Bends with gloves, pendant, shield, cape, wings, halo and agility boots on the limbs | Enabled |
+| Avaritia + Even Mo' Bends | Mo' Bends with the infinity armor's every effect on the limbs | Enabled |
+| Wall Grab / Tuck & Roll + Even Mo' Bends | Mo' Bends limbs in the wall grab and tuck poses | Enabled |
 | Backhand + Just A Shield + Even Mo' Bends | Mo' Bends with per-hand blocking poses, including passive shield blocking | Enabled |
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled |
