@@ -11,6 +11,7 @@ import net.gobbob.mobends.compat.CemCompat;
 import net.gobbob.mobends.compat.DraconicEvolutionCompat;
 import net.gobbob.mobends.client.model.BonedArmorModel;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
+import net.gobbob.mobends.client.renderer.CapeSway;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
@@ -379,56 +380,21 @@ extends RenderPlayer {
             GL11.glPushMatrix();
             ((ModelBendsPlayer)this.modelBipedMain).geometry().attach("body", MODEL_SCALE);
             GL11.glTranslatef((float)0.0f, (float)-0.75f, (float)0.125f);
-            double d3 = argPlayer.field_71091_bM + (argPlayer.field_71094_bP - argPlayer.field_71091_bM) * (double)argPartialTicks - (argPlayer.prevPosX + (argPlayer.posX - argPlayer.prevPosX) * (double)argPartialTicks);
-            double d4 = argPlayer.field_71096_bN + (argPlayer.field_71095_bQ - argPlayer.field_71096_bN) * (double)argPartialTicks - (argPlayer.prevPosY + (argPlayer.posY - argPlayer.prevPosY) * (double)argPartialTicks);
-            double d0 = argPlayer.field_71097_bO + (argPlayer.field_71085_bR - argPlayer.field_71097_bO) * (double)argPartialTicks - (argPlayer.prevPosZ + (argPlayer.posZ - argPlayer.prevPosZ) * (double)argPartialTicks);
-            float f4 = argPlayer.prevRenderYawOffset + (argPlayer.renderYawOffset - argPlayer.prevRenderYawOffset) * argPartialTicks;
-            double d1 = MathHelper.sin(f4 * (float)Math.PI / 180.0f);
-            double d2 = -MathHelper.cos(f4 * (float)Math.PI / 180.0f);
-            float f5 = (float)d4 * 10.0f;
-            if (f5 < -6.0f) {
-                f5 = -6.0f;
-            }
-            if (f5 > 32.0f) {
-                f5 = 32.0f;
-            }
-            float f6 = (float)(d3 * d1 + d0 * d2) * 100.0f;
-            float f7 = (float)(d3 * d2 - d0 * d1) * 100.0f;
-            if (f6 < 0.0f) {
-                f6 = 0.0f;
-            }
-            float f8 = argPlayer.prevCameraYaw + (argPlayer.cameraYaw - argPlayer.prevCameraYaw) * argPartialTicks;
-            f5 += MathHelper.sin((argPlayer.prevDistanceWalkedModified + (argPlayer.distanceWalkedModified - argPlayer.prevDistanceWalkedModified) * argPartialTicks) * 6.0f) * 32.0f * f8;
-            if (argPlayer.isSneaking()) {
-                f5 += 25.0f;
-            }
-            Data_Player flight = Data_Player.get(argPlayer.getEntityId());
-            boolean creativeFlying = PlayerAnimationConfig.isEnabled("flying")
-                && flight != null && flight.isFlying(argPlayer)
-                && !flight.isOnGround()
-                && !EtFuturumRequiemCompat.isElytraFlying(argPlayer);
+            CapeSway sway = CapeSway.of(argPlayer, argPartialTicks);
             if (wavey) {
                 // Wavey Capes cancels renderCloak and draws its own cape from vanilla's cape matrix: it undoes
                 // vanilla's swing, clamped as it clamps it, then swings the cape itself.
-                f6 = Math.min(f6, 150.0f);
-                f7 = MathHelper.clamp_float(f7, -20.0f, 20.0f);
-                GL11.glRotatef(6.0f + f6 / 2.0f + f5, 1.0f, 0.0f, 0.0f);
-                GL11.glRotatef(f7 / 2.0f, 0.0f, 0.0f, 1.0f);
-                GL11.glRotatef(-f7 / 2.0f, 0.0f, 1.0f, 0.0f);
+                float back = Math.min(sway.back, 150.0f);
+                float side = MathHelper.clamp_float(sway.side, -20.0f, 20.0f);
+                GL11.glRotatef(6.0f + back / 2.0f + sway.lift, 1.0f, 0.0f, 0.0f);
+                GL11.glRotatef(side / 2.0f, 0.0f, 0.0f, 1.0f);
+                GL11.glRotatef(-side / 2.0f, 0.0f, 1.0f, 0.0f);
                 GL11.glRotatef(180.0f, 0.0f, 1.0f, 0.0f);
                 if (this.waveyCape == null) this.waveyCape = WaveyCapesCompat.createLayer(this, this.modelBipedMain);
                 WaveyCapesCompat.render(this.waveyCape, argPlayer, argPartialTicks);
                 GL11.glPopMatrix();
-            } else if (creativeFlying) {
-                float flutter = MathHelper.sin((argPlayer.ticksExisted + argPartialTicks) * 0.15f) * 2.0f;
-                float sideSway = MathHelper.clamp_float(f7 * 0.15f, -8.0f, 8.0f);
-                GL11.glRotatef(8.0f + flutter, 1.0f, 0.0f, 0.0f);
-                GL11.glRotatef(sideSway, 0.0f, 0.0f, 1.0f);
-                GL11.glRotatef(-sideSway, 0.0f, 1.0f, 0.0f);
             } else {
-                GL11.glRotatef((float)(6.0f + f6 / 2.0f + f5), (float)1.0f, (float)0.0f, (float)0.0f);
-                GL11.glRotatef((float)(f7 / 2.0f), (float)0.0f, (float)0.0f, (float)1.0f);
-                GL11.glRotatef((float)(-f7 / 2.0f), (float)0.0f, (float)1.0f, (float)0.0f);
+                sway.apply();
             }
             if (!wavey) {
                 GL11.glRotatef((float)180.0f, (float)0.0f, (float)1.0f, (float)0.0f);

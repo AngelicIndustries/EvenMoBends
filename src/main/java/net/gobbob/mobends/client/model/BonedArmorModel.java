@@ -106,6 +106,30 @@ public final class BonedArmorModel extends ModelBiped {
         this.part(part, which, scale);
     }
 
+    /**
+     * {@code part}, something another mod hangs on a player, drawn on {@code pose}'s bone for {@code which}, whole,
+     * in the frame the player's model is drawn in. {@code local}, run first, places it from the part's vanilla pivot,
+     * as that mod places it from the vanilla model; with {@code ownPose} the part keeps its own pivot and turn, such as
+     * a wing's flap, else the bone's pose stands in for it.
+     */
+    public void drawAttached(ModelBendsPlayer pose, ModelRenderer part, Part which, Runnable local, boolean ownPose,
+        float scale) {
+        if (part == null || part.isHidden || !part.showModel) return;
+        this.pose = pose;
+        BendsGeometry geometry = pose.geometry();
+        Vector3f rest = geometry.restPivot(which.bone);
+        GL11.glPushMatrix();
+        try {
+            geometry.attach(which.bone, 0.0625f);
+            GL11.glTranslatef(which.x * scale - rest.x * 0.0625f, which.y * scale - rest.y * 0.0625f, which.z * scale - rest.z * 0.0625f);
+            if (local != null) local.run();
+            if (ownPose) part.render(scale);
+            else this.draw(part, scale);
+        } finally {
+            GL11.glPopMatrix();
+        }
+    }
+
     private void part(ModelRenderer part, Part which, float scale) {
         this.part(part, which.bone, which.lower, which.x, which.y, which.z, scale);
     }
@@ -273,7 +297,10 @@ public final class BonedArmorModel extends ModelBiped {
         LEFT_LEG("leftLeg", "leftForeLeg", 1.9f, 12.0f, 0.0f),
         /** An arm part worn on the hand, such as a glove: the whole of it rides the forearm. */
         RIGHT_HAND("rightForeArm", null, -5.0f, 2.0f, 0.0f),
-        LEFT_HAND("leftForeArm", null, 5.0f, 2.0f, 0.0f);
+        LEFT_HAND("leftForeArm", null, 5.0f, 2.0f, 0.0f),
+        /** A leg part worn on the foot, such as a boot: the whole of it rides the shin. */
+        RIGHT_FOOT("rightForeLeg", null, -1.9f, 12.0f, 0.0f),
+        LEFT_FOOT("leftForeLeg", null, 1.9f, 12.0f, 0.0f);
 
         final String bone;
         final String lower;
