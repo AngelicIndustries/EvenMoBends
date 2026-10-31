@@ -32,8 +32,6 @@ public final class CemCompat {
         if (entity == null || !(model instanceof CemModelParts)) return false;
         if (entity instanceof AbstractClientPlayer && model instanceof ModelBiped) {
             CemPlayers.register((ModelBiped)model);
-            if (WawelAuthCompat.isLoaded())
-                CemPlayers.skinModel((AbstractClientPlayer)entity, WawelAuthCompat.isSlim((AbstractClientPlayer)entity));
         }
         Map<String, ModelRenderer> parts = ((CemModelParts)model).salamander$cemParts();
         CemBinding binding = BINDINGS.get(model);

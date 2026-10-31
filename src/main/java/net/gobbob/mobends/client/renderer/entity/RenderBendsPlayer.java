@@ -17,9 +17,8 @@ import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.compat.AquaAcrobaticsCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
-import net.gobbob.mobends.compat.SimpleSkinBackportCompat;
 import net.gobbob.mobends.compat.WaveyCapesCompat;
-import net.gobbob.mobends.compat.WawelAuthCompat;
+import net.gobbob.mobends.compat.SalamanderSkins;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
 import net.gobbob.mobends.settings.SettingsBoolean;
@@ -60,17 +59,15 @@ extends RenderPlayer {
     private static final float MODEL_SCALE = 0.0625f;
     public int refreshModel = 0;
     private final RenderPlayer packRenderer = new RenderPlayer();
-    private final ModelBendsPlayer firstPersonModel = new ModelBendsPlayer(0);
-    /** The model RenderPlayer's constructor installed; with Wawel Auth, its player model, which adds the sleeve. */
-    private final ModelBiped wawelFirstPersonModel = this.modelBipedMain;
-    private final ModelBiped ssbFirstPersonModel = new ModelBiped();
+    /** The model RenderPlayer's constructor installed: Salamander's player model, which adds the sleeve. */
+    private final ModelBiped playerFirstPersonModel = this.modelBipedMain;
     /** Wavey Capes' cape layer for this renderer, made on first use. */
     private Object waveyCape;
     /** Draws another mod's armor model on the bones, for the render pass at hand. */
     private final BonedArmorModel bonedArmor = new BonedArmorModel();
 
     public RenderBendsPlayer() {
-        this.mainModel = WawelAuthCompat.createPlayerModel(0.0f);
+        this.mainModel = SalamanderSkins.createPlayerModel(0.0f);
         this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
         this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
         this.modelArmor = new ModelBendsPlayer(0.5f);
@@ -165,23 +162,9 @@ extends RenderPlayer {
         float f = 1.0f;
         GL11.glColor3f((float)f, (float)f, (float)f);
 
-        if (p_82441_1_ instanceof AbstractClientPlayer && WawelAuthCompat.isLoaded()) {
-            this.lendFirstPersonModel(this.wawelFirstPersonModel);
-            super.renderFirstPersonArm(p_82441_1_);
-            return;
-        }
-
-        // SSB's hand event updates modelBipedMain, not the straight arm drawn here.
-        // Use its converter only on a vanilla model, never on ModelRendererBends boxes.
-        if (SimpleSkinBackportCompat.prepareFirstPersonModel(this.ssbFirstPersonModel, p_82441_1_)) {
-            this.ssbFirstPersonModel.onGround = 0.0f;
-            this.ssbFirstPersonModel.setRotationAngles(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, MODEL_SCALE, p_82441_1_);
-            this.ssbFirstPersonModel.bipedRightArm.render(MODEL_SCALE);
-        } else {
-            this.firstPersonModel.geometry().render(MODEL_SCALE,
-                name -> this.firstPersonModel.geometry().rig.descendant(name, "rightArm"));
-        }
-        this.lendFirstPersonModel(this.ssbFirstPersonModel);
+        // Salamander's player model, with its sleeve, draws the straight first-person arm.
+        this.lendFirstPersonModel(this.playerFirstPersonModel);
+        super.renderFirstPersonArm(p_82441_1_);
     }
 
     /** Whether modelBipedMain is a first-person model, lent until this renderer next draws a player. */
@@ -256,14 +239,14 @@ extends RenderPlayer {
             return;
         }
         if (this.refreshModel != MoBends.refreshModel || !this.ownsModels()) {
-            this.mainModel = WawelAuthCompat.createPlayerModel(0.0f);
+            this.mainModel = SalamanderSkins.createPlayerModel(0.0f);
             this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
             this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
             this.modelArmor = new ModelBendsPlayer(0.5f);
             this.refreshModel = MoBends.refreshModel;
         }
-        if (WawelAuthCompat.isLoaded() && this.modelBipedMain instanceof ModelBendsPlayer) {
-            ((ModelBendsPlayer)this.modelBipedMain).setSlim(WawelAuthCompat.isSlim(p_76986_1_));
+        if (this.modelBipedMain instanceof ModelBendsPlayer) {
+            ((ModelBendsPlayer)this.modelBipedMain).setSlim(SalamanderSkins.isSlim(p_76986_1_));
         }
         Data_Player data = Data_Player.get(p_76986_1_.getEntityId());
         double landingOffset = data.landingRenderOffset(p_76986_9_);

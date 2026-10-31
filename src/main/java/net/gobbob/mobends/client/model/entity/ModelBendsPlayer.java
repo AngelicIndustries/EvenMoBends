@@ -2,7 +2,7 @@ package net.gobbob.mobends.client.model.entity;
 
 import net.gobbob.mobends.client.animation.BipedRigModel;
 import net.gobbob.mobends.client.animation.BendsGeometry;
-import net.gobbob.mobends.compat.WawelAuthCompat;
+import net.gobbob.mobends.compat.SalamanderSkins;
 
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.animation.Animation;
@@ -281,9 +281,9 @@ extends ModelBiped implements BipedRigModel {
             if (data != null && data.swimming) this.measureSwimReach(data);
         }
         this.prepareModernOverlays();
-        if (this.modern && WawelAuthCompat.isLoaded()) {
-            // Wawel Auth draws the overlay layers, flat or as voxels, on this model's joints.
-            WawelAuthCompat.renderWithLayers(this, argEntity, p_78088_7_);
+        if (this.modern) {
+            // Salamander draws the overlay layers, flat or as voxels, on this model's joints.
+            SalamanderSkins.renderWithLayers(this, argEntity, p_78088_7_);
             return;
         }
         this.renderGeometry(p_78088_7_);

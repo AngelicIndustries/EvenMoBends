@@ -1,4 +1,4 @@
-package net.gobbob.mobends.compat.wawelauth;
+package net.gobbob.mobends.compat.salamander;
 
 import net.gobbob.mobends.client.animation.BendsGeometry;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
@@ -6,20 +6,19 @@ import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraftforge.client.MinecraftForgeClient;
 
-import industries.angelic.wawelauth.api.skin.DrawKind;
-import industries.angelic.wawelauth.api.skin.LayerDraw;
-import industries.angelic.wawelauth.api.skin.LayerSegment;
-import industries.angelic.wawelauth.api.skin.SkinLayers;
-import industries.angelic.wawelauth.api.skin.SkinPart;
+import industries.angelic.salamander.api.skin.DrawKind;
+import industries.angelic.salamander.api.skin.LayerDraw;
+import industries.angelic.salamander.api.skin.LayerSegment;
+import industries.angelic.salamander.api.skin.SkinLayers;
+import industries.angelic.salamander.api.skin.SkinPart;
 import org.lwjgl.opengl.GL11;
 
 /**
- * Draws a Mo' Bends player's overlay layers through Wawel Auth, which decides flat or voxel, visibility, armor and
+ * Draws a Mo' Bends player's overlay layers through Salamander, which decides flat or voxel, visibility, armor and
  * distance. Head and body get whole boxes; each jointed limb gets its upper half on the limb bone and its lower half
- * on the fore bone, whose origin is the joint. The boxes match ModelBendsPlayer's own wear boxes. Loaded only when
- * Wawel Auth is present.
+ * on the fore bone, whose origin is the joint. The boxes match ModelBendsPlayer's own wear boxes.
  */
-public final class WawelAuthLayers {
+public final class SalamanderLayers {
 
     static final LayerSegment HAT = LayerSegment.box(SkinPart.HAT, -4, -8, -4, 8, 8, 8, 32, 0);
     static final LayerSegment JACKET = LayerSegment.box(SkinPart.JACKET, -4, -12, -2, 8, 12, 4, 16, 32);
@@ -41,7 +40,7 @@ public final class WawelAuthLayers {
     private static final int LIMB = 12;
     private static final int HALF = 6;
 
-    private WawelAuthLayers() {}
+    private SalamanderLayers() {}
 
     private static LayerSegment upperArm(SkinPart part, float x, int width, int u, int v) {
         return LayerSegment.box(part, x, -2, -2, width, LIMB, 4, u, v).rows(0, HALF);

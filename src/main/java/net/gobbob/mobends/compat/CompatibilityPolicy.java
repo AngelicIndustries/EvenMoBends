@@ -2,6 +2,7 @@ package net.gobbob.mobends.compat;
 
 import cpw.mods.fml.common.Loader;
 import net.minecraft.launchwrapper.Launch;
+import industries.angelic.salamander.api.skin.SkinLayers;
 import net.gobbob.mobends.compat.wawelauth.WawelAuthApi;
 import net.gobbob.mobends.util.BendsLogger;
 
@@ -11,18 +12,17 @@ public final class CompatibilityPolicy {
     private static final boolean SMART_RENDER_LOADED = Loader.isModLoaded("SmartRender");
     private static final boolean WAWEL_AUTH_PRESENT = Loader.isModLoaded("wawelauth");
     private static final boolean WAWEL_AUTH_LOADED = WAWEL_AUTH_PRESENT && WawelAuthApi.compatible();
-    private static final boolean SIMPLE_SKIN_BACKPORT_LOADED = Loader.isModLoaded("simpleskinbackport");
     private static final boolean JUST_A_SHIELD_LOADED = Loader.isModLoaded("targaseule");
     private static final boolean AQUA_ACROBATICS_LOADED = Loader.isModLoaded("aquaacrobatics");
     private static final boolean ET_FUTURUM_REQUIEM_LOADED = Loader.isModLoaded("etfuturum");
     private static final boolean BACKHAND_LOADED = Loader.isModLoaded("backhand");
     private static final boolean WAVEY_CAPES_LOADED = Loader.isModLoaded("waveycapes");
     /**
-     * Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have, unless Wawel Auth moves
+     * Ears anchors its features to the vanilla limbs, which Mo' Bends' split limbs don't have, unless Salamander moves
      * them onto the bones the skin layers are drawn on.
      */
     private static final boolean EARS_LOADED = Loader.isModLoaded("ears") || foamFixEarsActive();
-    private static final boolean EARS_ON_BONES = EARS_LOADED && WAWEL_AUTH_LOADED && WawelAuthApi.earsFollowLayers();
+    private static final boolean EARS_ON_BONES = EARS_LOADED && SkinLayers.earsFollowLayers();
     private static final boolean MOB_ONLY_MODE = SMART_MOVING_LOADED || SMART_RENDER_LOADED
         || EARS_LOADED && !EARS_ON_BONES;
 
@@ -54,10 +54,6 @@ public final class CompatibilityPolicy {
     /** Wawel Auth with the skin API this build uses; an older one is left alone. */
     public static boolean isWawelAuthLoaded() {
         return WAWEL_AUTH_LOADED;
-    }
-
-    public static boolean isSimpleSkinBackportLoaded() {
-        return SIMPLE_SKIN_BACKPORT_LOADED;
     }
 
     public static boolean isJustAShieldLoaded() {

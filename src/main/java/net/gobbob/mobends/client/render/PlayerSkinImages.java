@@ -1,6 +1,6 @@
 package net.gobbob.mobends.client.render;
 
-import net.gobbob.mobends.compat.WawelAuthCompat;
+import net.gobbob.mobends.compat.SalamanderSkins;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -22,8 +22,8 @@ public final class PlayerSkinImages {
 
     public static BufferedImage copyPlayerSkin(AbstractClientPlayer player) {
         if (player == null) return null;
-        BufferedImage wawelAuth = WawelAuthCompat.originalSkin(player);
-        if (wawelAuth != null) return CemSkinImage.copy(wawelAuth);
+        BufferedImage original = SalamanderSkins.originalSkin(player);
+        if (original != null) return CemSkinImage.copy(original);
         ResourceLocation location = player.getLocationSkin();
         ITextureObject texture = Minecraft.getMinecraft().getTextureManager().getTexture(location);
         return CemSkinImage.copy(getSourceImage(location, texture));

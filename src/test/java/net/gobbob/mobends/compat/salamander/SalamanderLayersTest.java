@@ -1,4 +1,4 @@
-package net.gobbob.mobends.compat.wawelauth;
+package net.gobbob.mobends.compat.salamander;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,37 +11,37 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.minecraft.client.model.ModelRenderer;
 
-import industries.angelic.wawelauth.api.skin.LayerSegment;
+import industries.angelic.salamander.api.skin.LayerSegment;
 import org.junit.jupiter.api.Test;
 
-class WawelAuthLayersTest {
+class SalamanderLayersTest {
 
     @Test
     void slicesMatchTheModelsOwnWearBoxes() throws Exception {
         ModelBendsPlayer model = new ModelBendsPlayer(0.0f);
         model.initModern();
 
-        assertSameBox(model.bipedHeadwear, WawelAuthLayers.HAT);
-        assertSameBox(wear(model, "bodyWear"), WawelAuthLayers.JACKET);
-        assertSameBox(wear(model, "classicRightArmWear"), WawelAuthLayers.RIGHT_SLEEVE_UPPER);
-        assertSameBox(wear(model, "classicRightForeArmWear"), WawelAuthLayers.RIGHT_SLEEVE_LOWER);
-        assertSameBox(wear(model, "slimRightArmWear"), WawelAuthLayers.RIGHT_SLEEVE_UPPER_SLIM);
-        assertSameBox(wear(model, "slimRightForeArmWear"), WawelAuthLayers.RIGHT_SLEEVE_LOWER_SLIM);
-        assertSameBox(wear(model, "classicLeftArmWear"), WawelAuthLayers.LEFT_SLEEVE_UPPER);
-        assertSameBox(wear(model, "classicLeftForeArmWear"), WawelAuthLayers.LEFT_SLEEVE_LOWER);
-        assertSameBox(wear(model, "slimLeftArmWear"), WawelAuthLayers.LEFT_SLEEVE_UPPER_SLIM);
-        assertSameBox(wear(model, "slimLeftForeArmWear"), WawelAuthLayers.LEFT_SLEEVE_LOWER_SLIM);
-        assertSameBox(wear(model, "rightLegWear"), WawelAuthLayers.RIGHT_PANTS_UPPER);
-        assertSameBox(wear(model, "rightForeLegWear"), WawelAuthLayers.RIGHT_PANTS_LOWER);
-        assertSameBox(wear(model, "leftLegWear"), WawelAuthLayers.LEFT_PANTS_UPPER);
-        assertSameBox(wear(model, "leftForeLegWear"), WawelAuthLayers.LEFT_PANTS_LOWER);
+        assertSameBox(model.bipedHeadwear, SalamanderLayers.HAT);
+        assertSameBox(wear(model, "bodyWear"), SalamanderLayers.JACKET);
+        assertSameBox(wear(model, "classicRightArmWear"), SalamanderLayers.RIGHT_SLEEVE_UPPER);
+        assertSameBox(wear(model, "classicRightForeArmWear"), SalamanderLayers.RIGHT_SLEEVE_LOWER);
+        assertSameBox(wear(model, "slimRightArmWear"), SalamanderLayers.RIGHT_SLEEVE_UPPER_SLIM);
+        assertSameBox(wear(model, "slimRightForeArmWear"), SalamanderLayers.RIGHT_SLEEVE_LOWER_SLIM);
+        assertSameBox(wear(model, "classicLeftArmWear"), SalamanderLayers.LEFT_SLEEVE_UPPER);
+        assertSameBox(wear(model, "classicLeftForeArmWear"), SalamanderLayers.LEFT_SLEEVE_LOWER);
+        assertSameBox(wear(model, "slimLeftArmWear"), SalamanderLayers.LEFT_SLEEVE_UPPER_SLIM);
+        assertSameBox(wear(model, "slimLeftForeArmWear"), SalamanderLayers.LEFT_SLEEVE_LOWER_SLIM);
+        assertSameBox(wear(model, "rightLegWear"), SalamanderLayers.RIGHT_PANTS_UPPER);
+        assertSameBox(wear(model, "rightForeLegWear"), SalamanderLayers.RIGHT_PANTS_LOWER);
+        assertSameBox(wear(model, "leftLegWear"), SalamanderLayers.LEFT_PANTS_UPPER);
+        assertSameBox(wear(model, "leftForeLegWear"), SalamanderLayers.LEFT_PANTS_LOWER);
     }
 
     @Test
     void limbHalvesShareOneBoxAndMeetAtTheJoint() {
-        assertHalves(WawelAuthLayers.RIGHT_SLEEVE_UPPER, WawelAuthLayers.RIGHT_SLEEVE_LOWER);
-        assertHalves(WawelAuthLayers.LEFT_SLEEVE_UPPER_SLIM, WawelAuthLayers.LEFT_SLEEVE_LOWER_SLIM);
-        assertHalves(WawelAuthLayers.RIGHT_PANTS_UPPER, WawelAuthLayers.RIGHT_PANTS_LOWER);
+        assertHalves(SalamanderLayers.RIGHT_SLEEVE_UPPER, SalamanderLayers.RIGHT_SLEEVE_LOWER);
+        assertHalves(SalamanderLayers.LEFT_SLEEVE_UPPER_SLIM, SalamanderLayers.LEFT_SLEEVE_LOWER_SLIM);
+        assertHalves(SalamanderLayers.RIGHT_PANTS_UPPER, SalamanderLayers.RIGHT_PANTS_LOWER);
     }
 
     @Test

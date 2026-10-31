@@ -10,6 +10,7 @@ import java.util.Collections;
 import javax.imageio.ImageIO;
 import net.gobbob.mobends.client.render.ExpressionSkinExporter;
 import net.gobbob.mobends.client.render.PlayerSkinImages;
+import net.gobbob.mobends.compat.SalamanderSkins;
 import net.gobbob.mobends.compat.WawelAuthCompat;
 import net.gobbob.mobends.compat.WawelAuthSkinUpload;
 import net.gobbob.mobends.compat.WawelAuthSkinUpload.Account;
@@ -571,7 +572,7 @@ public class GuiExpressionSkinEditor extends GuiScreen {
         this.statusSuccess = false;
         this.status = I18n.format("mobends.upload.progress", account.name, account.provider);
         updateExportButton();
-        boolean slim = WawelAuthCompat.isSlim(this.mc.thePlayer);
+        boolean slim = SalamanderSkins.isSlim(this.mc.thePlayer);
         WawelAuthSkinUpload.upload(account, output, slim, (result, error) -> {
             this.uploading = false;
             if (error != null) {
