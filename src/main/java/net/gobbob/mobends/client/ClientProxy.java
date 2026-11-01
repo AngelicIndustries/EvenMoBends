@@ -5,6 +5,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.CommonProxy;
 import net.gobbob.mobends.client.animation.CommandEvenMoBends;
+import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
@@ -44,6 +45,7 @@ extends CommonProxy {
     public void init() {
         EtFuturumRequiemCompat.registerBoatRenderers();
         AetherCompat.install();
+        AdventureBackpackCompat.install();
         // EFR renders its own zombie villagers, also from init: animate them as zombies, after it.
         for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
             if (entity.id.equals("zombie") && entity.animate) EtFuturumRequiemCompat.registerZombieVillagerRenderer();

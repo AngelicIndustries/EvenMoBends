@@ -54,6 +54,16 @@ dependencies {
 
     // Off-hand items and blocking, in the development client by default.
     devOnlyNonPublishable("com.github.GTNewHorizons:Backhand:1.8.15:dev")
+    // Backpacks, the copter pack and the coal jetpack worn on the back.
+    if (project.hasProperty("adventureBackpackJar")) {
+        def backpackJar = file(project.property("adventureBackpackJar"))
+        if (!backpackJar.isFile()) {
+            throw new GradleException("Adventure Backpack development jar not found: ${backpackJar}")
+        }
+        devOnlyNonPublishable(files(backpackJar))
+    } else {
+        devOnlyNonPublishable("com.github.GTNewHorizons:AdventureBackpack2:1.4.28-GTNH:dev")
+    }
     if (project.hasProperty("justAShieldJar")) {
         def shieldJar = file(project.property("justAShieldJar"))
         if (!shieldJar.isFile()) {

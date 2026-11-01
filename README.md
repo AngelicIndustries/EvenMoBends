@@ -48,6 +48,7 @@ priority decides which model wins if several are enabled. Removing the pack or d
 | WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth's skins, layers drawn by Salamander | Enabled |
 | The Aether + Even Mo' Bends | Mo' Bends with gloves, pendant, shield, cape, wings, halo and agility boots on the limbs | Enabled |
 | Avaritia + Even Mo' Bends | Mo' Bends with the infinity armor's every effect on the limbs | Enabled |
+| Adventure Backpack + Even Mo' Bends | Mo' Bends with backpacks, the copter pack and the coal jetpack on the body; flying on a pack uses the flight pose | Enabled |
 | Wall Grab / Tuck & Roll + Even Mo' Bends | Mo' Bends limbs in the wall grab and tuck poses | Enabled |
 | Backhand + Just A Shield + Even Mo' Bends | Mo' Bends with per-hand blocking poses, including passive shield blocking | Enabled |
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |

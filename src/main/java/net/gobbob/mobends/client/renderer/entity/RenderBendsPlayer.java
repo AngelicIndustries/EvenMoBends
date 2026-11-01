@@ -6,6 +6,7 @@ import net.gobbob.mobends.MoBends;
 import net.gobbob.mobends.animation.player.Animation_Rowing;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
+import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CemCompat;
 import net.gobbob.mobends.compat.DraconicEvolutionCompat;
@@ -297,7 +298,14 @@ extends RenderPlayer {
         ItemStack itemstack1;
         float f2;
         RenderPlayerEvent.Specials.Pre event = new RenderPlayerEvent.Specials.Pre(argPlayer, this, argPartialTicks);
-        if (MinecraftForge.EVENT_BUS.post(event)) {
+        boolean canceled;
+        AdventureBackpackCompat.drawingSpecials(argPlayer, this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null);
+        try {
+            canceled = MinecraftForge.EVENT_BUS.post(event);
+        } finally {
+            AdventureBackpackCompat.drawingSpecials(null, null);
+        }
+        if (canceled) {
             return;
         }
         GL11.glColor3f((float)1.0f, (float)1.0f, (float)1.0f);

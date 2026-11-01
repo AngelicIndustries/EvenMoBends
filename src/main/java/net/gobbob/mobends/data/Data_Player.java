@@ -7,6 +7,7 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.client.model.ItemBone;
 import net.gobbob.mobends.client.renderer.SwordTrail;
 import net.gobbob.mobends.client.animation.HandAction;
+import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.BackhandCompat;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.minecraft.entity.player.EntityPlayer;
@@ -180,8 +181,12 @@ extends EntityData {
         return newData;
     }
 
-    /** Whether {@code player} is in creative flight: its own ability, which other players' clients are never sent. */
+    /**
+     * Whether {@code player} flies: on Adventure Backpack's copter pack or jetpack, or in creative flight, its own
+     * ability, which other players' clients are never sent.
+     */
     public boolean isFlying(EntityPlayer player) {
+        if (AdventureBackpackCompat.flies(player)) return true;
         if (player == Minecraft.getMinecraft().thePlayer) return player.capabilities.isFlying;
         return this.steadyAirTicks >= STEADY_FLIGHT_TICKS && this.aloftTicks >= ALOFT_FLIGHT_TICKS;
     }
