@@ -17,6 +17,7 @@ public class EntityData {
     public Vector3f motion_prev = new Vector3f();
     public Vector3f motion = new Vector3f();
     public float ticks = 0.0f;
+    private final Clock clock = new Clock();
     public float ticksPerFrame = 0.0f;
     public float lastTicks = 0.0f;
     public float lastTicksPerFrame = 0.0f;
@@ -103,12 +104,33 @@ public class EntityData {
         return this.onGround;
     }
 
+    /**
+     * The local player's age, read every frame, as a clock that only runs forward. Respawning or changing dimension
+     * gives the player a new entity whose age starts over at 0: read directly, every timer kept in ticks would fall
+     * back by the old player's age, and a sword swing would not start its combo until that much time had passed again.
+     */
+    static final class Clock {
+        private double last, ticks;
+
+        /** Moves on to the player's age {@code now}, and returns how far the clock moved. */
+        float advance(double now) {
+            double elapsed = Math.max(0.0, now - this.last);
+            this.last = now;
+            this.ticks += elapsed;
+            return (float)elapsed;
+        }
+
+        float ticks() {
+            return (float)this.ticks;
+        }
+    }
+
     public void update(float argPartialTicks) {
         if (this.getEntity() == null) {
             return;
         }
-        this.ticksPerFrame = (float)Minecraft.getMinecraft().thePlayer.ticksExisted + argPartialTicks - this.ticks;
-        this.ticks = (float)Minecraft.getMinecraft().thePlayer.ticksExisted + argPartialTicks;
+        this.ticksPerFrame = this.clock.advance((double)Minecraft.getMinecraft().thePlayer.ticksExisted + argPartialTicks);
+        this.ticks = this.clock.ticks();
         this.updatedThisFrame = false;
         boolean calculatedOnGround = this.calcOnGround();
         this.bounced(this.getEntity(), calculatedOnGround);
