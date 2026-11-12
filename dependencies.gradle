@@ -1,6 +1,6 @@
 dependencies {
     // Supply a local Salamander development jar with -PsalamanderJar, e.g. a build with unpublished changes.
-    def salamanderDependency = "industries.angelic.salamander:Salamander:5dc2a21-snapshot:dev"
+    def salamanderDependency = "industries.angelic.salamander:Salamander:0.0.2:dev"
     if (project.hasProperty("salamanderJar")) {
         def salamanderJar = file(project.property("salamanderJar"))
         if (!salamanderJar.isFile()) {
@@ -10,7 +10,7 @@ dependencies {
     }
     // Provider skins must retain vanilla download hooks so Salamander can preserve expression-slot alpha.
     // Supply a local Wawel Auth development jar with -PwawelAuthJar, e.g. a build with an unpublished skin API.
-    def wawelAuthDependency = "industries.angelic.wawelauth:WawelAuth:ca661cd-snapshot:dev"
+    def wawelAuthDependency = "industries.angelic.wawelauth:WawelAuth:2801b05-snapshot:dev"
     if (project.hasProperty("wawelAuthJar")) {
         def wawelAuthJar = file(project.property("wawelAuthJar"))
         if (!wawelAuthJar.isFile()) {
