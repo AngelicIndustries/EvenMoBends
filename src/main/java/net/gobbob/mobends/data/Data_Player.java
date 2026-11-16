@@ -175,7 +175,7 @@ extends EntityData {
             return dataList.get(i);
         }
         Data_Player newData = new Data_Player(argEntityID);
-        if (Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID) != null) {
+        if (EntityData.entityByID(argEntityID) != null) {
             dataList.add(newData);
         }
         return newData;

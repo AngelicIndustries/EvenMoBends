@@ -59,8 +59,19 @@ public class EntityData {
 
     public EntityData(int argEntityID) {
         this.entityID = argEntityID;
-        this.entityType = Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID) != null ? Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID).getCommandSenderName() : "NULL";
+        Entity entity = entityByID(argEntityID);
+        this.entityType = entity != null ? entity.getCommandSenderName() : "NULL";
         this.model = null;
+        // A mob outside the world, drawn in a GUI preview, gets new data every frame: pose it at once, not eased from zero
+        if (entity == null) this.ticksPerFrame = PREVIEW_TICKS_PER_FRAME;
+    }
+
+    /** Enough ticks for any eased part to reach its pose within one frame. */
+    private static final float PREVIEW_TICKS_PER_FRAME = 1000.0f;
+
+    /** The client world's entity with this ID; null without a world, as in previews drawn from the main menu. */
+    public static Entity entityByID(int entityID) {
+        return Minecraft.getMinecraft().theWorld != null ? Minecraft.getMinecraft().theWorld.getEntityByID(entityID) : null;
     }
 
     public boolean canBeUpdated() {
@@ -77,7 +88,7 @@ public class EntityData {
     }
 
     public boolean calcOnGround() {
-        Entity entity = Minecraft.getMinecraft().theWorld.getEntityByID(this.entityID);
+        Entity entity = entityByID(this.entityID);
         if (entity == null) {
             this.receivedOnGround = false;
             return false;
@@ -210,10 +221,8 @@ public class EntityData {
     }
 
     public EntityLivingBase getEntity() {
-        if (Minecraft.getMinecraft().theWorld.getEntityByID(this.entityID) instanceof EntityLivingBase) {
-            return (EntityLivingBase)Minecraft.getMinecraft().theWorld.getEntityByID(this.entityID);
-        }
-        return null;
+        Entity entity = entityByID(this.entityID);
+        return entity instanceof EntityLivingBase ? (EntityLivingBase)entity : null;
     }
 
     public void onTouchdown() {

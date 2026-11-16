@@ -263,10 +263,8 @@ extends ModelSpider implements AnimatedModel {
 
     @Override
     public void setRotationAngles(float p_78087_1_, float p_78087_2_, float p_78087_3_, float p_78087_4_, float p_78087_5_, float p_78087_6_, Entity argEntity) {
-        if (Minecraft.getMinecraft().theWorld == null) {
-            return;
-        }
-        if (Minecraft.getMinecraft().theWorld.isRemote && Minecraft.getMinecraft().isGamePaused()) {
+        // Without a world (a preview from the main menu) it is posed all the same
+        if (Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && Minecraft.getMinecraft().isGamePaused()) {
             return;
         }
         Data_Spider data = Data_Spider.get(argEntity.getEntityId());

@@ -8,7 +8,6 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
 import net.gobbob.mobends.data.Data_Zombie;
 import net.gobbob.mobends.util.SmoothVector3f;
-import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.model.ModelBiped;
@@ -189,12 +188,6 @@ extends ModelBiped implements BipedRigModel {
 
     @Override
     public void setRotationAngles(float argSwingTime, float argSwingAmount, float argArmSway, float argHeadY, float argHeadX, float argNr6, Entity argEntity) {
-        if (Minecraft.getMinecraft().theWorld == null) {
-            return;
-        }
-        if (Minecraft.getMinecraft().theWorld.isRemote) {
-            // empty if block
-        }
         Data_Zombie data = Data_Zombie.get(argEntity.getEntityId());
         this.armSwing = argSwingTime;
         this.armSwingAmount = argSwingAmount;

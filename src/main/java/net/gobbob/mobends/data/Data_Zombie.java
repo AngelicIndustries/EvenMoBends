@@ -7,7 +7,6 @@ import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.client.model.entity.ModelBendsZombie;
 import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.SmoothVector3f;
-import net.minecraft.client.Minecraft;
 
 public class Data_Zombie
 extends EntityData {
@@ -97,7 +96,7 @@ extends EntityData {
             return dataList.get(i);
         }
         Data_Zombie newData = new Data_Zombie(argEntityID);
-        if (Minecraft.getMinecraft().theWorld.getEntityByID(argEntityID) != null) {
+        if (EntityData.entityByID(argEntityID) != null) {
             dataList.add(newData);
         }
         return newData;
