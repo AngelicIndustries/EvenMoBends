@@ -34,9 +34,10 @@ extends RenderBiped {
     protected ModelBiped villagerRegularArmor;
     private int field_82431_q = 1;
     public int refreshModel = 0;
-    private final RenderBiped packRenderer = this.createPackRenderer();
+    /** Made on first use, so a subclass may hand in a renderer it only has once constructed. */
+    private RenderBiped packRenderer;
     // RenderZombie switches modelBipedMain when drawing a villager; keep a stable regular-model probe.
-    private final ModelBiped packZombieModel = this.packRenderer.modelBipedMain;
+    private ModelBiped packZombieModel;
     private final net.minecraft.client.model.ModelZombieVillager packVillagerModel = new net.minecraft.client.model.ModelZombieVillager();
 
     public RenderBendsZombie() {
@@ -63,6 +64,19 @@ extends RenderBiped {
         };
     }
 
+    private RenderBiped packRenderer() {
+        if (this.packRenderer == null) {
+            this.packRenderer = this.createPackRenderer();
+            this.packZombieModel = this.packRenderer.modelBipedMain;
+        }
+        return this.packRenderer;
+    }
+
+    private ModelBiped packZombieModel() {
+        this.packRenderer();
+        return this.packZombieModel;
+    }
+
     @Override
     protected void func_82421_b() {
         this.field_82423_g = new ModelBendsZombie(1.0f, true);
@@ -80,9 +94,9 @@ extends RenderBiped {
 
     public void doRender(EntityZombie p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
         if (net.gobbob.mobends.compat.CemCompat.hasModel(p_76986_1_,
-            p_76986_1_.isVillager() ? this.packVillagerModel : this.packZombieModel, getEntityTexture(p_76986_1_))) {
-            this.packRenderer.setRenderManager(this.renderManager);
-            this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+            p_76986_1_.isVillager() ? this.packVillagerModel : this.packZombieModel(), getEntityTexture(p_76986_1_))) {
+            this.packRenderer().setRenderManager(this.renderManager);
+            this.packRenderer().doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
             return;
         }
         if (this.refreshModel != MoBends.refreshModel) {
@@ -98,7 +112,7 @@ extends RenderBiped {
     /** The resource pack whose model draws this zombie in Mo' Bends' place, or null. */
     public String packModelSource(EntityZombie zombie) {
         return net.gobbob.mobends.compat.CemCompat.source(zombie,
-            zombie.isVillager() ? this.packVillagerModel : this.packZombieModel, getEntityTexture(zombie));
+            zombie.isVillager() ? this.packVillagerModel : this.packZombieModel(), getEntityTexture(zombie));
     }
 
     protected ResourceLocation getEntityTexture(EntityZombie p_110775_1_) {

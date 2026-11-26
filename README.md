@@ -39,8 +39,9 @@ The config screen (Mods, Even Mo' Bends, Config) has:
   pack's model (naming the pack), another mod's renderer, or the mob's Animate switch being off. Without a mob
   selected, a player model turns and cycles through its animations. The menu works from the main menu too, without a
   world.
-* **General**: the sword trail, and **Combine face-only player packs** (on by default; see
-  [Compatibility](#compatibility)).
+* **General**: the sword trail, **Combine face-only player packs** (on by default; see
+  [Compatibility](#compatibility)), **Animate other mods' spiders and zombies** (on by default), and **Mobs left to
+  their mods**, entity names or class names that list exceptions to it.
 
 The G key and the old in-game menu are gone.
 
@@ -76,6 +77,7 @@ model wins if several are enabled. Removing the pack or disabling CEM restores M
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled, including EFR's zombie villagers and husks |
 | Special Mobs + Even Mo' Bends | Mo' Bends | Its zombies, zombie pigmen, spiders and cave spiders animate as the vanilla ones, with their own textures, eyes and sizes |
+| Other mods' spiders and zombies | Mo' Bends | Enabled for any mod whose renderer draws the vanilla spider or zombie model and only picks its texture, size, eyes or tint: in Adventura Arcana, Biomes O' Plenty's jungle spiders, Natura's heatscar spiders, Twilight Forest's hedge, king and swarm spiders, redscale broodlings and lich minions, Wild Mobs' tarantulas and faded, and Uralte Zauber's spider minions. Mobs with a model or drawing of their own (Wild Mobs' zomgus, Uralte Zauber's zombie minions) keep their mod's look; the mob menu lists both |
 | Village Names + Even Mo' Bends | Mo' Bends | Enabled with its modern zombie skins: zombie villagers keep Village Names' biome, profession and level skins and hats |
 | Smart Moving (with or without Wawel Auth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
 | Just Expressions + Even Mo' Bends | Mo' Bends animates the body; Salamander draws the pack's animated face on Mo' Bends' head | Enabled |

@@ -108,6 +108,12 @@ public final class BendsGeometry {
         this.buffer.clear();
         GL11.glGetFloat(GL11.GL_CURRENT_COLOR, this.buffer);
         float r = this.buffer.get(0), g = this.buffer.get(1), b = this.buffer.get(2), a = this.buffer.get(3);
+        // Vanilla's glowing passes (a spider's eyes) set the lightmap to (61680, 0), full bright only because
+        // vanilla's own draws clamp it; the tessellated mesh needs it in range.
+        float lightX = net.minecraft.client.renderer.OpenGlHelper.lastBrightnessX;
+        float lightY = net.minecraft.client.renderer.OpenGlHelper.lastBrightnessY;
+        if (lightX > 240.0f || lightY > 240.0f) net.minecraft.client.renderer.OpenGlHelper.setLightmapTextureCoords(
+            net.minecraft.client.renderer.OpenGlHelper.lightmapTexUnit, Math.min(lightX, 240.0f), Math.min(lightY, 240.0f));
         GL11.glPushMatrix();
         try {
             GL11.glTranslatef(0, 24 * scale, 0);

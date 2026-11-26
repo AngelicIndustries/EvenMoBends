@@ -8,6 +8,7 @@ import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
+import net.gobbob.mobends.compat.MobAdoption;
 import net.gobbob.mobends.compat.SpecialMobsCompat;
 import net.gobbob.mobends.compat.VillageNamesCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
@@ -49,6 +50,13 @@ extends CommonProxy {
             "Resource packs that only animate the player's face, such as Just Expressions, draw it on Mo' Bends' head "
                 + "while Mo' Bends animates the body. Off, such a pack replaces the player.")
             .setLanguageKey("mobends.config.general.combineFaces").getBoolean();
+        MobAdoption.enabled = config.get("General", "Animate Other Mods' Mobs", true,
+            "Other mods' spiders and zombies drawn with the vanilla model take Mo' Bends' animations, keeping their own "
+                + "texture, size and eyes.")
+            .setLanguageKey("mobends.config.general.adoptMobs").getBoolean();
+        MobAdoption.excluded = new java.util.HashSet<>(java.util.Arrays.asList(config.get("General", "Mobs Left Alone",
+            new String[0], "Entity names, as /summon takes them, or class names of mobs Mo' Bends leaves to their mod.")
+            .setLanguageKey("mobends.config.general.adoptExclusions").getStringList()));
     }
 
     /** The config screen edited the loaded config: take its values and write it. */
@@ -58,6 +66,16 @@ extends CommonProxy {
         readGeneral(net.gobbob.mobends.MoBends.config);
         PlayerAnimationConfig.load(net.gobbob.mobends.MoBends.config);
         net.gobbob.mobends.MoBends.config.save();
+        MobAdoption.reapply();
+    }
+
+    /**
+     * Other mods' renderers are all in place once the game runs (FML fills the render map after the last mod's
+     * events): the first tick looks for spiders and zombies to animate.
+     */
+    @cpw.mods.fml.common.eventhandler.SubscribeEvent
+    public void onClientTick(cpw.mods.fml.common.gameevent.TickEvent.ClientTickEvent event) {
+        MobAdoption.scanOnce();
     }
 
     @Override

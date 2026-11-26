@@ -15,7 +15,9 @@ extends RenderSpider {
 
     public RenderBendsSpider() {
         this.mainModel = new ModelBendsSpider();
-        this.setRenderPassModel(new ModelBendsSpider());
+        // The eyes pass draws the same posed model again: a second model would hold only part of the pose, and its
+        // eyes would fail the depth test against the body drawn first.
+        this.setRenderPassModel(this.mainModel);
     }
 
     private RenderSpider vanilla;
@@ -37,7 +39,7 @@ extends RenderSpider {
         }
         if (this.refreshModel != MoBends.refreshModel) {
             this.mainModel = new ModelBendsSpider();
-            this.setRenderPassModel(new ModelBendsSpider());
+            this.setRenderPassModel(this.mainModel);
             this.refreshModel = MoBends.refreshModel;
         }
         super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);

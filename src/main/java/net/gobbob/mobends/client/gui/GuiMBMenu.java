@@ -15,6 +15,7 @@ import net.gobbob.mobends.client.renderer.entity.RenderBendsPlayer;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsSpider;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsZombie;
 import net.gobbob.mobends.compat.CemCompat;
+import net.gobbob.mobends.compat.MobAdoption;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.compat.salamander.PackFaces;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
@@ -361,6 +362,37 @@ public class GuiMBMenu extends GuiScreen {
             noteY += 4;
         }
         if (player) this.drawList(mouseX, mouseY, textX, noteY, textWidth, shown);
+        else this.drawKin(entity.id, textX, noteY, textWidth);
+    }
+
+    /**
+     * On a mob's page, the other mods' mobs of its kind: those Mo' Bends animates too, by mod, and those their mods
+     * draw their own way. As many lines as fit above the restart hint.
+     */
+    private void drawKin(String id, int x, int y, int width) {
+        int bottom = this.height - 30;
+        List<String> adopted = MobAdoption.adoptedMods(id);
+        if (!adopted.isEmpty()) {
+            y = this.drawLines(I18n.format("mobends.menu.adopted", String.join(", ", adopted)), x, y, width, bottom,
+                COMBINED_COLOR) + 4;
+        }
+        List<String> kept = MobAdoption.keptMobs(id);
+        if (!kept.isEmpty()) {
+            this.drawLines(I18n.format("mobends.menu.kept", String.join(", ", kept)), x, y, width, bottom, 0xA0A0A0);
+        }
+    }
+
+    /** Wraps {@code text} to {@code width} from {@code y}, stopping above {@code bottom}; returns the next line's y. */
+    private int drawLines(String text, int x, int y, int width, int bottom, int color) {
+        List<?> lines = this.fontRendererObj.listFormattedStringToWidth(text, width);
+        for (int i = 0; i < lines.size() && y + 9 <= bottom; ++i) {
+            String line = (String)lines.get(i);
+            // The last line that fits says there is more.
+            if (y + 19 > bottom && i < lines.size() - 1) line = this.fontRendererObj.trimStringToWidth(line, width - 12) + "...";
+            this.drawString(this.fontRendererObj, line, x, y, color);
+            y += 10;
+        }
+        return y;
     }
 
     private static final int OVERRIDE_COLOR = 0xFFC060, COMBINED_COLOR = 0x90E090;
