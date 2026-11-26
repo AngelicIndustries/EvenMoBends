@@ -76,6 +76,7 @@ model wins if several are enabled. Removing the pack or disabling CEM restores M
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled, including EFR's zombie villagers and husks |
 | Special Mobs + Even Mo' Bends | Mo' Bends | Its zombies, zombie pigmen, spiders and cave spiders animate as the vanilla ones, with their own textures, eyes and sizes |
+| Village Names + Even Mo' Bends | Mo' Bends | Enabled with its modern zombie skins: zombie villagers keep Village Names' biome, profession and level skins and hats |
 | Smart Moving (with or without Wawel Auth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
 | Just Expressions + Even Mo' Bends | Mo' Bends animates the body; Salamander draws the pack's animated face on Mo' Bends' head | Enabled |
 | Fresh Moves, or another player pack that changes the body | Salamander renders the pack's player model | Mo' Bends for uncovered mobs |

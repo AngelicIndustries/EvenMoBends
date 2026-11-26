@@ -12,7 +12,7 @@ import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraftforge.common.config.Configuration;
 
-@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum;after:SpecialMobs",
+@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum;after:SpecialMobs;after:VillageNames",
     acceptableRemoteVersions="*", guiFactory="net.gobbob.mobends.client.gui.MoBendsGuiFactory",
     customProperties = {
         @Mod.CustomProperty(k = "iconFile", v = "logo.png"),

@@ -9,6 +9,7 @@ import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.SpecialMobsCompat;
+import net.gobbob.mobends.compat.VillageNamesCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.event.EventHandler_DataUpdate;
 import net.gobbob.mobends.settings.SettingsBoolean;
@@ -70,6 +71,8 @@ extends CommonProxy {
         }
         // Special Mobs too, also from init: its zombies and spiders animate as theirs do, after it.
         SpecialMobsCompat.registerRenderers();
+        // And Village Names, whose modern zombie skins come with a zombie renderer of its own.
+        VillageNamesCompat.registerRenderers();
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 

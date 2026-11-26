@@ -27,7 +27,7 @@ extends RenderBiped {
     private static final ResourceLocation zombieTextures = new ResourceLocation("textures/entity/zombie/zombie.png");
     private static final ResourceLocation zombieVillagerTextures = new ResourceLocation("textures/entity/zombie/zombie_villager.png");
     private ModelBiped zombieRegularModel = this.modelBipedMain;
-    private ModelBendsZombieVillager zombieVillagerModel = new ModelBendsZombieVillager();
+    private ModelBiped zombieVillagerModel = this.createVillagerModel();
     protected ModelBiped zombieRegularArmorChestplate;
     protected ModelBiped zombieRegularArmor;
     protected ModelBiped villagerRegularArmorChestplate;
@@ -41,6 +41,16 @@ extends RenderBiped {
 
     public RenderBendsZombie() {
         super(new ModelBendsZombie(), 0.5f, 1.0f);
+    }
+
+    /** A zombie villager's model; a subclass drawing villagers with another look replaces it. */
+    protected ModelBiped createVillagerModel() {
+        return new ModelBendsZombieVillager();
+    }
+
+    /** A zombie villager's armor model at that size (1 for the chestplate's, 0.5 for the leggings'). */
+    protected ModelBiped createVillagerArmor(float scale) {
+        return new ModelBendsZombieVillager(scale, 0.0f, true);
     }
 
     /** The vanilla renderer this zombie steps aside to when a resource pack's CEM model takes it over. */
@@ -59,8 +69,8 @@ extends RenderBiped {
         this.field_82425_h = new ModelBendsZombie(0.5f, true);
         this.zombieRegularArmorChestplate = this.field_82423_g;
         this.zombieRegularArmor = this.field_82425_h;
-        this.villagerRegularArmorChestplate = new ModelBendsZombieVillager(1.0f, 0.0f, true);
-        this.villagerRegularArmor = new ModelBendsZombieVillager(0.5f, 0.0f, true);
+        this.villagerRegularArmorChestplate = this.createVillagerArmor(1.0f);
+        this.villagerRegularArmor = this.createVillagerArmor(0.5f);
     }
 
     protected int shouldRenderPass(EntityZombie p_77032_1_, int p_77032_2_, float p_77032_3_) {
@@ -78,7 +88,7 @@ extends RenderBiped {
         if (this.refreshModel != MoBends.refreshModel) {
             this.mainModel = new ModelBendsZombie();
             this.zombieRegularModel = this.modelBipedMain = (ModelBendsZombie)this.mainModel;
-            this.zombieVillagerModel = new ModelBendsZombieVillager();
+            this.zombieVillagerModel = this.createVillagerModel();
             this.refreshModel = MoBends.refreshModel;
         }
         this.func_82427_a(p_76986_1_);
@@ -115,10 +125,10 @@ extends RenderBiped {
     private void func_82427_a(EntityZombie p_82427_1_) {
         if (p_82427_1_.isVillager()) {
             if (this.field_82431_q != 10) {
-                this.zombieVillagerModel = new ModelBendsZombieVillager();
+                this.zombieVillagerModel = this.createVillagerModel();
                 this.field_82431_q = 10;
-                this.villagerRegularArmorChestplate = new ModelBendsZombieVillager(1.0f, 0.0f, true);
-                this.villagerRegularArmor = new ModelBendsZombieVillager(0.5f, 0.0f, true);
+                this.villagerRegularArmorChestplate = this.createVillagerArmor(1.0f);
+                this.villagerRegularArmor = this.createVillagerArmor(0.5f);
             }
             this.mainModel = this.zombieVillagerModel;
             this.field_82423_g = this.villagerRegularArmorChestplate;
