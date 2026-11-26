@@ -11,6 +11,7 @@ import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
 import net.gobbob.mobends.compat.MobAdoption;
 import net.gobbob.mobends.compat.SpecialMobsCompat;
 import net.gobbob.mobends.compat.VillageNamesCompat;
+import net.gobbob.mobends.compat.WildMobsCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.event.EventHandler_DataUpdate;
 import net.gobbob.mobends.settings.SettingsBoolean;
@@ -30,6 +31,7 @@ extends CommonProxy {
     public void preInit(Configuration config) {
         CompatibilityPolicy.logActiveMode();
         PlayerAnimationConfig.load(config);
+        dropStrayCategories(config);
         net.gobbob.mobends.config.MobSwitches.load(config);
         AnimatedEntity.registerRendering();
         MinecraftForge.EVENT_BUS.register(new EventHandler_DataUpdate());
@@ -39,25 +41,37 @@ extends CommonProxy {
         FMLCommonHandler.instance().bus().register(this);
     }
 
+    /**
+     * Configuration.get lowercases category names but getCategory doesn't: builds before 0.0.4's release asked for
+     * "General" and "Animate" by getCategory, read those empty categories and wrote them back. Drop them.
+     */
+    private static void dropStrayCategories(Configuration config) {
+        for (String stray : new String[] {"General", "Animate"}) {
+            if (config.hasCategory(stray) && config.getCategory(stray).isEmpty()) {
+                config.removeCategory(config.getCategory(stray));
+            }
+        }
+    }
+
     /** The General category, as the config screen shows it. */
     private static void readGeneral(Configuration config) {
-        config.getCategory("General").setLanguageKey("mobends.config.general");
-        ((SettingsBoolean)SettingsNode.getSetting("swordTrail")).data = config.get("General", "Sword Trail", true)
+        config.getCategory("general").setLanguageKey("mobends.config.general");
+        ((SettingsBoolean)SettingsNode.getSetting("swordTrail")).data = config.get("general", "Sword Trail", true)
             .setLanguageKey("mobends.settings.swordTrail").getBoolean();
-        net.gobbob.mobends.compat.salamander.PackFaces.combine = config.get("General", "Combine Face Packs", true,
+        net.gobbob.mobends.compat.salamander.PackFaces.combine = config.get("general", "Combine Face Packs", true,
             "Resource packs that only animate the player's face, such as Just Expressions, draw it on Mo' Bends' head "
                 + "while Mo' Bends animates the body. Off, such a pack replaces the player.")
             .setLanguageKey("mobends.config.general.combineFaces").getBoolean();
-        MobAdoption.enabled = config.get("General", "Animate Other Mods' Mobs", true,
+        MobAdoption.enabled = config.get("general", "Animate Other Mods' Mobs", true,
             "Other mods' spiders and zombies drawn with the vanilla model take Mo' Bends' animations, keeping their own "
                 + "texture, size and eyes.")
             .setLanguageKey("mobends.config.general.adoptMobs").getBoolean();
         // Mobs left alone are switched off in the menu now, each on its own (see MobSwitches).
-        if (config.getCategory("General").containsKey("Mobs Left Alone")) {
-            for (String name : config.get("General", "Mobs Left Alone", new String[0]).getStringList()) {
+        if (config.getCategory("general").containsKey("Mobs Left Alone")) {
+            for (String name : config.get("general", "Mobs Left Alone", new String[0]).getStringList()) {
                 net.gobbob.mobends.config.MobSwitches.set(config, name, false);
             }
-            config.getCategory("General").remove("Mobs Left Alone");
+            config.getCategory("general").remove("Mobs Left Alone");
         }
     }
 
@@ -91,6 +105,8 @@ extends CommonProxy {
         SpecialMobsCompat.registerRenderers();
         // And Village Names, whose modern zombie skins come with a zombie renderer of its own.
         VillageNamesCompat.registerRenderers();
+        // And Wild Mobs' zomgus, whose mushrooms keep adoption away: drawn with them on the rig.
+        WildMobsCompat.registerRenderers();
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 

@@ -49,7 +49,7 @@ public class MoBendsGuiFactory implements IModGuiFactory {
             List<IConfigElement> elements = new ArrayList<IConfigElement>();
             elements.add(new DummyConfigElement.DummyCategoryElement("animations", "mobends.config.animations",
                 AnimationsEntry.class));
-            elements.add(new ConfigElement(MoBends.config.getCategory("General")));
+            elements.add(new ConfigElement(MoBends.config.getCategory("general")));
             return elements;
         }
     }

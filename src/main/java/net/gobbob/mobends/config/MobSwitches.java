@@ -19,7 +19,8 @@ import net.minecraftforge.common.config.Property;
  * /summon takes it. A mob without an entry is animated. Renderers ask as they draw, so a switch takes effect at once.
  */
 public final class MobSwitches {
-    public static final String CATEGORY = "Animate";
+    /** Lowercase: Configuration.get lowercases category names, getCategory doesn't. */
+    public static final String CATEGORY = "animate";
 
     private static final Map<String, Boolean> SWITCHES = new HashMap<>();
     /** Each entity class's key, and its switch, as last asked. */

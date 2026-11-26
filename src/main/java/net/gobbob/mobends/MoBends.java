@@ -12,7 +12,7 @@ import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraftforge.common.config.Configuration;
 
-@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum;after:SpecialMobs;after:VillageNames",
+@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum;after:SpecialMobs;after:VillageNames;after:wildmobsmod",
     acceptableRemoteVersions="*", guiFactory="net.gobbob.mobends.client.gui.MoBendsGuiFactory",
     customProperties = {
         @Mod.CustomProperty(k = "iconFile", v = "logo.png"),
@@ -42,9 +42,9 @@ public class MoBends {
 
     public static void saveConfig() {
         for (int i = 0; i < AnimatedEntity.animatedEntities.length; ++i) {
-            config.get("Animate", AnimatedEntity.animatedEntities[i].id, false).setValue(AnimatedEntity.animatedEntities[i].animate);
+            config.get(net.gobbob.mobends.config.MobSwitches.CATEGORY, AnimatedEntity.animatedEntities[i].id, false).setValue(AnimatedEntity.animatedEntities[i].animate);
         }
-        config.get("General", "Sword Trail", true).setValue(((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data);
+        config.get("general", "Sword Trail", true).setValue(((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data);
         PlayerAnimationConfig.save(config);
         config.save();
     }

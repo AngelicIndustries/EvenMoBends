@@ -42,6 +42,12 @@ extends RenderBiped {
 
     public RenderBendsZombie() {
         super(new ModelBendsZombie(), 0.5f, 1.0f);
+        this.zombieRegularModel = this.modelBipedMain = (ModelBiped)(this.mainModel = this.createModel());
+    }
+
+    /** The zombie's model; a subclass drawing a zombie with parts of its own replaces it. */
+    protected ModelBendsZombie createModel() {
+        return new ModelBendsZombie();
     }
 
     /** A zombie villager's model; a subclass drawing villagers with another look replaces it. */
@@ -101,7 +107,7 @@ extends RenderBiped {
             return;
         }
         if (this.refreshModel != MoBends.refreshModel) {
-            this.mainModel = new ModelBendsZombie();
+            this.mainModel = this.createModel();
             this.zombieRegularModel = this.modelBipedMain = (ModelBendsZombie)this.mainModel;
             this.zombieVillagerModel = this.createVillagerModel();
             this.refreshModel = MoBends.refreshModel;
