@@ -31,17 +31,18 @@ Minecraft 1.7.10 fork of Mo' Bends 0.20.1: segmented player and mob animations, 
 
 The config screen (Mods, Even Mo' Bends, Config) has:
 
-* **Animations**: the mob menu. It lists every mob Mo' Bends animates, vanilla's first, then other mods' under each
-  mod's name (Special Mobs, Et Futurum Requiem, Twilight Forest, ...), scrolling when they don't fit. Mobs of those
-  kinds that their mod draws its own way are listed greyed out, saying why. Each mob's page has a preview, its own
-  **Animate** switch, which takes effect at once, and the command that writes its rig's Blockbench project, which
-  copies on click. The switches are the `Animate` category of `config/mobends.cfg`, by entity name, such as
+* **Animations**: the mob menu, one screen. On the left, a search field (by mob or mod name) over every mob Mo' Bends
+  animates, vanilla's first, then other mods' under each mod's name (Special Mobs, Et Futurum Requiem, Twilight
+  Forest, ...), scrolling when they don't fit. Mobs of those kinds that their mod draws its own way are listed greyed
+  out, saying why. Clicking a mob shows it on the right: a preview, its own **Animate** switch, which takes effect at
+  once, and the command that writes its rig's Blockbench project, which copies on click. Clicking it again, or the
+  x in its header, goes back to the showcase: a player model turning and cycling through its animations, its cape
+  swinging as it moves. The switches are the `Animate` category of `config/mobends.cfg`, by entity name, such as
   `B:"TwilightForest.King Spider"=false`; vanilla's player, zombie, spider and cave spider keep their old keys. The
-  **Player** page also lists the player's animations: click one to preview it, and its switch to turn it on or off,
-  at once; those are `animations.player.*`, for example `animations.player.eating=false`. Each page says when
-  something else draws its mob in Mo' Bends' place: a resource pack's model (naming the pack), another mod's
-  renderer, or its switch being off. Without a mob selected, a player model turns and cycles through its animations,
-  its cape swinging as it moves. The menu works from the main menu too, without a world.
+  **Player** also lists its animations: click one to preview it, and its switch to turn it on or off, at once; those
+  are `animations.player.*`, for example `animations.player.eating=false`. The right side says when something else
+  draws a mob in Mo' Bends' place: a resource pack's model (naming the pack), another mod's renderer, or its switch
+  being off. Escape clears the search first, then leaves. The menu works from the main menu too, without a world.
 * **General**: the sword trail, **Combine face-only player packs** (on by default; see
   [Compatibility](#compatibility)) and **Animate other mods' spiders and zombies** (on by default).
 

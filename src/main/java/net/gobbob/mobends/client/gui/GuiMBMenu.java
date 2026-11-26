@@ -23,6 +23,7 @@ import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.entity.Render;
@@ -31,22 +32,24 @@ import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
 /**
- * The Mo' Bends menu, opened from the config screen: every mob Mo' Bends animates, vanilla's and other mods', listed
- * by mod, each with a preview, its own switch, and the command that writes its Blockbench project. Mobs of those kinds
- * that their mod draws its own way are listed greyed out, with why. The player's page also lists its animations, each
- * to preview and switch on or off. Without a mob chosen, a player shows off the animations. Animations themselves are
- * Blockbench files, edited outside the game; the expression editor is Salamander's.
+ * The Mo' Bends menu, opened from the config screen. On the left, a search field over every mob Mo' Bends animates,
+ * vanilla's and other mods', listed by mod; mobs of those kinds that their mod draws its own way are listed greyed
+ * out, with why. On the right, the chosen mob: its preview, its own switch, the command that writes its Blockbench
+ * project, and for the player its animations, each to preview and switch on or off. Without a mob chosen, a player
+ * shows off the animations. Animations themselves are Blockbench files, edited outside the game; the expression
+ * editor is Salamander's.
  */
 public class GuiMBMenu extends GuiScreen {
     public static final ResourceLocation TITLE = new ResourceLocation("mobends", "title.png");
     public static final ResourceLocation LOGO = new ResourceLocation("mobends", "textures/gui/logo.png");
     public static final ResourceLocation PREVIEW_BACKGROUND = new ResourceLocation("mobends", "textures/gui/displayBG.png");
-    private static final int DONE = 0, BACK = 1, ANIMATE = 2;
-    /** No page switch waiting; see {@link #pendingPage}. */
+    private static final int DONE = 0, ANIMATE = 2;
+    /** No selection change waiting; see {@link #pendingPage}. */
     private static final int NO_PAGE = Integer.MIN_VALUE;
     /** Title texture size, for its width at a given height. */
     private static final float TITLE_ASPECT = 1024.0f / 122.0f;
@@ -76,27 +79,31 @@ public class GuiMBMenu extends GuiScreen {
             {"punch", "player/punch", "punch_right"}, {"punchStance", "player/punch", "punch_left"}};
         for (String[] preview : previews) SWITCH_PREVIEWS.put(preview[0], new String[] {preview[1], preview[2]});
     }
-    private static final int ROW_HEIGHT = 16, TOGGLE_WIDTH = 30, SCROLLBAR_WIDTH = 6, MOB_ROW = 13;
+    private static final int ROW_HEIGHT = 16, TOGGLE_WIDTH = 30, SCROLLBAR_WIDTH = 6, MOB_ROW = 13, SEARCH_HEIGHT = 14;
+    /** The detail's top: below its header line. */
+    private static final int DETAIL_TOP = 26, CLOSE_SIZE = 11;
     private static final int HEADER_COLOR = 0xFFD080, KEPT_COLOR = 0x707070, PLACEHOLDER_COLOR = 0x909090;
 
     private final GuiScreen parent;
     private final long openedNanos = System.nanoTime();
     private final Random random = new Random();
-    /** The mobs listed, and the main page's rows: a mod's name (String) or a mob (its Integer index). */
+    /** The mobs listed, and the list's rows matching the search: a mod's name (String) or a mob (its Integer index). */
     private final List<MobRoster.Entry> roster = MobRoster.build();
     private final List<Object> rows = new ArrayList<Object>();
-    /** The main page's mob list as last drawn, and its first row shown. */
+    private GuiTextField search;
+    /** The mob list as last drawn, and its first row shown. */
     private int mobsX, mobsY, mobsWidth, mobsRows;
     private int mobsScroll;
     private boolean draggingMobsScrollbar;
-    /** The chosen mob's index in {@link #roster}, or -1 for the main page. */
+    /** The chosen mob's index in {@link #roster}, or -1 for none: the showcase. */
     private int selected = -1;
     /**
-     * The page a button asked for, switched to before the next frame. Switching at once would rebuild the buttons
-     * while the click still goes through them, and the new page's button under the pointer would take it too.
+     * The selection a click asked for, made before the next frame. Making it at once would rebuild the buttons while
+     * the click still goes through them, and a new button under the pointer would take it too.
      */
     private int pendingPage = NO_PAGE;
-    private long selectedNanos;
+    /** When the selection last changed, for the title's and previews' motion. */
+    private long selectedNanos = System.nanoTime();
     private int showcase = -1;
     private double showcaseUntil;
     private GuiToggleButton animate;
@@ -108,18 +115,30 @@ public class GuiMBMenu extends GuiScreen {
     private int scroll;
     private int previewing;
     private boolean draggingScrollbar;
-    /** The pointer as last drawn, for the main page's list. */
+    /** The pointer as last drawn, for the lists' hovers and the mouse wheel. */
     private int lastMouseX, lastMouseY;
+    /** The detail's close box as last drawn. */
+    private int closeX, closeY;
 
     public GuiMBMenu(GuiScreen parent) {
         this.parent = parent;
         ++MoBends.refreshModel;
+        this.filter("");
+    }
+
+    /** The rows of the mobs whose name or mod contains {@code query}, case aside, each under its mod's name. */
+    private void filter(String query) {
+        String wanted = query.trim().toLowerCase(java.util.Locale.ROOT);
+        this.rows.clear();
         String mod = null;
         for (int i = 0; i < this.roster.size(); ++i) {
             MobRoster.Entry entry = this.roster.get(i);
+            if (!wanted.isEmpty() && !entry.name.toLowerCase(java.util.Locale.ROOT).contains(wanted)
+                && !entry.mod.toLowerCase(java.util.Locale.ROOT).contains(wanted)) continue;
             if (!entry.mod.equals(mod)) this.rows.add(mod = entry.mod);
             this.rows.add(i);
         }
+        this.mobsScroll = 0;
     }
 
     private MobRoster.Entry entry() {
@@ -128,38 +147,83 @@ public class GuiMBMenu extends GuiScreen {
 
     @Override
     public void initGui() {
+        Keyboard.enableRepeatEvents(true);
+        String query = this.search == null ? "" : this.search.getText();
+        this.search = new GuiTextField(this.fontRendererObj, 11, 11, this.mobsListWidth() - 2, SEARCH_HEIGHT - 2);
+        this.search.setMaxStringLength(40);
+        this.search.setText(query);
+        // Typing always searches: nothing else on the screen takes text.
+        this.search.setFocused(true);
         this.buttonList.clear();
-        if (this.selected < 0) {
-            this.buttonList.add(new GuiButton(DONE, 10, this.height - 30, this.mobsListWidth(), 20, I18n.format("gui.done")));
-        } else {
+        this.buttonList.add(new GuiButton(DONE, 10, this.height - 30, this.mobsListWidth(), 20, I18n.format("gui.done")));
+        this.animate = null;
+        // Only mobs Mo' Bends draws have a switch; the others say who draws them.
+        if (this.selected >= 0 && this.entry().kind == MobRoster.Kind.ANIMATED) {
             int box = this.previewSize();
-            // Only mobs Mo' Bends draws have a switch; the others' pages say who draws them.
-            if (this.entry().kind == MobRoster.Kind.ANIMATED) {
-                this.animate = new GuiToggleButton(ANIMATE, 10, 30 + box + 6, this.entry().animated())
-                    .setTitle(I18n.format("mobends.menu.animate"), Math.max(0, box - 40));
-                this.buttonList.add(this.animate);
-            }
-            this.buttonList.add(new GuiButton(BACK, 10, this.height - 30, 90, 20, I18n.format("mobends.gui.back")));
+            boolean beside = this.switchBesidePreview();
+            int besideX = this.right() + box + 12;
+            int width = beside ? Math.min(100, this.width - 10 - besideX) : box;
+            this.animate = new GuiToggleButton(ANIMATE, beside ? besideX : this.right(),
+                beside ? DETAIL_TOP : DETAIL_TOP + box + 6, this.entry().animated())
+                .setTitle(I18n.format("mobends.menu.animate"), Math.max(0, width - 40));
+            this.buttonList.add(this.animate);
         }
     }
 
-    /** The main page's mob list: wide enough for mobs' names, a third of the screen at most. */
+    /** The mob list's column: wide enough for mobs' names, a third of the screen at most. */
     private int mobsListWidth() {
         return Math.max(110, Math.min(170, (this.width - 30) / 3));
     }
 
-    /** Where the main page's content starts: below the title. */
-    private int top() {
-        return 10 + this.titleHeight() + 8;
+    /** Where the mob list starts: below the search field. */
+    private int listTop() {
+        return 10 + SEARCH_HEIGHT + 4;
     }
 
+    /** The right side, beside the mob list: the chosen mob, or the showcase. */
+    private int right() {
+        return 10 + this.mobsListWidth() + 10;
+    }
+
+    private int rightWidth() {
+        return this.width - 10 - this.right();
+    }
+
+    /** The title's height on the showcase: as on the main menus, narrower where the right side is. */
     private int titleHeight() {
-        return this.height < 260 ? 16 : 20;
+        int height = this.height < 260 ? 16 : 20;
+        return Math.max(8, Math.min(height, Math.round((this.rightWidth() - 4) / (TITLE_ASPECT + 1.0f))));
     }
 
-    /** The mob page's preview box: as large as fits, up to 128, leaving the command room beside it. */
+    /** How wide the text beside the preview must be for the longest Blockbench command to show whole. */
+    private int commandRoom() {
+        int command = Math.max(this.fontRendererObj.getStringWidth("/evenmobends blockbench zombie"),
+            this.fontRendererObj.getStringWidth("/evenmobends blockbench spider"));
+        return Math.max(140, command + 10);
+    }
+
+    /**
+     * Too narrow for the text beside the preview: the preview and its switch side by side on top, the rest under them
+     * across the right side. The same for every mob at a given size, so choosing another doesn't move things about.
+     */
+    private boolean stacked() {
+        return this.rightWidth() - 12 - this.commandRoom() < 64;
+    }
+
+    /** The chosen mob's preview box: as large as fits, up to 128, leaving its text room beside it. */
     private int previewSize() {
-        return Math.max(48, Math.min(128, Math.min(this.height - 110, Math.min((this.width - 30) / 2, this.width - 222))));
+        if (this.stacked()) return Math.max(40, Math.min(72, Math.min(this.rightWidth() - 112, this.height - 150)));
+        return Math.max(48, Math.min(128, Math.min(this.height - 104, this.rightWidth() - 12 - this.commandRoom())));
+    }
+
+    /** Where the preview is small, its switch sits beside it rather than under it. */
+    private boolean switchBesidePreview() {
+        return this.stacked() || this.previewSize() < 80;
+    }
+
+    /** The chosen mob's text: beside its preview, or under it when stacked. */
+    private int textX() {
+        return this.stacked() ? this.right() : this.right() + this.previewSize() + 12;
     }
 
     private boolean playerPage() {
@@ -170,8 +234,6 @@ public class GuiMBMenu extends GuiScreen {
     protected void actionPerformed(GuiButton button) {
         if (button.id == DONE) {
             this.mc.displayGuiScreen(this.parent);
-        } else if (button.id == BACK) {
-            this.pendingPage = -1;
         } else if (button.id == ANIMATE) {
             // Takes effect at once: Mo' Bends' renderers ask the switch as they draw.
             MobRoster.Entry entry = this.entry();
@@ -186,7 +248,7 @@ public class GuiMBMenu extends GuiScreen {
         if (this.pendingPage == NO_PAGE) return;
         int page = this.pendingPage;
         this.pendingPage = NO_PAGE;
-        // The showcase starts over on the way back; the player's page plays the animation picked there.
+        // The showcase starts over once nothing is chosen; the player plays the animation picked in its list.
         AnimationPreview.stopLoop(MenuPreview.showcasePlayer());
         this.showcase = -1;
         this.selected = page;
@@ -205,21 +267,36 @@ public class GuiMBMenu extends GuiScreen {
 
     @Override
     protected void keyTyped(char character, int key) {
-        if (key != org.lwjgl.input.Keyboard.KEY_ESCAPE) return;
-        // As Back does on a mob's page; from the main page, back to the config screen.
-        if (this.selected >= 0) this.pendingPage = -1;
-        else this.mc.displayGuiScreen(this.parent);
+        if (key == Keyboard.KEY_ESCAPE) {
+            // A search to clear first; then back to the config screen.
+            if (this.search.getText().isEmpty()) {
+                this.mc.displayGuiScreen(this.parent);
+            } else {
+                this.search.setText("");
+                this.filter("");
+            }
+        } else if (this.search.textboxKeyTyped(character, key)) {
+            this.filter(this.search.getText());
+        }
     }
 
     @Override
     protected void mouseClicked(int x, int y, int button) {
         super.mouseClicked(x, y, button);
+        if (inside(x, y, 10, 10, this.mobsListWidth(), SEARCH_HEIGHT)) {
+            this.search.mouseClicked(x, y, button);
+            this.search.setFocused(true);
+        }
         if (button != 0 || this.pendingPage != NO_PAGE) return;
-        if (this.selected < 0) {
+        if (inside(x, y, this.mobsX, this.mobsY, this.mobsWidth, this.mobsRows * MOB_ROW)) {
             this.clickMobs(x, y);
             return;
         }
-        if (this.overCommand(x, y)) {
+        if (this.selected < 0) return;
+        if (inside(x, y, this.closeX, this.closeY, CLOSE_SIZE, CLOSE_SIZE)) {
+            this.mc.getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(new ResourceLocation("gui.button.press"), 1.0f));
+            this.pendingPage = -1;
+        } else if (this.overCommand(x, y)) {
             GuiScreen.setClipboardString(this.command());
             this.copiedUntilMillis = Minecraft.getSystemTime() + 2000L;
         } else if (this.playerPage()) {
@@ -244,8 +321,13 @@ public class GuiMBMenu extends GuiScreen {
     public void handleMouseInput() {
         super.handleMouseInput();
         int wheel = Mouse.getEventDWheel();
-        if (wheel != 0 && this.playerPage()) this.scrollTo(this.scroll - Integer.signum(wheel));
-        else if (wheel != 0 && this.selected < 0) this.scrollMobs(this.mobsScroll - Integer.signum(wheel) * 3);
+        if (wheel == 0) return;
+        // Whichever list the pointer is over.
+        int x = this.lastMouseX, y = this.lastMouseY;
+        if (inside(x, y, this.mobsX, this.mobsY, this.mobsWidth, this.mobsRows * MOB_ROW))
+            this.scrollMobs(this.mobsScroll - Integer.signum(wheel) * 3);
+        else if (this.playerPage() && inside(x, y, this.listX, this.listY, this.listWidth, this.listRows * ROW_HEIGHT))
+            this.scrollTo(this.scroll - Integer.signum(wheel));
     }
 
     private boolean overCommand(int x, int y) {
@@ -261,6 +343,7 @@ public class GuiMBMenu extends GuiScreen {
 
     @Override
     public void onGuiClosed() {
+        Keyboard.enableRepeatEvents(false);
         AnimationPreview.stopLoop(MenuPreview.showcasePlayer());
         MoBends.saveConfig();
     }
@@ -274,26 +357,39 @@ public class GuiMBMenu extends GuiScreen {
         if (this.mc.theWorld == null) this.drawDefaultBackground();
         else this.drawGradientRect(0, 0, this.width, this.height, 0xA0101010, 0xC0101010);
         double seconds = (System.nanoTime() - this.openedNanos) / 1.0e9;
-        if (this.selected < 0) this.drawMainPage(seconds);
-        else this.drawMobPage(mouseX, mouseY, (System.nanoTime() - this.selectedNanos) / 1.0e9);
+        double sinceChosen = (System.nanoTime() - this.selectedNanos) / 1.0e9;
+        this.drawSearch();
+        this.drawMobs(seconds);
+        if (this.selected < 0) this.drawShowcasePage(sinceChosen);
+        else this.drawMobPage(mouseX, mouseY, sinceChosen);
         super.drawScreen(mouseX, mouseY, partialTicks);
         if (this.selected >= 0 && this.overCommand(mouseX, mouseY)) {
             boolean copied = Minecraft.getSystemTime() < this.copiedUntilMillis;
             List<String> tooltip = Collections.singletonList(I18n.format(copied ? "mobends.menu.copied" : "mobends.menu.copy"));
             this.func_146283_a(tooltip, mouseX, mouseY);
-        } else if (this.playerPage()) {
+        } else if (this.playerPage() && this.rowAt(mouseX, mouseY) >= 0) {
             this.drawListTooltip(mouseX, mouseY);
-        } else if (this.selected < 0) {
+        } else {
             this.drawMobsTooltip(mouseX, mouseY);
         }
     }
 
-    /** The title and logo, the mob buttons sliding in one after another, and the showcase player. */
-    private void drawMainPage(double seconds) {
+    /** The search field over the list, saying what it's for while empty. */
+    private void drawSearch() {
+        this.search.drawTextBox();
+        if (this.search.getText().isEmpty()) {
+            this.drawString(this.fontRendererObj, this.fontRendererObj.trimStringToWidth(
+                I18n.format("mobends.menu.search"), this.mobsListWidth() - 12), 15, 13, PLACEHOLDER_COLOR);
+        }
+    }
+
+    /** Nothing chosen: the title and logo over the showcase player, on the right. */
+    private void drawShowcasePage(double seconds) {
+        int left = this.right(), width = this.rightWidth();
         int titleHeight = this.titleHeight();
         int titleWidth = Math.round(titleHeight * TITLE_ASPECT);
         int logoSize = titleHeight;
-        int groupX = (this.width - logoSize - 4 - titleWidth) / 2;
+        int groupX = left + (width - logoSize - 4 - titleWidth) / 2;
         int titleY = 10 - Math.round((1.0f - ease(seconds / 0.4)) * (titleHeight + 10));
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -302,14 +398,12 @@ public class GuiMBMenu extends GuiScreen {
         Gui.func_146110_a(groupX, titleY, 0, 0, logoSize, logoSize, logoSize, logoSize);
         this.mc.getTextureManager().bindTexture(TITLE);
         Gui.func_146110_a(groupX + logoSize + 4, titleY, 0, 0, titleWidth, titleHeight, titleWidth, titleHeight);
-        int left = 10 + this.mobsListWidth() + 10;
-        this.drawShowcase(seconds, left);
-        this.drawMobs(seconds);
+        this.drawShowcase(seconds, left, 10 + titleHeight + 8);
         String owner = CompatibilityPolicy.playerOwner();
         if (owner != null) {
             int noteY = this.height - 26;
             for (Object line : this.fontRendererObj.listFormattedStringToWidth(
-                I18n.format("mobends.menu.override.player", owner), this.width - left - 10)) {
+                I18n.format("mobends.menu.override.player", owner), width)) {
                 this.drawString(this.fontRendererObj, (String)line, left, noteY, OVERRIDE_COLOR);
                 noteY += 10;
             }
@@ -317,11 +411,11 @@ public class GuiMBMenu extends GuiScreen {
     }
 
     /**
-     * The mobs, a row each under their mod's name, sliding in one after another; those switched off say so, and those
-     * their mod draws are greyed out. Scrolls when they don't all fit.
+     * The mobs matching the search, a row each under their mod's name, sliding in one after another; the chosen one
+     * stands out, those switched off say so, and those their mod draws are greyed out. Scrolls when they don't all fit.
      */
     private void drawMobs(double seconds) {
-        int x = 10, y = this.top();
+        int x = 10, y = this.listTop();
         int width = this.mobsListWidth();
         this.mobsX = x;
         this.mobsY = y;
@@ -331,6 +425,10 @@ public class GuiMBMenu extends GuiScreen {
         boolean scrolls = this.rows.size() > this.mobsRows;
         int rowsWidth = width - (scrolls ? SCROLLBAR_WIDTH + 2 : 0);
         int mouseX = this.lastMouseX, mouseY = this.lastMouseY;
+        if (this.rows.isEmpty()) {
+            this.drawString(this.fontRendererObj, this.fontRendererObj.trimStringToWidth(I18n.format("mobends.menu.noMatch"),
+                width - 4), x + 2, y + 3, PLACEHOLDER_COLOR);
+        }
         for (int i = 0; i < this.mobsRows && this.mobsScroll + i < this.rows.size(); ++i) {
             Object row = this.rows.get(this.mobsScroll + i);
             int rowY = y + i * MOB_ROW;
@@ -341,12 +439,14 @@ public class GuiMBMenu extends GuiScreen {
                 continue;
             }
             MobRoster.Entry entry = this.roster.get((Integer)row);
+            boolean chosen = (Integer)row == this.selected;
             boolean over = rowX == x && inside(mouseX, mouseY, x, rowY, rowsWidth, MOB_ROW - 1);
-            drawRect(rowX, rowY, rowX + rowsWidth, rowY + MOB_ROW - 1, over ? 0x70FFFFFF : 0x60000000);
+            drawRect(rowX, rowY, rowX + rowsWidth, rowY + MOB_ROW - 1, chosen ? 0x90FFFFFF : over ? 0x50FFFFFF : 0x60000000);
+            if (chosen) drawRect(rowX, rowY, rowX + 2, rowY + MOB_ROW - 1, 0xFFFFFFA0);
             boolean ours = entry.kind == MobRoster.Kind.ANIMATED;
             String tag = ours && !entry.animated() ? I18n.format("mobends.gui.off") : null;
             int tagWidth = tag == null ? 0 : this.fontRendererObj.getStringWidth(tag) + 6;
-            int color = !ours ? KEPT_COLOR : tag != null ? 0xA0A0A0 : 0xFFFFFF;
+            int color = chosen ? 0xFFFFA0 : !ours ? KEPT_COLOR : tag != null ? 0xA0A0A0 : 0xFFFFFF;
             this.drawString(this.fontRendererObj,
                 this.fontRendererObj.trimStringToWidth(entry.name, rowsWidth - 10 - tagWidth), rowX + 6, rowY + 2, color);
             if (tag != null) this.drawString(this.fontRendererObj, tag, rowX + rowsWidth - tagWidth + 2, rowY + 2, 0xD05050);
@@ -379,7 +479,8 @@ public class GuiMBMenu extends GuiScreen {
         int mob = this.mobAt(x, y);
         if (mob < 0) return;
         this.mc.getSoundHandler().playSound(PositionedSoundRecord.func_147674_a(new ResourceLocation("gui.button.press"), 1.0f));
-        this.pendingPage = mob;
+        // The chosen mob again puts the showcase back.
+        this.pendingPage = mob == this.selected ? -1 : mob;
     }
 
     private void dragMobsScrollbar(int y) {
@@ -401,7 +502,7 @@ public class GuiMBMenu extends GuiScreen {
     }
 
     /** A player spinning once every 10 seconds, playing another of its animations each time round. */
-    private void drawShowcase(double seconds, int left) {
+    private void drawShowcase(double seconds, int left, int top) {
         EntityLivingBase player = MenuPreview.showcasePlayer();
         if (seconds >= this.showcaseUntil || this.showcase < 0) {
             int next = this.random.nextInt(SHOWCASE.length);
@@ -411,39 +512,45 @@ public class GuiMBMenu extends GuiScreen {
             AnimationPreview.loopOn(player, new ResourceLocation("mobends", SHOWCASE[next][0]), SHOWCASE[next][1]);
             MenuPreview.motion(SHOWCASE[next][1]);
         }
-        int top = this.top();
-        int scale = Math.max(20, Math.min(70, (this.height - top - 20) / 3));
-        int x = (left + this.width) / 2, y = this.height - Math.max(30, (this.height - top - scale * 2) / 2);
+        int scale = Math.max(20, Math.min(70, Math.min((this.height - top - 20) / 3, (this.width - 10 - left) / 2)));
+        int x = (left + this.width - 10) / 2, y = this.height - Math.max(30, (this.height - top - scale * 2) / 2);
         float yaw = (float)(seconds * 36.0 % 360.0);
         MenuPreview.draw(player, () -> renderLivingEntity(x, y, scale, yaw, player));
     }
 
     /**
-     * The mob's page: its preview, its switch, the command that writes its rig's Blockbench project, who draws it when
-     * Mo' Bends doesn't, and on the player's page its animations.
+     * The chosen mob, on the right: its name over its preview, its switch, the command that writes its rig's
+     * Blockbench project, who draws it when Mo' Bends doesn't, and for the player its animations. The box at the
+     * header's end puts the showcase back.
      */
     private void drawMobPage(int mouseX, int mouseY, double seconds) {
         MobRoster.Entry entry = this.entry();
         boolean player = this.playerPage();
+        int left = this.right(), width = this.rightWidth();
         boolean vanilla = entry.vanilla != null || entry.type != null && entry.type.getName().startsWith("net.minecraft.");
         String title = vanilla ? entry.name : entry.name + " - " + entry.mod;
-        this.drawCenteredString(this.fontRendererObj, this.fontRendererObj.trimStringToWidth(title, this.width - 20),
-            this.width / 2, 10, 0xFFFFFF);
+        this.drawCenteredString(this.fontRendererObj, this.fontRendererObj.trimStringToWidth(title, width - 2 * CLOSE_SIZE - 8),
+            left + width / 2, 10, 0xFFFFFF);
+        this.closeX = left + width - CLOSE_SIZE;
+        this.closeY = 8;
+        boolean overClose = inside(mouseX, mouseY, this.closeX, this.closeY, CLOSE_SIZE, CLOSE_SIZE);
+        drawRect(this.closeX, this.closeY, this.closeX + CLOSE_SIZE, this.closeY + CLOSE_SIZE, overClose ? 0xFFA0A0A0 : 0xFF606060);
+        drawRect(this.closeX + 1, this.closeY + 1, this.closeX + CLOSE_SIZE - 1, this.closeY + CLOSE_SIZE - 1, 0xFF101010);
+        this.drawCenteredString(this.fontRendererObj, "x", this.closeX + CLOSE_SIZE / 2 + 1, this.closeY + 1,
+            overClose ? 0xFFFFA0 : 0xE0E0E0);
         int box = this.previewSize();
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         this.mc.getTextureManager().bindTexture(PREVIEW_BACKGROUND);
-        Gui.func_146110_a(10, 30, 0, 0, box, box, box, box);
+        Gui.func_146110_a(left, DETAIL_TOP, 0, 0, box, box, box, box);
         EntityLivingBase shown = entry.preview();
-        if (shown != null) this.drawPreview(entry, shown, box, seconds);
-        else this.drawCenteredString(this.fontRendererObj, I18n.format("mobends.menu.noPreview"), 10 + box / 2,
-            30 + box / 2 - 4, PLACEHOLDER_COLOR);
+        if (shown != null) this.drawPreview(entry, shown, left, DETAIL_TOP, box, seconds);
+        else this.drawCenteredString(this.fontRendererObj, I18n.format("mobends.menu.noPreview"), left + box / 2,
+            DETAIL_TOP + box / 2 - 4, PLACEHOLDER_COLOR);
 
-        int textX = 10 + box + 12, textWidth = this.width - textX - 10;
-        if (textWidth < 120) {
-            textX = 10;
-            textWidth = this.width - 20;
-        }
-        int textY = textX == 10 ? 30 + box + 34 : 34;
+        int textX = this.textX(), textWidth = this.width - 10 - textX;
+        // Under the preview when stacked; else beside it, under the switch when that sits there too.
+        int textY = this.stacked() ? DETAIL_TOP + box + 6
+            : this.animate != null && this.switchBesidePreview() ? DETAIL_TOP + 26 : DETAIL_TOP + 2;
         int noteY = textY;
         // A mob its own mod draws takes no Mo' Bends animations: no Blockbench project to offer.
         if (entry.keeper == null) {
@@ -470,7 +577,7 @@ public class GuiMBMenu extends GuiScreen {
         Owner note = this.why(entry);
         if (note == null && shown != null) note = this.override(entry, shown);
         if (note != null) {
-            noteY = this.drawLines(note.text, textX, noteY, textWidth, this.height - 36,
+            noteY = this.drawLines(note.text, textX, noteY, textWidth, this.height - 10,
                 note.combined ? COMBINED_COLOR : OVERRIDE_COLOR) + 4;
         }
         if (player) this.drawList(mouseX, mouseY, textX, noteY, textWidth, shown);
@@ -480,7 +587,7 @@ public class GuiMBMenu extends GuiScreen {
      * The mob turning in its box, sized from how much its renderer scales it: a giant shrinks to fit, a small spider
      * grows. A mob that fails to draw here shows the placeholder from then on.
      */
-    private void drawPreview(MobRoster.Entry entry, EntityLivingBase shown, int box, double seconds) {
+    private void drawPreview(MobRoster.Entry entry, EntityLivingBase shown, int boxX, int boxY, int box, double seconds) {
         boolean player = entry.player();
         // Mobs walk on the spot, as they always have here.
         if (!player) shown.moveForward = 1.0f;
@@ -488,10 +595,10 @@ public class GuiMBMenu extends GuiScreen {
         boolean spider = entry.spider();
         float fit = player ? 1.0f : Math.max(0.35f, Math.min(1.6f, 1.0f / entry.renderScale(shown)));
         int scale = Math.max(8, Math.round(box * (spider ? 38 : 50) / 128.0f * fit));
-        int baseY = 30 + box - box * (spider ? 44 : 22) / 128;
+        int baseY = boxY + box - box * (spider ? 44 : 22) / 128;
         float yaw = (float)(seconds * (player ? 36.0 : 72.0) % 360.0);
         try {
-            MenuPreview.draw(shown, () -> renderLivingEntity(10 + box / 2, baseY, scale, yaw, shown));
+            MenuPreview.draw(shown, () -> renderLivingEntity(boxX + box / 2, baseY, scale, yaw, shown));
         } catch (RuntimeException failed) {
             entry.previewFailed();
             BendsLogger.log("The menu couldn't draw " + entry.key + ": " + failed, BendsLogger.ERROR);
@@ -576,7 +683,7 @@ public class GuiMBMenu extends GuiScreen {
         this.listX = x;
         this.listY = y;
         this.listWidth = width;
-        this.listRows = Math.max(0, (this.height - 36 - y) / ROW_HEIGHT);
+        this.listRows = Math.max(0, (this.height - 10 - y) / ROW_HEIGHT);
         this.scrollTo(this.scroll);
         if (this.listRows == 0) return;
         boolean scrolls = names.size() > this.listRows;
