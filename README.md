@@ -15,7 +15,6 @@ Mo' Bends for Minecraft 1.7.10: segmented player and mob animations, drawn by Sa
 [![maven](images/badges/maven.png)](https://maven.angelic.industries/#/releases/net/gobbob/mobends/EvenMoBends)
 -->
 
-![mobs](images/screenshots/mobs.png)
 ![player](images/screenshots/player.png)
 
 ## Features
