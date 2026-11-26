@@ -2,7 +2,7 @@
   {
     "modid": "${modId}",
     "name": "${modName}",
-    "description": "Mo' Bends for Minecraft 1.7.10, with Salamander models and animations, resource-pack support and an expressive skin editor.",
+    "description": "Mo' Bends for Minecraft 1.7.10: segmented player and mob animations, drawn by Salamander and editable in Blockbench.",
     "version": "${modVersion}",
     "mcversion": "${minecraftVersion}",
     "url": "https://github.com/AngelicIndustries/EvenMoBends",

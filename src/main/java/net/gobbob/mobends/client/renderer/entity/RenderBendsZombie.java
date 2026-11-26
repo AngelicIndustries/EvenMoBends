@@ -34,18 +34,23 @@ extends RenderBiped {
     protected ModelBiped villagerRegularArmor;
     private int field_82431_q = 1;
     public int refreshModel = 0;
-    private final net.minecraft.client.renderer.entity.RenderZombie packRenderer = new net.minecraft.client.renderer.entity.RenderZombie() {
-        @Override
-        protected ResourceLocation getEntityTexture(EntityZombie entity) {
-            return RenderBendsZombie.this.getEntityTexture(entity);
-        }
-    };
+    private final RenderBiped packRenderer = this.createPackRenderer();
     // RenderZombie switches modelBipedMain when drawing a villager; keep a stable regular-model probe.
     private final ModelBiped packZombieModel = this.packRenderer.modelBipedMain;
     private final net.minecraft.client.model.ModelZombieVillager packVillagerModel = new net.minecraft.client.model.ModelZombieVillager();
 
     public RenderBendsZombie() {
         super(new ModelBendsZombie(), 0.5f, 1.0f);
+    }
+
+    /** The vanilla renderer this zombie steps aside to when a resource pack's CEM model takes it over. */
+    protected RenderBiped createPackRenderer() {
+        return new net.minecraft.client.renderer.entity.RenderZombie() {
+            @Override
+            protected ResourceLocation getEntityTexture(EntityZombie entity) {
+                return RenderBendsZombie.this.getEntityTexture(entity);
+            }
+        };
     }
 
     @Override
@@ -78,6 +83,12 @@ extends RenderBiped {
         }
         this.func_82427_a(p_76986_1_);
         super.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
+    }
+
+    /** The resource pack whose model draws this zombie in Mo' Bends' place, or null. */
+    public String packModelSource(EntityZombie zombie) {
+        return net.gobbob.mobends.compat.CemCompat.source(zombie,
+            zombie.isVillager() ? this.packVillagerModel : this.packZombieModel, getEntityTexture(zombie));
     }
 
     protected ResourceLocation getEntityTexture(EntityZombie p_110775_1_) {

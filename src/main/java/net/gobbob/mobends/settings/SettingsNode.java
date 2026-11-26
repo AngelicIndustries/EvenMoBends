@@ -3,7 +3,7 @@ package net.gobbob.mobends.settings;
 import net.gobbob.mobends.settings.SettingsBoolean;
 
 public abstract class SettingsNode {
-    public static SettingsNode[] settings = new SettingsNode[]{new SettingsBoolean("swordTrail", "Sword Trail").setupDefault(true), new SettingsBoolean("dummy", "Dummy")};
+    public static SettingsNode[] settings = new SettingsNode[]{new SettingsBoolean("swordTrail", "Sword Trail").setupDefault(true)};
     public String id;
     public String displayName;
 

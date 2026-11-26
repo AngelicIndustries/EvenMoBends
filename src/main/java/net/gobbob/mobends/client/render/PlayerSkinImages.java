@@ -16,7 +16,7 @@ import net.minecraft.client.resources.IResource;
 import net.minecraft.util.ResourceLocation;
 import industries.angelic.salamander.cem.client.CemSkinImage;
 
-/** Read original skin pixels for the editor and Blockbench export, without generated expression textures. */
+/** Read original skin pixels for Blockbench export, without generated expression textures. */
 public final class PlayerSkinImages {
     private PlayerSkinImages() {}
 

@@ -24,7 +24,8 @@ public class EntityData {
     public boolean updatedThisFrame = false;
     public float ticksAfterLiftoff = 0.0f;
     public float ticksAfterTouchdown = 0.0f;
-    public float ticksAfterPunch = 0.0f;
+    /** Ticks since the last swing started; a new entity, a world join or a preview has not swung for long. */
+    public float ticksAfterPunch = 60.0f;
     public boolean alreadyPunched = false;
     public boolean onGround;
 
@@ -62,8 +63,13 @@ public class EntityData {
         Entity entity = entityByID(argEntityID);
         this.entityType = entity != null ? entity.getCommandSenderName() : "NULL";
         this.model = null;
-        // A mob outside the world, drawn in a GUI preview, gets new data every frame: pose it at once, not eased from zero
-        if (entity == null) this.ticksPerFrame = PREVIEW_TICKS_PER_FRAME;
+        // A mob outside the world, drawn in a GUI preview, gets new data every frame: pose it at once, not eased from
+        // zero. Nothing updates it either, so it stands on the ground, landed long ago, rather than in a jump.
+        if (entity == null) {
+            this.ticksPerFrame = PREVIEW_TICKS_PER_FRAME;
+            this.onGround = true;
+            this.ticksAfterTouchdown = 60.0f;
+        }
     }
 
     /** Enough ticks for any eased part to reach its pose within one frame. */
@@ -72,6 +78,11 @@ public class EntityData {
     /** The client world's entity with this ID; null without a world, as in previews drawn from the main menu. */
     public static Entity entityByID(int entityID) {
         return Minecraft.getMinecraft().theWorld != null ? Minecraft.getMinecraft().theWorld.getEntityByID(entityID) : null;
+    }
+
+    /** Whether {@code entity} is in the world, rather than a preview drawn on its own. */
+    public static boolean inWorld(Entity entity) {
+        return entity != null && entityByID(entity.getEntityId()) == entity;
     }
 
     public boolean canBeUpdated() {

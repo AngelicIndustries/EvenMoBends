@@ -48,6 +48,21 @@ public final class CemCompat {
         }
     }
 
+    /** The resource pack whose model draws the spider in Mo' Bends' place, or null; see {@link #source}. */
+    public static String source(Entity entity) {
+        return source(entity, SPIDER, null);
+    }
+
+    /**
+     * The resource pack whose model draws {@code entity} in Mo' Bends' place, or null when none does. Salamanders
+     * without the API name no pack: "a resource pack" stands for it.
+     */
+    public static String source(Entity entity, ModelBase model, ResourceLocation texture) {
+        if (!hasModel(entity, model, texture)) return null;
+        String pack = net.gobbob.mobends.compat.salamander.PackFaces.modelSource(entity, model, texture);
+        return pack != null ? pack : net.minecraft.client.resources.I18n.format("mobends.menu.override.somePack");
+    }
+
     static boolean selects(Object subject, CemBinding binding, List<String> candidates) {
         return CemResources.INSTANCE.select(candidates, binding, subject) != null;
     }

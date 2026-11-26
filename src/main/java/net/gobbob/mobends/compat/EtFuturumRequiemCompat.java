@@ -28,8 +28,9 @@ public final class EtFuturumRequiemCompat {
     }
 
     /** Et Futurum's zombie villagers render as Mo' Bends zombies while zombies are animated. */
-    public static void registerZombieVillagerRenderer() {
-        if (CompatibilityPolicy.isEtFuturumRequiemLoaded()) Api.registerZombieVillagerRenderer();
+    /** Et Futurum's zombie villagers and husks, which it renders itself, animate as zombies. */
+    public static void registerZombieRenderers() {
+        if (CompatibilityPolicy.isEtFuturumRequiemLoaded()) Api.registerZombieRenderers();
     }
 
     /** An Et Futurum zombie villager's profession (its villager type), or -1. */
@@ -79,10 +80,13 @@ public final class EtFuturumRequiemCompat {
             RenderRowingBoatEtFuturum.register();
         }
 
-        private static void registerZombieVillagerRenderer() {
+        private static void registerZombieRenderers() {
             cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
                 ganymedes01.etfuturum.entities.EntityZombieVillager.class,
                 new net.gobbob.mobends.client.renderer.entity.RenderBendsZombieVillagerEtFuturum());
+            cpw.mods.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+                ganymedes01.etfuturum.entities.EntityHusk.class,
+                new net.gobbob.mobends.client.renderer.entity.RenderBendsHuskEtFuturum());
         }
 
         private static int getZombieVillagerType(Entity entity) {

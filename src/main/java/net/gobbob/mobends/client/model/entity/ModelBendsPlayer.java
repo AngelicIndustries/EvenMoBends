@@ -29,6 +29,8 @@ import net.gobbob.mobends.compat.EtFuturumRequiemCompat.BoatState;
 import net.gobbob.mobends.compat.PlayerBlockingCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.data.Data_Player;
+import net.gobbob.mobends.data.EntityData;
+import net.gobbob.mobends.compat.salamander.PackFaces;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -284,9 +286,12 @@ extends ModelBiped implements BipedRigModel {
         if (this.modern) {
             // Salamander draws the overlay layers, flat or as voxels, on this model's joints.
             SalamanderSkins.renderWithLayers(this, argEntity, p_78088_7_);
-            return;
+        } else {
+            this.renderGeometry(p_78088_7_);
         }
-        this.renderGeometry(p_78088_7_);
+        // A face-only player pack, such as Just Expressions, draws its face on this head, turned as it is.
+        PackFaces.draw(this, argEntity, p_78088_2_, p_78088_3_, p_78088_4_, this.headRotationY, this.headRotationX,
+            p_78088_7_);
     }
 
     /** For SwimRoom on the next frame: how far this player's pose reaches, and while lying in the stroke. */
@@ -418,10 +423,11 @@ extends ModelBiped implements BipedRigModel {
     public void setRotationAngles(float argSwingTime, float argSwingAmount, float argArmSway, float argHeadY, float argHeadX, float argNr6, Entity argEntity) {
         this.bipedRightArm = this.ownRightArm;
         this.bipedLeftArm = this.ownLeftArm;
-        if (Minecraft.getMinecraft().theWorld == null) {
+        // Menu previews pose without a world too, in one of their own; pausing the game holds only the world's players.
+        if (Minecraft.getMinecraft().theWorld == null && argEntity.worldObj == null) {
             return;
         }
-        if (Minecraft.getMinecraft().theWorld.isRemote && Minecraft.getMinecraft().isGamePaused()) {
+        if (Minecraft.getMinecraft().isGamePaused() && EntityData.inWorld(argEntity)) {
             return;
         }
         Data_Player data = Data_Player.get(argEntity.getEntityId());

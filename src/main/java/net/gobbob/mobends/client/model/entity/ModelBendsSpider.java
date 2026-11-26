@@ -10,6 +10,7 @@ import net.gobbob.mobends.client.animation.BendsAnimator;
 import net.gobbob.mobends.client.animation.PlayerRig;
 import net.gobbob.mobends.client.model.ModelRendererBends;
 import net.gobbob.mobends.data.Data_Spider;
+import net.gobbob.mobends.data.EntityData;
 import net.gobbob.mobends.util.SmoothVector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
@@ -263,8 +264,8 @@ extends ModelSpider implements AnimatedModel {
 
     @Override
     public void setRotationAngles(float p_78087_1_, float p_78087_2_, float p_78087_3_, float p_78087_4_, float p_78087_5_, float p_78087_6_, Entity argEntity) {
-        // Without a world (a preview from the main menu) it is posed all the same
-        if (Minecraft.getMinecraft().theWorld != null && Minecraft.getMinecraft().theWorld.isRemote && Minecraft.getMinecraft().isGamePaused()) {
+        // Pausing the game holds only the world's spiders; previews, with or without a world, pose all the same
+        if (Minecraft.getMinecraft().isGamePaused() && EntityData.inWorld(argEntity)) {
             return;
         }
         Data_Spider data = Data_Spider.get(argEntity.getEntityId());

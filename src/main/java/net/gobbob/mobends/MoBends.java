@@ -12,8 +12,8 @@ import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraftforge.common.config.Configuration;
 
-@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum",
-    acceptableRemoteVersions="*",
+@Mod(modid=MoBends.MODID, name=MoBends.MODNAME, version=MoBends.VERSION, dependencies="required-after:salamander;after:etfuturum;after:SpecialMobs",
+    acceptableRemoteVersions="*", guiFactory="net.gobbob.mobends.client.gui.MoBendsGuiFactory",
     customProperties = {
         @Mod.CustomProperty(k = "iconFile", v = "logo.png"),
         @Mod.CustomProperty(k = "backgroundFile", v = "assets/mobends/background.png")
@@ -27,20 +27,20 @@ public class MoBends {
     @Mod.Instance(value="mobends")
     public static MoBends instance;
     public static File configFile;
+    /** The config, kept loaded: the config screen edits it in place. */
+    public static Configuration config;
     public static int refreshModel;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         configFile = event.getSuggestedConfigurationFile();
-        Configuration config = new Configuration(event.getSuggestedConfigurationFile());
+        config = new Configuration(event.getSuggestedConfigurationFile());
         config.load();
         proxy.preInit(config);
         config.save();
     }
 
     public static void saveConfig() {
-        Configuration config = new Configuration(configFile);
-        config.load();
         for (int i = 0; i < AnimatedEntity.animatedEntities.length; ++i) {
             config.get("Animate", AnimatedEntity.animatedEntities[i].id, false).setValue(AnimatedEntity.animatedEntities[i].animate);
         }

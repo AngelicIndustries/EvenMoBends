@@ -51,6 +51,12 @@ public final class CompatibilityPolicy {
         return MOB_ONLY_MODE;
     }
 
+    /** The mod that draws the player in Mo' Bends' place, or null when Mo' Bends does. */
+    public static String playerOwner() {
+        if (!MOB_ONLY_MODE) return null;
+        return SMART_MOVING_LOADED ? "Smart Moving" : SMART_RENDER_LOADED ? "Smart Render" : "Ears";
+    }
+
     /** Wawel Auth with the skin API this build uses; an older one is left alone. */
     public static boolean isWawelAuthLoaded() {
         return WAWEL_AUTH_LOADED;
@@ -90,7 +96,7 @@ public final class CompatibilityPolicy {
             BendsLogger.log("Ears detected: Wawel Auth puts its features on Mo' Bends' bones.", BendsLogger.INFO);
         }
         if (MOB_ONLY_MODE) {
-            String owner = SMART_MOVING_LOADED ? "Smart Moving" : SMART_RENDER_LOADED ? "Smart Render" : "Ears";
+            String owner = playerOwner();
             BendsLogger.log(
                 owner + " detected: disabling all Mo' Bends player rendering and keeping mob animations enabled.",
                 BendsLogger.INFO);

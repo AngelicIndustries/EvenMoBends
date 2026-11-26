@@ -1,15 +1,15 @@
 # Even Mo' Bends
 
-Minecraft 1.7.10 fork of Mo' Bends 0.20.1, with Salamander models and animations, resource-pack support and an expressive skin editor.
+Minecraft 1.7.10 fork of Mo' Bends 0.20.1: segmented player and mob animations, drawn by Salamander and editable in Blockbench.
 
-![Even Mo' Bends logo](images/logo_small.png)
+![logo](images/logo_small.png)
 
 [![hub](images/badges/github.png)](https://github.com/AngelicIndustries/EvenMoBends/releases)
 [![67](images/badges/67.png)](https://67minecraft.com/mod/even-mo-bends)
 ![forge](images/badges/forge.png)
 [![cord](images/badges/cord.png)](https://discord.gg/xAWCqGrguG)
 
-<!--
+<!-- Not published yet
 [![curse](images/badges/curse.png)](https://www.curseforge.com/minecraft/mc-mods/even-mo-bends)
 [![modrinth](images/badges/modrinth.png)](https://modrinth.com/mod/even-mo-bends)
 [![maven](images/badges/maven.png)](https://maven.angelic.industries/#/releases/net/gobbob/mobends/EvenMoBends)
@@ -17,111 +17,115 @@ Minecraft 1.7.10 fork of Mo' Bends 0.20.1, with Salamander models and animations
 
 ## Features
 
-Segmented player, zombie, zombie villager, zombie pigman, spider and cave spider animations. Salamander loads and
-renders the model geometry and evaluates the Blockbench/GeckoLib animation files. Resource packs can replace those
-assets; see the [Blockbench guide](blockbench/README.md) for exporting projects and editing animations.
+* Segmented player, zombie, zombie villager, zombie pigman, spider and cave spider animations. Salamander loads and
+  draws the model geometry and evaluates the Blockbench/GeckoLib animation files.
+* Resource packs can replace those models and animations; see the [Blockbench guide](blockbench/README.md) for
+  exporting projects and editing animations.
+* Skin layers, flat or 3D, are drawn by Salamander on Mo' Bends' joints.
+* Eating and drinking raise the hand holding the item, including Backhand's off hand, while the rest of the body keeps
+  moving. Holding food alone does not trigger it.
+* A switch per player animation: movement, combat, swimming, crawling, rowing, eating and more.
+* Only the client needs it. Clients without Even Mo' Bends can join servers that have it.
 
-Eating and drinking raise the hand holding the item, including Backhand's off hand, while the rest of the body can
-keep moving. Holding food alone does not trigger the animation. Set `animations.player.eating=false` in `mobends.cfg`
-to disable it. The player animation switches also cover movement, combat, swimming, crawling and rowing.
+### Settings
 
-## Dependencies
+The config screen (Mods, Even Mo' Bends, Config) has:
 
-* [Salamander](https://github.com/AngelicIndustries/Salamander) is required, 0.0.2 or newer: it draws the skin layers
-  on Mo' Bends' joints through its skin layer API.
-* [Wawel Auth](https://github.com/AngelicIndustries/WawelAuth) is optional, for players' skins from their own auth
-  providers.
-* Salamander also requires [GTNHLib](https://github.com/GTNewHorizons/GTNHLib) 0.11.30 or newer and a compatible
-  mixin bootstrap such as [UniMixins](https://github.com/LegacyModdingMC/UniMixins).
-* Just Expressions and Fresh Moves are optional, separately installed resource packs. No pack artwork is bundled.
+* **Animations**: the mob menu. Each mob's page has a preview, an **Animate** switch (restart the game after
+  switching it), and the command that writes the mob's Blockbench project, which copies on click. The **Player**
+  page also lists the player's animations: click one to preview it, and its switch to turn it on or off, at once.
+  The switches are `animations.player.*` in `config/mobends.cfg`; for example, `animations.player.eating=false`
+  turns off the eating animation. Each page says when something else draws its mob in Mo' Bends' place: a resource
+  pack's model (naming the pack), another mod's renderer, or the mob's Animate switch being off. Without a mob
+  selected, a player model turns and cycles through its animations. The menu works from the main menu too, without a
+  world.
+* **General**: the sword trail, and **Combine face-only player packs** (on by default; see
+  [Compatibility](#compatibility)).
 
-## Compatibility
+The G key and the old in-game menu are gone.
+
+### Commands
+
+* `/evenmobends blockbench`: writes `.minecraft/mobends/blockbench/player.bbmodel` (or `player_slim.bbmodel`) with
+  your skin. Add `slim` or `classic` to override the arm width, or `zombie` or `spider` for those mobs.
+* `/evenmobends play <file> <animation>`: loops an animation on yourself. Files are under `geckolib/animations/`, for
+  example `player/item_test`. `/evenmobends stop` ends it.
+
+### Expressions
+
+The expression editor moved to [Salamander](https://github.com/AngelicIndustries/Salamander/wiki/Expression-Editor),
+which draws the eyes and brows through Just Expressions and Fresh Moves. Mo' Bends' own player and pig blinking and
+its `blinking.*` settings are retired.
+
+### Compatibility
 
 Every row below includes the required Salamander installation. A matching, enabled CEM pack takes priority over
-Mo' Bends for that entity. Player packs replace the whole player model and its animations, including eating;
-the editor does not splice pack eyes onto the Mo' Bends body. Use one player pack at a time; normal resource-pack
-priority decides which model wins if several are enabled. Removing the pack or disabling CEM restores Mo' Bends.
+Mo' Bends for that entity. Player packs replace the whole player model and its animations, including eating; pack
+eyes are not added to the Mo' Bends body. Use one player pack at a time; normal resource-pack priority decides which
+model wins if several are enabled. Removing the pack or disabling CEM restores Mo' Bends.
 
 | Installed mods | Player renderer | Mob animations |
 | --- | --- | --- |
 | Even Mo' Bends | Mo' Bends through Salamander | Enabled |
-| WawelAuth + Even Mo' Bends | Mo' Bends with WawelAuth's skins, layers drawn by Salamander | Enabled |
+| Wawel Auth + Even Mo' Bends | Mo' Bends with Wawel Auth's skins, layers drawn by Salamander | Enabled |
 | The Aether + Even Mo' Bends | Mo' Bends with gloves, pendant, shield, cape, wings, halo and agility boots on the limbs | Enabled |
 | Avaritia + Even Mo' Bends | Mo' Bends with the infinity armor's every effect on the limbs | Enabled |
 | Adventure Backpack + Even Mo' Bends | Mo' Bends with backpacks, the copter pack and the coal jetpack on the body; flying on a pack uses the flight pose | Enabled |
 | Wall Grab / Tuck & Roll + Even Mo' Bends | Mo' Bends limbs in the wall grab and tuck poses | Enabled |
 | Backhand + Just A Shield + Even Mo' Bends | Mo' Bends with per-hand blocking poses, including passive shield blocking | Enabled |
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
-| GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled |
-| Smart Moving (with or without WawelAuth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
-| Just Expressions / Fresh Moves | Salamander renders the pack's player model | Mo' Bends for uncovered mobs |
+| GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled, including EFR's zombie villagers and husks |
+| Special Mobs + Even Mo' Bends | Mo' Bends | Its zombies, zombie pigmen, spiders and cave spiders animate as the vanilla ones, with their own textures, eyes and sizes |
+| Smart Moving (with or without Wawel Auth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
+| Just Expressions + Even Mo' Bends | Mo' Bends animates the body; Salamander draws the pack's animated face on Mo' Bends' head | Enabled |
+| Fresh Moves, or another player pack that changes the body | Salamander renders the pack's player model | Mo' Bends for uncovered mobs |
 | A matching zombie, zombie villager or spider CEM pack | Mo' Bends unless a player pack is also active | Salamander renders the pack's model for covered mobs |
+
+Salamander tells a face-only player pack from one that changes the body: a pack whose player parts keep vanilla's
+boxes and whose animations move only what it adds on the head, such as Just Expressions, is face-only. Mo' Bends then
+keeps the body and Salamander draws the pack's face on Mo' Bends' head, blinking and looking around as the pack
+animates it. Any other player pack, such as Fresh Moves, replaces the player. Turn off **Combine face-only player
+packs** to let face-only packs replace the player too. This needs Salamander 0.0.3; older Salamanders let every
+player pack replace the player.
 
 EFR boat drivers follow each paddle independently, including turns and coasting. Boats, chest boats,
 and rafts use their own handle and seat positions; rear passengers sit without rowing.
 The paddles settle into an advanced resting position for a more relaxed arm pose, with eased starts and stops.
-Set `animations.player.rowing=false` in `mobends.cfg` to use the ordinary riding pose instead.
+Set `animations.player.rowing=false` to use the ordinary riding pose instead.
 
 Aqua Acrobatics supplies the swimming/crawling state and body rotation; Mo' Bends animates the segmented limbs.
 Stopping or touching the bottom keeps AA's prone pose, and ordinary movement in water uses upright treading.
 Set `animations.player.crawling=false` to disable the crawl limb cycle while keeping the low pose needed to fit.
 The `swimming` animation switch also controls AA's swimming limb cycle.
 
-## Expressive skin editor
+Players don't take the fighting stance on joining a world or in other mods' previews, such as Wawel Auth's account
+manager.
 
-Open the Even Mo' Bends menu (default `G`) and choose **Prepare Expressive Skin**. Choose an eye shape and
-height, then use the arrows to edit pupils, eye whites, eyelids, eyebrows, outer-layer brows and eyelashes.
-Each color page has a picker, a hex field and a skin eyedropper. Left/right refer to the preview; choose **Both**
-to apply presets to both sides. Right-click erases optional colors or resets backgrounds. `Ctrl+Z` undoes a stroke
-or preset; `Ctrl+Y` (or `Ctrl+Shift+Z`) redoes it. **No eyebrows** removes both brows from both skin layers,
-regardless of the selected side. Other pages label the clear action **Clear left**, **Clear right** or **Clear both**.
-You can export after removing every expression feature.
+## Dependencies
 
-Export a PNG or use the Wawel Auth upload button, which asks for confirmation before replacing your skin.
-Enable **Just Expressions** or the **Animated Eyes** version of **Fresh Moves** to see expressions through
-Salamander. Saving a draft does not change your active skin or enable a pack.
-For downloaded Wawel Auth skins, use a build with the vanilla skin-download hooks (the dev client uses
-`409cfd2-snapshot`). Older builds such as `6bccb2c-snapshot` bypass Salamander's original-image capture and
-can turn transparent expression slots into black facial marks, even when the PNG itself is correct.
-
-The editor writes the shared layout used by Just Expressions 1.2.1 and Fresh Moves 3.1.1:
-
-* Base-face 2x1, 2x2 and 2x3 eyes, derp eyes, 3x1 Enderman eyes, wide-set eyes, and simple one-pixel-wide blinking eyes.
-* Paired, wide-set and joined eyebrows, with separately editable colors and skin covers.
-* Outer-layer eyebrows and eyelashes for bottom-positioned 2x2 eyes.
-
-It accepts 64x64 and 64x32 skins and preserves visible skin pixels. Presets use supported positions and pupil
-shapes; validation catches incompatible combinations, inconsistent colors, HD skins and eyes on the hat layer
-before export or upload. Hover the status text to read longer explanations. See the
-[pack skin guide](https://github.com/IthanMendoza/Fresh-Moves/wiki) for the underlying format.
-
-Only unambiguous current pack data is loaded. Old Mo' Bends/ETF expression data is not imported; start a new
-setup with the presets. Export clears the reserved expression areas before writing the new features, preventing
-stray corner pixels from becoming black eyes or brows. Existing skins are not automatically rewritten.
-
-The preview offers automatic motion, open/closed eyes and four gaze directions. It is a color and placement aid;
-the active pack controls final expression motion. The editor prepares the facial features supported by those
-packs, rather than authoring animation timelines. Mo' Bends' separate player/pig blink renderer and `blinking.*`
-settings have been retired.
+* [Salamander](https://github.com/AngelicIndustries/Salamander) [![curse](images/icons/curse.png)](https://www.curseforge.com/minecraft/mc-mods/salamander) [![67](images/icons/67.png)](https://67minecraft.com/mod/salamander) [![git](images/icons/git.png)](https://github.com/AngelicIndustries/Salamander/releases),
+  0.0.3 or newer: it draws the models, the animations and the skin layers.
+* [GTNHLib](https://modrinth.com/mod/gtnhlib) [![curse](images/icons/curse.png)](https://www.curseforge.com/minecraft/mc-mods/gtnhlib) [![modrinth](images/icons/modrinth.png)](https://modrinth.com/mod/gtnhlib) [![git](images/icons/git.png)](https://github.com/GTNewHorizons/GTNHLib/releases),
+  0.11.30 or newer, required by Salamander.
+* [UniMixins](https://modrinth.com/mod/unimixins) [![curse](images/icons/curse.png)](https://www.curseforge.com/minecraft/mc-mods/unimixins) [![modrinth](images/icons/modrinth.png)](https://modrinth.com/mod/unimixins/versions) [![git](images/icons/git.png)](https://github.com/LegacyModdingMC/UniMixins/releases),
+  required by Salamander.
+* Optional: [Wawel Auth](https://github.com/AngelicIndustries/WawelAuth) [![curse](images/icons/curse.png)](https://www.curseforge.com/minecraft/mc-mods/wawel-auth) [![modrinth](images/icons/modrinth.png)](https://modrinth.com/mod/wawel-auth) [![67](images/icons/67.png)](https://67minecraft.com/mod/wawel-auth) [![git](images/icons/git.png)](https://github.com/AngelicIndustries/WawelAuth/releases),
+  for players' skins from their own auth providers.
+* Optional: the Just Expressions and Fresh Moves resource packs, installed separately. No pack artwork is bundled.
 
 ## Building
-
-See the [0.0.3 release checklist](RELEASE_CHECKLIST.md) for migration validation and remaining publication work.
 
 ```sh
 ./gradlew build
 ```
 
-To additionally check both classic and slim models and the editor's UV layout against original pack ZIPs, without
-bundling them in the project:
+To build against a local Salamander or Wawel Auth development jar:
 
 ```sh
-EXPRESSION_PACKS='/path/to/JustExpressions_v1.2.1.zip:/path/to/FreshMoves-3.1.1-AnimatedEyes.zip' ./gradlew test --tests '*ExpressionPackTest' --rerun-tasks
+./gradlew -PsalamanderJar=/path/to/salamander-dev.jar -PwawelAuthJar=/path/to/wawelauth-dev.jar build
 ```
 
-Use your operating system's path separator between ZIPs (`:` on Linux/macOS, `;` on Windows).
-
-It can additionally load makamys' Smart Moving stack without making it a published dependency:
+The development client can also load makamys' Smart Moving stack without making it a published dependency:
 
 ```sh
 ./gradlew -PsmartMoving runClient25
@@ -145,7 +149,6 @@ To test Aqua Acrobatics, supply its development jar. This can be combined with t
 * [makamys](https://github.com/makamys/SmartMoving), maintainer of the Minecraft 1.7.10 Smart Moving fork used for compatibility testing.
 * [GTNH Et Futurum Requiem](https://github.com/GTNewHorizons/Et-Futurum-Requiem), whose optional API supplies Elytra flight and boat paddle state.
 * [Salamander](https://github.com/AngelicIndustries/Salamander), for model rendering, animation evaluation and CEM support.
-* [FreshLX / Ithan Mendoza](https://github.com/IthanMendoza/Fresh-Moves), for the Just Expressions / Fresh Moves skin layout used by the editor.
 * [GT:NH buildscript](https://github.com/GTNewHorizons/ExampleMod1.7.10).
 
 See [UPSTREAM.md](UPSTREAM.md) for exact source and binary provenance.
@@ -153,6 +156,10 @@ See [UPSTREAM.md](UPSTREAM.md) for exact source and binary provenance.
 ## License
 
 Mixed MIT and GPL-3.0-or-later; see [LICENSE](LICENSE) for details.
+
+* Code and assets from Mo' Bends, and fork work not marked otherwise: MIT ([LICENSES/MIT.txt](LICENSES/MIT.txt)).
+* Animations derived from Smart Moving: GPL-3.0-or-later ([LICENSES/GPL-3.0-or-later.txt](LICENSES/GPL-3.0-or-later.txt)),
+  so combined builds are distributed under GPL-3.0-or-later.
 
 ## Buy me some creatine
 

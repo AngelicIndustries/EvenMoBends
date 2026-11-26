@@ -9,6 +9,7 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CemCompat;
+import net.gobbob.mobends.compat.salamander.PackFaces;
 import net.gobbob.mobends.compat.DraconicEvolutionCompat;
 import net.gobbob.mobends.client.model.BonedArmorModel;
 import net.gobbob.mobends.client.model.ModelRendererBends_SeperatedChild;
@@ -72,6 +73,8 @@ extends RenderPlayer {
         this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
         this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
         this.modelArmor = new ModelBendsPlayer(0.5f);
+        // Salamander's pack models stay off it: a face-only pack draws its face on its head instead.
+        PackFaces.exclude(this.mainModel);
     }
 
     @Override
@@ -152,10 +155,20 @@ extends RenderPlayer {
         }
     }
 
+    /**
+     * Whether a resource pack's CEM player model draws {@code player} in this mod's place: one that covers the body,
+     * such as Fresh Moves', or a face-only one, such as Just Expressions', with combining off. Combined, a face-only
+     * pack draws its face on this mod's head instead (see {@link PackFaces}).
+     */
+    public boolean packDraws(AbstractClientPlayer player) {
+        PackFaces.Cover cover = PackFaces.cover(player);
+        if (cover == null) return CemCompat.hasModel(player, this.packRenderer.modelBipedMain, player.getLocationSkin());
+        return cover == PackFaces.Cover.BODY || cover == PackFaces.Cover.FACE && !PackFaces.combine;
+    }
+
     @Override
     public void renderFirstPersonArm(EntityPlayer p_82441_1_) {
-        if (p_82441_1_ instanceof AbstractClientPlayer && CemCompat.hasModel(p_82441_1_,
-            this.packRenderer.modelBipedMain, ((AbstractClientPlayer)p_82441_1_).getLocationSkin())) {
+        if (p_82441_1_ instanceof AbstractClientPlayer && this.packDraws((AbstractClientPlayer)p_82441_1_)) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.renderFirstPersonArm(p_82441_1_);
             return;
@@ -234,7 +247,7 @@ extends RenderPlayer {
     @Override
     public void doRender(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
         this.takeBackModel();
-        if (CemCompat.hasModel(p_76986_1_, this.packRenderer.modelBipedMain, p_76986_1_.getLocationSkin())) {
+        if (this.packDraws(p_76986_1_)) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
             return;
@@ -242,6 +255,7 @@ extends RenderPlayer {
         if (this.refreshModel != MoBends.refreshModel || !this.ownsModels()) {
             this.mainModel = SalamanderSkins.createPlayerModel(0.0f);
             this.modelBipedMain = (ModelBendsPlayer)this.mainModel;
+            PackFaces.exclude(this.mainModel);
             this.modelArmorChestplate = new ModelBendsPlayer(1.0f);
             this.modelArmor = new ModelBendsPlayer(0.5f);
             this.refreshModel = MoBends.refreshModel;

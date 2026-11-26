@@ -1,6 +1,5 @@
 package net.gobbob.mobends.client;
 
-import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.CommonProxy;
@@ -9,9 +8,9 @@ import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CompatibilityPolicy;
 import net.gobbob.mobends.compat.EtFuturumRequiemCompat;
+import net.gobbob.mobends.compat.SpecialMobsCompat;
 import net.gobbob.mobends.config.PlayerAnimationConfig;
 import net.gobbob.mobends.event.EventHandler_DataUpdate;
-import net.gobbob.mobends.event.EventHandler_Keyboard;
 import net.gobbob.mobends.settings.SettingsBoolean;
 import net.gobbob.mobends.settings.SettingsNode;
 import net.minecraft.util.ResourceLocation;
@@ -33,12 +32,31 @@ extends CommonProxy {
             AnimatedEntity.animatedEntities[i].animate = config.get("Animate", AnimatedEntity.animatedEntities[i].id, true).getBoolean();
         }
         AnimatedEntity.registerRendering();
-        ClientRegistry.registerKeyBinding(EventHandler_Keyboard.key_Menu);
         MinecraftForge.EVENT_BUS.register(new EventHandler_DataUpdate());
         MinecraftForge.EVENT_BUS.register(new net.gobbob.mobends.client.animation.HandAction.Listener());
         FMLCommonHandler.instance().bus().register(new EventHandler_DataUpdate());
-        FMLCommonHandler.instance().bus().register(new EventHandler_Keyboard());
-        ((SettingsBoolean)SettingsNode.getSetting((String)"swordTrail")).data = config.get("General", "Sword Trail", true).getBoolean();
+        readGeneral(config);
+        FMLCommonHandler.instance().bus().register(this);
+    }
+
+    /** The General category, as the config screen shows it. */
+    private static void readGeneral(Configuration config) {
+        config.getCategory("General").setLanguageKey("mobends.config.general");
+        ((SettingsBoolean)SettingsNode.getSetting("swordTrail")).data = config.get("General", "Sword Trail", true)
+            .setLanguageKey("mobends.settings.swordTrail").getBoolean();
+        net.gobbob.mobends.compat.salamander.PackFaces.combine = config.get("General", "Combine Face Packs", true,
+            "Resource packs that only animate the player's face, such as Just Expressions, draw it on Mo' Bends' head "
+                + "while Mo' Bends animates the body. Off, such a pack replaces the player.")
+            .setLanguageKey("mobends.config.general.combineFaces").getBoolean();
+    }
+
+    /** The config screen edited the loaded config: take its values and write it. */
+    @cpw.mods.fml.common.eventhandler.SubscribeEvent
+    public void onConfigChanged(cpw.mods.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent event) {
+        if (!event.modID.equals(net.gobbob.mobends.MoBends.MODID)) return;
+        readGeneral(net.gobbob.mobends.MoBends.config);
+        PlayerAnimationConfig.load(net.gobbob.mobends.MoBends.config);
+        net.gobbob.mobends.MoBends.config.save();
     }
 
     @Override
@@ -46,10 +64,12 @@ extends CommonProxy {
         EtFuturumRequiemCompat.registerBoatRenderers();
         AetherCompat.install();
         AdventureBackpackCompat.install();
-        // EFR renders its own zombie villagers, also from init: animate them as zombies, after it.
+        // EFR renders its own zombie villagers and husks, also from init: animate them as zombies, after it.
         for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
-            if (entity.id.equals("zombie") && entity.animate) EtFuturumRequiemCompat.registerZombieVillagerRenderer();
+            if (entity.id.equals("zombie") && entity.animate) EtFuturumRequiemCompat.registerZombieRenderers();
         }
+        // Special Mobs too, also from init: its zombies and spiders animate as theirs do, after it.
+        SpecialMobsCompat.registerRenderers();
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 
