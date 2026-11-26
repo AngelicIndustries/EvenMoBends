@@ -105,8 +105,8 @@ public class AnimatedEntity {
     }
 
     public static void registerRendering() {
+        // Whatever the switches say: the renderers ask them as they draw, so switching takes effect at once.
         for (int i = 0; i < animatedEntities.length; ++i) {
-            if (!AnimatedEntity.animatedEntities[i].animate) continue;
             RenderingRegistry.registerEntityRenderingHandler(AnimatedEntity.animatedEntities[i].entityClass, AnimatedEntity.animatedEntities[i].renderer);
         }
         BendsLogger.log("Registering Animated Entities...", BendsLogger.INFO);

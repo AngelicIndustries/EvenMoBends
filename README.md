@@ -31,17 +31,19 @@ Minecraft 1.7.10 fork of Mo' Bends 0.20.1: segmented player and mob animations, 
 
 The config screen (Mods, Even Mo' Bends, Config) has:
 
-* **Animations**: the mob menu. Each mob's page has a preview, an **Animate** switch (restart the game after
-  switching it), and the command that writes the mob's Blockbench project, which copies on click. The **Player**
-  page also lists the player's animations: click one to preview it, and its switch to turn it on or off, at once.
-  The switches are `animations.player.*` in `config/mobends.cfg`; for example, `animations.player.eating=false`
-  turns off the eating animation. Each page says when something else draws its mob in Mo' Bends' place: a resource
-  pack's model (naming the pack), another mod's renderer, or the mob's Animate switch being off. Without a mob
-  selected, a player model turns and cycles through its animations. The menu works from the main menu too, without a
-  world.
+* **Animations**: the mob menu. It lists every mob Mo' Bends animates, vanilla's first, then other mods' under each
+  mod's name (Special Mobs, Et Futurum Requiem, Twilight Forest, ...), scrolling when they don't fit. Mobs of those
+  kinds that their mod draws its own way are listed greyed out, saying why. Each mob's page has a preview, its own
+  **Animate** switch, which takes effect at once, and the command that writes its rig's Blockbench project, which
+  copies on click. The switches are the `Animate` category of `config/mobends.cfg`, by entity name, such as
+  `B:"TwilightForest.King Spider"=false`; vanilla's player, zombie, spider and cave spider keep their old keys. The
+  **Player** page also lists the player's animations: click one to preview it, and its switch to turn it on or off,
+  at once; those are `animations.player.*`, for example `animations.player.eating=false`. Each page says when
+  something else draws its mob in Mo' Bends' place: a resource pack's model (naming the pack), another mod's
+  renderer, or its switch being off. Without a mob selected, a player model turns and cycles through its animations,
+  its cape swinging as it moves. The menu works from the main menu too, without a world.
 * **General**: the sword trail, **Combine face-only player packs** (on by default; see
-  [Compatibility](#compatibility)), **Animate other mods' spiders and zombies** (on by default), and **Mobs left to
-  their mods**, entity names or class names that list exceptions to it.
+  [Compatibility](#compatibility)) and **Animate other mods' spiders and zombies** (on by default).
 
 The G key and the old in-game menu are gone.
 
@@ -77,7 +79,7 @@ model wins if several are enabled. Removing the pack or disabling CEM restores M
 | Aqua Acrobatics + Even Mo' Bends | Mo' Bends limbs with AA's swimming/crawling poses and whole-body transforms | Enabled |
 | GTNH Et Futurum Requiem + Even Mo' Bends | Mo' Bends with EFR-aware Elytra flight and rowing poses | Enabled, including EFR's zombie villagers and husks |
 | Special Mobs + Even Mo' Bends | Mo' Bends | Its zombies, zombie pigmen, spiders and cave spiders animate as the vanilla ones, with their own textures, eyes and sizes |
-| Other mods' spiders and zombies | Mo' Bends | Enabled for any mod whose renderer draws the vanilla spider or zombie model and only picks its texture, size, eyes or tint: in Adventura Arcana, Biomes O' Plenty's jungle spiders, Natura's heatscar spiders, Twilight Forest's hedge, king and swarm spiders, redscale broodlings and lich minions, Wild Mobs' tarantulas and faded, and Uralte Zauber's spider minions. Mobs with a model or drawing of their own (Wild Mobs' zomgus, Uralte Zauber's zombie minions) keep their mod's look; the mob menu lists both |
+| Other mods' spiders and zombies | Mo' Bends | Enabled for any mod whose renderer draws the vanilla spider or zombie model and only picks its texture, size, eyes or tint: in Adventura Arcana, Biomes O' Plenty's jungle spiders, Natura's heatscar spiders, Twilight Forest's hedge, king and swarm spiders, redscale broodlings and lich minions, Wild Mobs' tarantulas and faded, and Uralte Zauber's spider minions. Mobs with a model or drawing of their own (Wild Mobs' zomgus, Uralte Zauber's zombie minions) keep their mod's look. The mob menu lists each of them, with its own switch |
 | Village Names + Even Mo' Bends | Mo' Bends | Enabled with its modern zombie skins: zombie villagers keep Village Names' biome, profession and level skins and hats |
 | Smart Moving (with or without Wawel Auth) | Smart Moving / Smart Render; Mo' Bends player features disabled | Enabled |
 | Just Expressions + Even Mo' Bends | Mo' Bends animates the body; Salamander draws the pack's animated face on Mo' Bends' head | Enabled |

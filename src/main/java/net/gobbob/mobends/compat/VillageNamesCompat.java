@@ -3,7 +3,6 @@ package net.gobbob.mobends.compat;
 import astrotibs.villagenames.config.GeneralConfig;
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Loader;
-import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsZombieVillageNames;
 import net.minecraft.entity.monster.EntityZombie;
 
@@ -26,11 +25,8 @@ public final class VillageNamesCompat {
 
         private static void registerRenderers() {
             if (!GeneralConfig.modernZombieSkins) return;
-            for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
-                if (entity.id.equals("zombie") && entity.animate) {
-                    RenderingRegistry.registerEntityRenderingHandler(EntityZombie.class, new RenderBendsZombieVillageNames());
-                }
-            }
+            // The zombie's switch is asked as it is drawn; off, Village Names' own renderer draws it.
+            RenderingRegistry.registerEntityRenderingHandler(EntityZombie.class, new RenderBendsZombieVillageNames());
         }
     }
 }

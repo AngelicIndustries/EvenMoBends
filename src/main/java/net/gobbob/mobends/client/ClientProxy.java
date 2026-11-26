@@ -30,9 +30,7 @@ extends CommonProxy {
     public void preInit(Configuration config) {
         CompatibilityPolicy.logActiveMode();
         PlayerAnimationConfig.load(config);
-        for (int i = 0; i < AnimatedEntity.animatedEntities.length; ++i) {
-            AnimatedEntity.animatedEntities[i].animate = config.get("Animate", AnimatedEntity.animatedEntities[i].id, true).getBoolean();
-        }
+        net.gobbob.mobends.config.MobSwitches.load(config);
         AnimatedEntity.registerRendering();
         MinecraftForge.EVENT_BUS.register(new EventHandler_DataUpdate());
         MinecraftForge.EVENT_BUS.register(new net.gobbob.mobends.client.animation.HandAction.Listener());
@@ -54,9 +52,13 @@ extends CommonProxy {
             "Other mods' spiders and zombies drawn with the vanilla model take Mo' Bends' animations, keeping their own "
                 + "texture, size and eyes.")
             .setLanguageKey("mobends.config.general.adoptMobs").getBoolean();
-        MobAdoption.excluded = new java.util.HashSet<>(java.util.Arrays.asList(config.get("General", "Mobs Left Alone",
-            new String[0], "Entity names, as /summon takes them, or class names of mobs Mo' Bends leaves to their mod.")
-            .setLanguageKey("mobends.config.general.adoptExclusions").getStringList()));
+        // Mobs left alone are switched off in the menu now, each on its own (see MobSwitches).
+        if (config.getCategory("General").containsKey("Mobs Left Alone")) {
+            for (String name : config.get("General", "Mobs Left Alone", new String[0]).getStringList()) {
+                net.gobbob.mobends.config.MobSwitches.set(config, name, false);
+            }
+            config.getCategory("General").remove("Mobs Left Alone");
+        }
     }
 
     /** The config screen edited the loaded config: take its values and write it. */
@@ -84,9 +86,7 @@ extends CommonProxy {
         AetherCompat.install();
         AdventureBackpackCompat.install();
         // EFR renders its own zombie villagers and husks, also from init: animate them as zombies, after it.
-        for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
-            if (entity.id.equals("zombie") && entity.animate) EtFuturumRequiemCompat.registerZombieRenderers();
-        }
+        EtFuturumRequiemCompat.registerZombieRenderers();
         // Special Mobs too, also from init: its zombies and spiders animate as theirs do, after it.
         SpecialMobsCompat.registerRenderers();
         // And Village Names, whose modern zombie skins come with a zombie renderer of its own.

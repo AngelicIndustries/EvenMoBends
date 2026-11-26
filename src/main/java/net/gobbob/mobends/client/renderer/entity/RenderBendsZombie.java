@@ -93,7 +93,8 @@ extends RenderBiped {
     }
 
     public void doRender(EntityZombie p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
-        if (net.gobbob.mobends.compat.CemCompat.hasModel(p_76986_1_,
+        // Switched off in the menu, or a pack's model: the vanilla (or the mod's own) renderer draws it.
+        if (!net.gobbob.mobends.config.MobSwitches.animates(p_76986_1_) || net.gobbob.mobends.compat.CemCompat.hasModel(p_76986_1_,
             p_76986_1_.isVillager() ? this.packVillagerModel : this.packZombieModel(), getEntityTexture(p_76986_1_))) {
             this.packRenderer().setRenderManager(this.renderManager);
             this.packRenderer().doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);

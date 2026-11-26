@@ -2,7 +2,6 @@ package net.gobbob.mobends.compat;
 
 import cpw.mods.fml.client.registry.RenderingRegistry;
 import cpw.mods.fml.common.Loader;
-import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsSpecialSpider;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsSpecialZombie;
 import toast.specialMobs.entity.cavespider.Entity_SpecialCaveSpider;
@@ -12,7 +11,7 @@ import toast.specialMobs.entity.zombie.Entity_SpecialZombie;
 
 /**
  * Father Toast's Special Mobs gives its zombies, zombie pigmen, spiders and cave spiders renderers of their own, which
- * Mo' Bends' never reach. Draw them with Mo' Bends' instead, wherever their vanilla kin animate.
+ * Mo' Bends' never reach. Draw them with Mo' Bends' instead, each as its own switch says.
  */
 public final class SpecialMobsCompat {
 
@@ -23,28 +22,16 @@ public final class SpecialMobsCompat {
         if (Loader.isModLoaded("SpecialMobs")) Api.registerRenderers();
     }
 
-    private static boolean animates(String id) {
-        for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
-            if (entity.id.equals(id)) return entity.animate;
-        }
-        return false;
-    }
-
     private static final class Api {
 
         private Api() {}
 
         private static void registerRenderers() {
-            if (animates("zombie")) {
-                RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialZombie.class, new RenderBendsSpecialZombie());
-                RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialPigZombie.class, new RenderBendsSpecialZombie());
-            }
-            if (animates("spider")) {
-                RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialSpider.class, new RenderBendsSpecialSpider());
-            }
-            if (animates("cave_spider")) {
-                RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialCaveSpider.class, new RenderBendsSpecialSpider());
-            }
+            // Each mob's switch is asked as it is drawn; off, Special Mobs' own renderer draws it.
+            RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialZombie.class, new RenderBendsSpecialZombie());
+            RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialPigZombie.class, new RenderBendsSpecialZombie());
+            RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialSpider.class, new RenderBendsSpecialSpider());
+            RenderingRegistry.registerEntityRenderingHandler(Entity_SpecialCaveSpider.class, new RenderBendsSpecialSpider());
         }
     }
 }

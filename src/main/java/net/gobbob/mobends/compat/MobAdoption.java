@@ -13,8 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
-import net.gobbob.mobends.AnimatedEntity;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsAdoptedSpider;
 import net.gobbob.mobends.client.renderer.entity.RenderBendsAdoptedZombie;
 import net.gobbob.mobends.util.BendsLogger;
@@ -36,6 +34,7 @@ import net.minecraft.entity.monster.EntityCaveSpider;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.util.ResourceLocation;
+import org.lwjgl.opengl.GL11;
 
 /**
  * Other mods' spiders and zombies drawn the vanilla way, whatever the mod: a renderer that only picks the texture, the
@@ -44,12 +43,20 @@ import net.minecraft.util.ResourceLocation;
  * mob.
  */
 public final class MobAdoption {
-    /** The General setting; off, every mod keeps its mobs. */
+    /** The General setting; off, every mod keeps its mobs. Each mob's own switch is MobSwitches'. */
     public static boolean enabled = true;
-    /** Entity names (as /summon takes them) or class names left to their mod. */
-    public static Set<String> excluded = Collections.emptySet();
 
-    /** The kinds of mob Mo' Bends animates, by the Animate switch each follows. */
+    /** What became of a mod's spider or zombie. */
+    public enum Status {
+        /** Mo' Bends draws it, as its switch says. */
+        ADOPTED,
+        /** Mo' Bends could, but the General setting leaves other mods' mobs to them. */
+        SETTING_OFF,
+        /** Its renderer draws more than Mo' Bends can take over, or its model has parts of its own. */
+        OWN_DRAWING
+    }
+
+    /** The kinds of mob Mo' Bends animates, by the rig each takes. */
     public enum Family {
         ZOMBIE("zombie"), SPIDER("spider"), CAVE_SPIDER("cave_spider");
 
@@ -59,26 +66,18 @@ public final class MobAdoption {
             this.id = id;
         }
 
-        static Family of(Class<?> type) {
+        public static Family of(Class<?> type) {
             if (EntityCaveSpider.class.isAssignableFrom(type)) return CAVE_SPIDER;
             if (EntitySpider.class.isAssignableFrom(type)) return SPIDER;
             if (EntityZombie.class.isAssignableFrom(type)) return ZOMBIE;
             return null;
         }
-
-        boolean animated() {
-            for (AnimatedEntity entity : AnimatedEntity.animatedEntities) {
-                if (entity.id.equals(this.id)) return entity.animate;
-            }
-            return false;
-        }
     }
 
     /** Adopted entity classes and the mod renderers they had, put back when the settings change. */
     private static final Map<Class<? extends Entity>, Render> ORIGINALS = new LinkedHashMap<>();
-    /** Per kind: the mods whose mobs Mo' Bends animates too, and the mobs their mods keep ("Zomgus (Wild Mobs)"). */
-    private static final Map<Family, Set<String>> ADOPTED_MODS = new LinkedHashMap<>();
-    private static final Map<Family, Set<String>> KEPT_MODS = new LinkedHashMap<>();
+    /** Every other mod's spider and zombie seen, and what became of it. */
+    private static final Map<Class<? extends Entity>, Status> STATUS = new LinkedHashMap<>();
     private static boolean scanned;
 
     /**
@@ -121,8 +120,7 @@ public final class MobAdoption {
         Map<Class<? extends Entity>, Render> map = RenderManager.instance.entityRenderMap;
         map.putAll(ORIGINALS);
         ORIGINALS.clear();
-        ADOPTED_MODS.clear();
-        KEPT_MODS.clear();
+        STATUS.clear();
         for (Map.Entry<Class<? extends Entity>, Render> entry : new ArrayList<>(map.entrySet())) {
             Class<? extends Entity> type = entry.getKey();
             Render render = entry.getValue();
@@ -130,9 +128,12 @@ public final class MobAdoption {
             // Vanilla's own mobs are Mo' Bends' already, or left vanilla by their Animate switch.
             if (family == null || render == null || type.getName().startsWith("net.minecraft.")
                 || render.getClass().getName().startsWith("net.gobbob.mobends.")) continue;
-            String mod = modName(type);
-            if (!enabled || !family.animated() || excluded(type) || !adoptable(family, render)) {
-                kinds(KEPT_MODS, family).add(entityName(type) + " (" + mod + ")");
+            if (!adoptable(family, render)) {
+                STATUS.put(type, Status.OWN_DRAWING);
+                continue;
+            }
+            if (!enabled) {
+                STATUS.put(type, Status.SETTING_OFF);
                 continue;
             }
             Render adopted = family == Family.ZOMBIE ? new RenderBendsAdoptedZombie((RenderBiped)render)
@@ -140,42 +141,19 @@ public final class MobAdoption {
             adopted.setRenderManager(RenderManager.instance);
             map.put(type, adopted);
             ORIGINALS.put(type, render);
-            kinds(ADOPTED_MODS, family).add(mod);
+            STATUS.put(type, Status.ADOPTED);
         }
         BendsLogger.log("Animating " + ORIGINALS.size() + " other mods' spiders and zombies", BendsLogger.INFO);
     }
 
-    private static Set<String> kinds(Map<Family, Set<String>> map, Family family) {
-        Set<String> set = map.get(family);
-        if (set == null) map.put(family, set = new TreeSet<>(String.CASE_INSENSITIVE_ORDER));
-        return set;
+    /** What became of this mod's mob, or null for vanilla's, Mo' Bends' own, and anything not a spider or zombie. */
+    public static Status status(Class<?> type) {
+        return STATUS.get(type);
     }
 
-    /** The mods whose mobs of this kind Mo' Bends animates too, sorted. */
-    public static List<String> adoptedMods(String id) {
-        return mods(ADOPTED_MODS, id);
-    }
-
-    /** The mobs of this kind their mods draw their own way, with the mod's name, sorted. */
-    public static List<String> keptMobs(String id) {
-        return mods(KEPT_MODS, id);
-    }
-
-    private static List<String> mods(Map<Family, Set<String>> map, String id) {
-        for (Family family : Family.values()) {
-            if (family.id.equals(id)) {
-                Set<String> set = map.get(family);
-                return set == null ? Collections.<String>emptyList() : new ArrayList<>(set);
-            }
-        }
-        return Collections.emptyList();
-    }
-
-    private static boolean excluded(Class<?> type) {
-        if (excluded.isEmpty()) return false;
-        Object name = EntityList.classToStringMapping.get(type);
-        return name != null && excluded.contains(name) || excluded.contains(type.getName())
-            || excluded.contains(type.getSimpleName());
+    /** The mod's own renderer for a mob Mo' Bends took over, or null. */
+    public static Render original(Class<?> type) {
+        return ORIGINALS.get(type);
     }
 
     /**
@@ -229,7 +207,7 @@ public final class MobAdoption {
     }
 
     /** The mod a mob comes from, by its class's package, else by its entity name's prefix. */
-    static String modName(Class<?> type) {
+    public static String modName(Class<?> type) {
         String name = type.getName();
         String pkg = name.lastIndexOf('.') < 0 ? "" : name.substring(0, name.lastIndexOf('.'));
         for (ModContainer mod : Loader.instance().getActiveModList()) {
@@ -245,7 +223,7 @@ public final class MobAdoption {
     }
 
     /** A mob's name as the game shows it, else its entity name without the mod's prefix. */
-    static String entityName(Class<?> type) {
+    public static String entityName(Class<?> type) {
         Object entity = EntityList.classToStringMapping.get(type);
         if (entity == null) return type.getSimpleName();
         String id = entity.toString();
@@ -274,6 +252,31 @@ public final class MobAdoption {
             PRE_RENDER.invoke(render, entity, partialTicks);
         } catch (ReflectiveOperationException | RuntimeException e) {
             failed(render, e);
+        }
+    }
+
+    /**
+     * How much a renderer scales its mob before drawing the model, read back from what its preRenderCallback does to
+     * the matrix: a giant's 1.5, a cave spider's 0.7. For the menu's previews, which should fit any of them in a box.
+     */
+    public static float renderScale(Render render, EntityLivingBase entity) {
+        if (!(render instanceof RendererLivingEntity)) return 1.0f;
+        GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS);
+        GL11.glMatrixMode(GL11.GL_MODELVIEW);
+        GL11.glPushMatrix();
+        try {
+            GL11.glLoadIdentity();
+            PRE_RENDER.invoke(render, entity, 1.0f);
+            java.nio.FloatBuffer matrix = org.lwjgl.BufferUtils.createFloatBuffer(16);
+            GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, matrix);
+            float scale = (float)Math.sqrt(matrix.get(0) * matrix.get(0) + matrix.get(1) * matrix.get(1)
+                + matrix.get(2) * matrix.get(2));
+            return scale > 0.01f && scale < 100.0f ? scale : 1.0f;
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            return 1.0f;
+        } finally {
+            GL11.glPopMatrix();
+            GL11.glPopAttrib();
         }
     }
 

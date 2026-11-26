@@ -28,10 +28,10 @@ extends RenderSpider {
     }
 
     public void doRender(EntityLiving p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
-        if (CemCompat.hasModel(p_76986_1_)) {
-            // A pack model (Fresh Animations, say) supersedes Mo' Bends: the vanilla renderer draws the spider, and
-            // Salamander swaps in the pack's model, texture and eyes there. Checked every frame, so pack reloads and
-            // Salamander's CEM switch take effect at once.
+        if (!net.gobbob.mobends.config.MobSwitches.animates(p_76986_1_) || CemCompat.hasModel(p_76986_1_)) {
+            // Switched off in the menu, or a pack model (Fresh Animations, say) supersedes Mo' Bends: the vanilla (or
+            // the mod's own) renderer draws the spider, and Salamander swaps in the pack's model, texture and eyes
+            // there. Checked every frame, so switches, pack reloads and Salamander's CEM switch take effect at once.
             if (this.vanilla == null) this.vanilla = this.createVanillaRenderer();
             this.vanilla.setRenderManager(this.renderManager);
             this.vanilla.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);

@@ -166,9 +166,14 @@ extends RenderPlayer {
         return cover == PackFaces.Cover.BODY || cover == PackFaces.Cover.FACE && !PackFaces.combine;
     }
 
+    /** Switched off in the menu, or a pack draws the player: then the vanilla renderer does. */
+    private boolean drawnElsewhere(AbstractClientPlayer player) {
+        return !net.gobbob.mobends.config.MobSwitches.animates(player) || this.packDraws(player);
+    }
+
     @Override
     public void renderFirstPersonArm(EntityPlayer p_82441_1_) {
-        if (p_82441_1_ instanceof AbstractClientPlayer && this.packDraws((AbstractClientPlayer)p_82441_1_)) {
+        if (p_82441_1_ instanceof AbstractClientPlayer && this.drawnElsewhere((AbstractClientPlayer)p_82441_1_)) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.renderFirstPersonArm(p_82441_1_);
             return;
@@ -247,7 +252,7 @@ extends RenderPlayer {
     @Override
     public void doRender(AbstractClientPlayer p_76986_1_, double p_76986_2_, double p_76986_4_, double p_76986_6_, float p_76986_8_, float p_76986_9_) {
         this.takeBackModel();
-        if (this.packDraws(p_76986_1_)) {
+        if (this.drawnElsewhere(p_76986_1_)) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.doRender(p_76986_1_, p_76986_2_, p_76986_4_, p_76986_6_, p_76986_8_, p_76986_9_);
             return;

@@ -36,7 +36,8 @@ extends RenderBiped {
 
     @Override
     public void doRender(EntityLiving entity, double x, double y, double z, float yaw, float partialTicks) {
-        if (net.gobbob.mobends.compat.CemCompat.hasModel(entity, this.packRenderer.modelBipedMain, getEntityTexture(entity))) {
+        if (!net.gobbob.mobends.config.MobSwitches.animates(entity)
+            || net.gobbob.mobends.compat.CemCompat.hasModel(entity, this.packRenderer.modelBipedMain, getEntityTexture(entity))) {
             this.packRenderer.setRenderManager(this.renderManager);
             this.packRenderer.doRender(entity, x, y, z, yaw, partialTicks);
             return;
