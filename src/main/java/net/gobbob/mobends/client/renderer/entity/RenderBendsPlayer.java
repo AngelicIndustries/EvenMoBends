@@ -9,6 +9,7 @@ import net.gobbob.mobends.client.model.entity.ModelBendsPlayer;
 import net.gobbob.mobends.compat.AdventureBackpackCompat;
 import net.gobbob.mobends.compat.AetherCompat;
 import net.gobbob.mobends.compat.CemCompat;
+import net.gobbob.mobends.compat.salamander.BodyFrame;
 import net.gobbob.mobends.compat.salamander.PackFaces;
 import net.gobbob.mobends.compat.DraconicEvolutionCompat;
 import net.gobbob.mobends.client.model.BonedArmorModel;
@@ -270,7 +271,25 @@ extends RenderPlayer {
         }
         Data_Player data = Data_Player.get(p_76986_1_.getEntityId());
         double landingOffset = data.landingRenderOffset(p_76986_9_);
-        super.doRender(p_76986_1_, p_76986_2_, p_76986_4_ + landingOffset, p_76986_6_, p_76986_8_, p_76986_9_);
+        AbstractClientPlayer outer = this.drawing;
+        this.drawing = p_76986_1_;
+        try {
+            super.doRender(p_76986_1_, p_76986_2_, p_76986_4_ + landingOffset, p_76986_6_, p_76986_8_, p_76986_9_);
+        } finally {
+            this.drawing = outer;
+        }
+    }
+
+    /** The player this renderer draws with its own model right now, else null (see {@link BodyFrame}). */
+    private AbstractClientPlayer drawing;
+
+    public AbstractClientPlayer drawing() {
+        return this.drawing;
+    }
+
+    /** This mod's player model, unless another model is lent out or drawn in its place. */
+    public ModelBendsPlayer bendsModel() {
+        return this.modelBipedMain instanceof ModelBendsPlayer ? (ModelBendsPlayer)this.modelBipedMain : null;
     }
 
     @Override

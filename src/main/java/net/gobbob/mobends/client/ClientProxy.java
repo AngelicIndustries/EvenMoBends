@@ -107,6 +107,8 @@ extends CommonProxy {
         VillageNamesCompat.registerRenderers();
         // And Wild Mobs' zomgus, whose mushrooms keep adoption away: drawn with them on the rig.
         WildMobsCompat.registerRenderers();
+        // Et Futurum's elytra, drawn from the model's root, follows the bent body through Salamander.
+        net.gobbob.mobends.compat.salamander.BodyFrame.register();
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 
