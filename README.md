@@ -23,6 +23,8 @@ Mo' Bends for Minecraft 1.7.10: segmented player and mob animations, drawn by Sa
 * Other mods' zombies and spiders: Special Mobs, Et Futurum Requiem, Village Names, Wild Mobs, and any mod that draws
   the vanilla model (Twilight Forest, Natura, Biomes O' Plenty, ...).
 * Face-only player packs such as Just Expressions animate the face on Mo' Bends' head.
+* Lanterns worn on a Baubles Expanded belt hang from it and swing with the leg. Other mods add theirs through
+  `net.gobbob.mobends.api.WornLanterns`.
 * Animations are Blockbench projects that resource packs can replace: see the [Blockbench guide](blockbench/README.md).
 * A switch per mob and per player animation, with live previews and search, in the mod's config screen.
 * Client side only.
@@ -33,7 +35,9 @@ Mo' Bends for Minecraft 1.7.10: segmented player and mob animations, drawn by Sa
 | --- | --- |
 | Wawel Auth | Skins and capes |
 | Salamander CEM packs | A pack's model replaces Mo' Bends for that mob; face-only player packs are combined |
-| Et Futurum Requiem | Elytra, rowing, husks, zombie villagers |
+| Et Futurum Requiem | Elytra, rowing, husks, zombie villagers, worn lanterns |
+| Botania | Et Futurum's worn lanterns drawn once, by Mo' Bends |
+| Supernova | Worn lanterns keep their own colors in colored light |
 | Aether, Avaritia, Adventure Backpack | Equipment on the limbs |
 | Backhand, Just A Shield | Per-hand blocking |
 | Aqua Acrobatics | Swimming and crawling |

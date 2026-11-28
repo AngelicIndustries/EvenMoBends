@@ -62,6 +62,10 @@ extends CommonProxy {
             "Resource packs that only animate the player's face, such as Just Expressions, draw it on Mo' Bends' head "
                 + "while Mo' Bends animates the body. Off, such a pack replaces the player.")
             .setLanguageKey("mobends.config.general.combineFaces").getBoolean();
+        net.gobbob.mobends.client.render.WornLanternRenderer.enabled = config.get("general", "Worn Lanterns", true,
+            "Lanterns worn in a Baubles Expanded belt slot, such as Et Futurum's, hang from the belt and swing with the "
+                + "leg.")
+            .setLanguageKey("mobends.config.general.wornLanterns").getBoolean();
         MobAdoption.enabled = config.get("general", "Animate Other Mods' Mobs", true,
             "Other mods' spiders and zombies drawn with the vanilla model take Mo' Bends' animations, keeping their own "
                 + "texture, size and eyes.")
@@ -109,6 +113,11 @@ extends CommonProxy {
         WildMobsCompat.registerRenderers();
         // Et Futurum's elytra, drawn from the model's root, follows the bent body through Salamander.
         net.gobbob.mobends.compat.salamander.BodyFrame.register();
+        // Lanterns worn on the belt: Et Futurum's, and those other mods register (api.WornLanterns)
+        EtFuturumRequiemCompat.registerWornLanterns();
+        if (cpw.mods.fml.common.Loader.isModLoaded("Baubles|Expanded")) {
+            net.gobbob.mobends.client.render.WornLanternRenderer.register();
+        }
         ClientCommandHandler.instance.registerCommand(new CommandEvenMoBends());
     }
 

@@ -33,6 +33,11 @@ public final class EtFuturumRequiemCompat {
         if (CompatibilityPolicy.isEtFuturumRequiemLoaded()) Api.registerZombieRenderers();
     }
 
+    /** Et Futurum's lantern and soul lantern hang from the belt when worn (api.WornLanterns). */
+    public static void registerWornLanterns() {
+        if (CompatibilityPolicy.isEtFuturumRequiemLoaded()) Api.registerWornLanterns();
+    }
+
     /** An Et Futurum zombie villager's profession (its villager type), or -1. */
     public static int getZombieVillagerType(Entity entity) {
         return CompatibilityPolicy.isEtFuturumRequiemLoaded() ? Api.getZombieVillagerType(entity) : -1;
@@ -78,6 +83,10 @@ public final class EtFuturumRequiemCompat {
 
         private static void registerBoatRenderers() {
             RenderRowingBoatEtFuturum.register();
+        }
+
+        private static void registerWornLanterns() {
+            net.gobbob.mobends.api.WornLanterns.registerHangingBlock(ganymedes01.etfuturum.blocks.BlockLantern.class, 1);
         }
 
         private static void registerZombieRenderers() {

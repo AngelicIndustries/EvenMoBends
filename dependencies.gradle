@@ -51,6 +51,8 @@ dependencies {
         runtimeOnlyNonPublishable(wawelAuthDependency)
     }
     devOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.7.4-GTNH:dev")
+    // Belt baubles, for worn lanterns (client/render/WornLanternRenderer).
+    compileOnly("com.github.GTNewHorizons:Baubles-Expanded:2.2.26-GTNH:dev") { transitive = false }
     compileOnly(rfg.deobf("curse.maven:special-mobs-59968:7581890")) // 4.2.3
     compileOnly(rfg.deobf("curse.maven:wild-mobs-mod-255711:2727879")) // 1.5.3
     compileOnly("com.github.GTNewHorizons:VillageNames:4.6.2-GTNH:dev")

@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "minVersion": "0.8.7-GTNH",
+  "package": "net.gobbob.mobends.mixins",
+  "refmap": "mixins.mobends.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [],
+  "client": [],
+  "server": []
+}
